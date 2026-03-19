@@ -189,7 +189,7 @@
 
             <div id="loginError" class="alert alert-danger d-none" role="alert"></div>
 
-            <form method="post" action="/login" id="loginForm">
+            <form method="post" action="/auth/login" id="loginForm">
 
 
 
@@ -227,7 +227,7 @@
 
 
 
-                    <a href="/forgot" class="small-link">Forgot Password?</a>
+                    <a href="/auth/forgot" class="text-decoration-none small">Forgot password?</a>
 
 
 
@@ -286,7 +286,7 @@
 
                 <!-- GOOGLE LOGIN -->
 
-                <button type="button" onclick="window.location.href='/google'" class="btn google-btn w-100 mb-3">
+                <button type="button" onclick="window.location.href='/auth/google'" class="btn google-btn w-100 mb-3">
 
 
 
@@ -304,23 +304,7 @@
 
 
 
-                <p class="small">
-
-
-
-                    Don’t have an account?
-
-
-
-                    <a href="/signup" class="fw-semibold text-primary">
-
-                        Sign up
-
-                    </a>
-
-
-
-                </p>
+                <p class="text-center mb-0">Don't have an account? <a href="/auth/signup" class="text-decoration-none">Create Account</a></p>
 
 
 

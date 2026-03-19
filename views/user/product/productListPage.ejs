@@ -1,0 +1,442 @@
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>MobileStore | Smartphone Collection</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+   
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d6cf2",
+                        "background-light": "#f1f6ff",
+                        "background-dark": "#0a0a14",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+    <!-- Header Navigation -->
+    <header
+        class="sticky top-0 z-50 w-full bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800">
+        <div class="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-8">
+            <!-- Logo -->
+            <div class="flex items-center gap-2 shrink-0">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined text-2xl">smartphone</span>
+                </div>
+                <h1 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">MobileStore</h1>
+            </div>
+            <!-- Search Bar -->
+            <div class="flex-1 max-w-2xl hidden md:block">
+                <div class="relative group">
+                    <span
+                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+                    <form action="/user/products" method="GET" class="relative group">
+
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                            search
+                        </span>
+
+                        <input name="search" value="<%= query.search || '' %>" placeholder="Search smartphones..."
+                            class="w-full bg-slate-100 rounded-xl py-2.5 pl-10 pr-4" />
+
+                    </form>
+                </div>
+            </div>
+            <!-- Utility Icons -->
+            <div class="flex items-center gap-2">
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    <span class="material-symbols-outlined">favorite</span>
+                </button>
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 relative">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-2 ring-white"></span>
+                </button>
+                <div class="h-8 w-px bg-slate-200 dark:border-slate-800 mx-2 hidden sm:block"></div>
+                <button
+                    class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full border border-slate-200 dark:border-slate-800 hover:bg-white transition-colors">
+                    <span class="text-sm font-medium hidden sm:block px-2">Profile</span>
+                    <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                        <img alt="User Profile" class="w-full h-full object-cover"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2EX9gi8wDYhu8OqzO4JQU4tHD8XsSiANJ09M3AcWGIXi_P1oTnsPXowl1ixMdnZ7PlO2x6dl_MTUWcM7hfZh0jp5Fk7STRvzVKikKqOhub9jE_TUSEL4STMSNG8qmLyxfZSkj8m2djnPTB-eO29VXquRhWHCAto1g_RftsqhpPtG51kziQSR-emcNlTYE807PLHh3cy2fDMLABCO2bHx7e63QAREaa8tVa_SO6tagJYXjQue4Ly16eU_s2Xkz_OE1SYUDKd-fM0o" />
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-[1440px] mx-auto px-6 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Sidebar Filters -->
+            <aside class="w-full lg:w-72 flex-shrink-0 space-y-8">
+                <!-- Search Filter -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Search Filters</h3>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1 group">
+                            <form action="/user/products" method="GET" class="flex gap-2">
+
+                                <input name="search" value="<%= query.search || '' %>" placeholder="Find by name..."
+                                    class="w-full bg-white border rounded-xl py-2.5 px-4" />
+
+                                <button class="h-10 w-10 bg-primary text-white rounded-xl">
+                                    <span class="material-symbols-outlined">search</span>
+                                </button>
+
+                            </form>
+                        </div>
+                        <button
+                            class="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary/90 transition-all shadow-md shadow-primary/20 shrink-0">
+                            <span class="material-symbols-outlined text-xl">search</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Categories -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+                        Categories
+                    </h3>
+
+                    <div class="space-y-1">
+
+                        <% categories.forEach(cat=> { %>
+
+                            <a href="/user/products
+    ?category=<%= cat.name %>
+    &search=<%= query.search || '' %>
+    &sort=<%= query.sort || '' %>" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all
+
+    <%= query.category === cat.name
+        ? 'bg-primary/10 text-primary font-semibold'
+        : 'text-slate-600 dark:text-slate-400 hover:bg-white' %>">
+
+                                <span class="flex items-center gap-3">
+
+                                    <!-- ICON (you can customize per category later) -->
+                                    <span class="material-symbols-outlined text-xl">
+                                        category
+                                    </span>
+
+                                    <%= cat.name %>
+
+                                </span>
+
+                                <!-- OPTIONAL COUNT -->
+                                <% if(cat.count !==undefined){ %>
+                                    <span class="text-xs">
+                                        <%= cat.count %>
+                                    </span>
+                                    <% } %>
+
+                            </a>
+
+                            <% }) %>
+
+                    </div>
+                </div>
+                <!-- Price Range Slider -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Price Range ($0 - $2000)
+                    </h3>
+                    <div class="px-2">
+                        <div class="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full relative">
+                            <div class="absolute inset-y-0 left-[0%] right-[35%] bg-primary rounded-full"></div>
+                            <div
+                                class="absolute top-1/2 left-[0%] -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-lg cursor-pointer">
+                            </div>
+                            <div
+                                class="absolute top-1/2 left-[65%] -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-lg cursor-pointer">
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-4 text-sm font-medium">
+                            <span
+                                class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-3 py-1 rounded-md text-xs text-slate-600">$0</span>
+                            <span
+                                class="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-3 py-1 rounded-md text-xs text-slate-600">$1300</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Brands -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+                        Brand
+                    </h3>
+
+                    <form id="brandForm" action="/user/products" method="GET">
+
+                        <!-- Preserve existing filters -->
+                        <input type="hidden" name="search" value="<%= query.search || '' %>">
+                        <input type="hidden" name="category" value="<%= query.category || '' %>">
+                        <input type="hidden" name="sort" value="<%= query.sort || '' %>">
+
+                        <div class="space-y-3">
+
+                            <% const selectedBrands=Array.isArray(query.brand) ? query.brand : query.brand ?
+                                [query.brand] : []; %>
+
+                                <% const brands=["Apple","Samsung","Google","Xiaomi","Sony"]; %>
+
+                                    <% brands.forEach(brand=> { %>
+
+                                        <label class="flex items-center gap-3 cursor-pointer">
+
+                                            <input type="checkbox" name="brand" value="<%= brand %>"
+                                                <%=selectedBrands.includes(brand) ? "checked" : "" %>
+
+                                            onchange="document.getElementById('brandForm').submit()"
+
+                                            class="rounded-md border-slate-300 text-primary focus:ring-primary h-5 w-5"
+                                            />
+
+                                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                                <%= brand %>
+                                            </span>
+
+                                        </label>
+
+                                        <% }) %>
+
+                        </div>
+
+                    </form>
+                </div>
+            </aside>
+            <!-- Main Content Area -->
+            <div class="flex-1">
+                <!-- Header Stats & Sorting -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            Smartphone Collection
+                        </h2>
+
+                        <p class="text-slate-500 mt-1">
+                            Showing <%= products.length %> products
+                        </p>
+                    </div>
+
+                    <!-- SORT FORM -->
+                    <form action="/user/products" method="GET" class="flex items-center gap-4">
+
+                        <span class="text-sm font-medium text-slate-500">Sort by:</span>
+
+                        <!-- Preserve filters -->
+                        <input type="hidden" name="search" value="<%= query.search || '' %>">
+                        <input type="hidden" name="category" value="<%= query.category || '' %>">
+
+                        <% if(Array.isArray(query.brand)){ %>
+                            <% query.brand.forEach(b=> { %>
+                                <input type="hidden" name="brand" value="<%= b %>">
+                                <% }) %>
+                                    <% } else if(query.brand){ %>
+                                        <input type="hidden" name="brand" value="<%= query.brand %>">
+                                        <% } %>
+
+                                            <select name="sort" onchange="this.form.submit()"
+                                                class="bg-white dark:bg-slate-900 border rounded-xl text-sm font-semibold px-3 py-2">
+
+                                                <option value="">Default</option>
+
+                                                <option value="price_low_high" <%=query.sort==='price_low_high'
+                                                    ? 'selected' : '' %>>
+                                                    Price Low → High
+                                                </option>
+
+                                                <option value="price_high_low" <%=query.sort==='price_high_low'
+                                                    ? 'selected' : '' %>>
+                                                    Price High → Low
+                                                </option>
+
+                                                <option value="a_z" <%=query.sort==='a_z' ? 'selected' : '' %>>
+                                                    A → Z
+                                                </option>
+
+                                                <option value="z_a" <%=query.sort==='z_a' ? 'selected' : '' %>>
+                                                    Z → A
+                                                </option>
+
+                                            </select>
+
+                    </form>
+
+                </div>
+                <!-- Product Grid - Updated to exactly 3 columns on desktop -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                    <% if(products.length> 0){ %>
+
+                        <% products.forEach(product=> { %>
+
+                            <div class="group bg-white rounded-3xl p-5 shadow-sm flex flex-col">
+
+                                <div class="relative aspect-square rounded-2xl overflow-hidden bg-slate-50 mb-4">
+
+                                    <img src="<%= product.images[0] %>" class="w-full h-full object-cover" />
+
+                                </div>
+
+                                <div class="flex-1 flex flex-col">
+
+                                    <h3 class="text-[15px] font-bold mb-1">
+
+                                        <%= product.name %>
+
+                                    </h3>
+
+                                    <div class="flex items-center justify-between mt-auto">
+
+                                        <div>
+
+                                            <p class="text-lg font-bold">
+
+                                                ₹<%= product.price %>
+
+                                            </p>
+
+                                        </div>
+
+                                        <button
+                                            class="h-10 w-10 bg-primary text-white rounded-xl flex items-center justify-center">
+
+                                            <span class="material-symbols-outlined">add</span>
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <% }) %>
+
+                                <% } else { %>
+
+                                    <p>No products found</p>
+
+                                    <% } %>
+
+                </div>
+                <!-- Pagination Component -->
+                <div class="mt-12 flex items-center justify-center gap-2">
+
+                    <!-- PREVIOUS BUTTON -->
+                    <% if(currentPage> 1){ %>
+                        <a href="/user/products?page=<%= currentPage - 1 %>
+    &search=<%= query.search || '' %>
+    &category=<%= query.category || '' %>
+    &sort=<%= query.sort || '' %>
+
+    <% if(Array.isArray(query.brand)){ %>
+      <% query.brand.forEach(b => { %>&brand=<%= b %><% }) %>
+    <% } else if(query.brand){ %>
+      &brand=<%= query.brand %>
+    <% } %>" class="w-10 h-10 flex items-center justify-center rounded-xl border text-slate-600">
+
+                            <span class="material-symbols-outlined">chevron_left</span>
+
+                        </a>
+                        <% } %>
+
+
+                            <!-- PAGE NUMBERS -->
+                            <div class="flex items-center gap-2">
+
+                                <% for(let i=1; i <=totalPages; i++){ %>
+
+                                    <a href="/user/products?page=<%= i %>
+      &search=<%= query.search || '' %>
+      &category=<%= query.category || '' %>
+      &sort=<%= query.sort || '' %>
+
+      <% if(Array.isArray(query.brand)){ %>
+        <% query.brand.forEach(b => { %>&brand=<%= b %><% }) %>
+      <% } else if(query.brand){ %>
+        &brand=<%= query.brand %>
+      <% } %>" class="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold
+
+      <%= currentPage === i
+          ? 'bg-primary text-white'
+          : 'border text-slate-600 hover:bg-white' %>">
+
+                                        <%= i %>
+
+                                    </a>
+
+                                    <% } %>
+
+                            </div>
+
+
+                            <!-- NEXT BUTTON -->
+                            <% if(currentPage < totalPages){ %>
+                                <a href="/user/products?page=<%= currentPage + 1 %>
+    &search=<%= query.search || '' %>
+    &category=<%= query.category || '' %>
+    &sort=<%= query.sort || '' %>
+
+    <% if(Array.isArray(query.brand)){ %>
+      <% query.brand.forEach(b => { %>&brand=<%= b %><% }) %>
+    <% } else if(query.brand){ %>
+      &brand=<%= query.brand %>
+    <% } %>" class="w-10 h-10 flex items-center justify-center rounded-xl border text-slate-600">
+
+                                    <span class="material-symbols-outlined">chevron_right</span>
+
+                                </a>
+                                <% } %>
+
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+const params = new URLSearchParams(window.location.search)
+
+if(params.get("search")){
+  Toastify({
+    text:"Search applied",
+    duration:2000
+  }).showToast()
+}
+</script>
+
+</body>
+</body>
+  
+</html>

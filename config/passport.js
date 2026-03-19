@@ -3,7 +3,8 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import mongoose from "mongoose";
-import User from "../models/User.js";
+import User from "../models/user/User.js";
+import addressSchema from "../models/user/Address.js";
 import dotenv from "dotenv";
 dotenv.config();
 

@@ -1,4 +1,5 @@
-import User from "../../models/User.js";
+import User from "../../models/user/User.js";
+import Address from "../../models/user/Address.js";
 import bcrypt from "bcryptjs";
 import { registerUser, loginUser, updateUserProfile, changeUserPassword, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultAddress, validateAndNormalizeAddress } from "../../services/user/authServices.js";
 import { sendOtpService, verifyOtpService, forgotPasswordService, resendOtpService, requestEmailChangeOtpService, verifyEmailChangeOtpService } from "../../services/user/authServices.js";
@@ -30,17 +31,17 @@ export const postSignup = async (req, res) => {
 
         // If service failed
         if (!result.success) {
-            return res.redirect(`/signup?msg=${encodeURIComponent(result.message)}`);
+            return res.redirect(`/auth/signup?msg=${encodeURIComponent(result.message)}`);
         }
 
         // OTP sent successfully
-        return res.redirect(`/verify-otp?email=${encodeURIComponent(result.email)}`);
+        return res.redirect(`/auth/verify-otp?email=${encodeURIComponent(result.email)}`);
 
     } catch (error) {
 
         console.error("Signup Controller Error:", error);
 
-        return res.redirect("/signup?msg=Something went wrong");
+        return res.redirect("/auth/signup?msg=Something went wrong");
 
     }
 };
@@ -60,7 +61,7 @@ export const postForgotPassword = async (req, res) => {
 
         // send the user to the OTP verification page and mark the flow as
         // a password reset by including a query parameter
-        res.redirect(`/verify-otp?email=${encodeURIComponent(email)}&context=reset`);
+        res.redirect(`/auth/verify-otp?email=${encodeURIComponent(email)}&context=reset`);
     } catch (err) {
         console.error("Forgot password controller error", err);
         res.status(500).send("Server error");
@@ -92,26 +93,26 @@ export const postLogin = async (req, res) => {
 
         // check empty fields
         if (!email || !password) {
-            return res.redirect("/login?msg=All fields required");
+            return res.redirect("/auth/login?msg=All fields required");
         }
 
         // find user
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.redirect("/login?msg=Invalid email or password");
+            return res.redirect("/auth/login?msg=Invalid email or password");
         }
 
         // compare password
         const match = await bcrypt.compare(password, user.password);
 
         if (!match) {
-            return res.redirect("/login?msg=Invalid email or password");
+            return res.redirect("/auth/login?msg=Invalid email or password");
         }
 
         // blocked user check
         if (user.isBlocked) {
-            return res.redirect("/login?msg=Your account is blocked");
+            return res.redirect("/auth/login?msg=Your account is blocked");
         }
 
         // create session
@@ -121,7 +122,7 @@ export const postLogin = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        res.redirect("/login?msg=Something went wrong");
+        res.redirect("/auth/login?msg=Something went wrong");
     }
 };
 
@@ -140,7 +141,7 @@ export const emailVerify = async (req, res) => {
         return res.send(result.message);
     }
 
-    res.redirect(`/verify-otp?email=${result.email}`);
+    res.redirect(`/auth/verify-otp?email=${result.email}`);
 };
 
 export const resendOtp = async (req, res) => {
@@ -158,18 +159,19 @@ export const resendOtp = async (req, res) => {
     if (!result.success) {
         return res.send(result.message);
     }
-    res.redirect(`/verify-otp?email=${encodeURIComponent(email)}${context ? `&context=${context}` : ''}`);
+    res.redirect(`/auth/verify-otp?email=${encodeURIComponent(email)}${context ? `&context=${context}` : ''}`);
 };
 
 export const getOtp = (req, res) => {
     res.render("user/otpVerification")
 }
-
 export const resetPassword = (req, res) => {
-    // render form with email from query string (set by OTP step)
-    res.render("user/resetPassword", { email: req.query.email });
+    res.render("user/resetPassword", {
+        email: req.query.email,
+        msg: req.query.msg || null,
+        icon: req.query.icon || null
+    });
 };
-
 export const resetSuccess = (req, res) => {
     res.render("user/resetSuccess");
 };
@@ -192,9 +194,9 @@ export const postResetPassword = async (req, res) => {
         await user.save();
 
         // redirect to login with flag so we can show a modal
-        res.redirect("/login?msg=Password updated successfully&icon=success");
+        res.redirect("/auth/login?msg=Password updated successfully&icon=success");
     } catch (err) {
-        return res.redirect("/login?msg=Password update failed&icon=error");
+        return res.redirect("/auth/login?msg=Password update failed&icon=error");
     }
 };
 
@@ -208,31 +210,36 @@ export const otpSignup = async (req, res) => {
         return res.send(result.message);
     }
 
-    res.redirect(`/verify-otp?email=${result.email}`);
+    res.redirect(`/auth/verify-otp?email=${result.email}`);
 };
 
 /* POST Verify OTP */
 export const postVerifyOtp = async (req, res) => {
+
     const { email, otp, context } = req.body;
+
     const result = await verifyOtpService({ email, otp, context });
 
     if (!result.success) {
-        return res.render("user/otpVerification",{
-            email,
-            context,
-            error:result.message
+        return res.json({
+            success: false,
+            message: result.message
         });
     }
 
-    // if we arrived with a reset context, send the user to the password form
     if (context === "reset") {
-        return res.redirect(`/reset-password?email=${encodeURIComponent(email)}`);
+        return res.json({
+            success: true,
+            redirect: `/auth/reset-password?email=${encodeURIComponent(email)}`
+        });
     }
 
-    // otherwise treat as regular signup verification
-    res.redirect("/login");
-};
+    return res.json({
+        success: true,
+        redirect: "/auth/login"
+    });
 
+};
 
 export const loadVerifyOtp = (req, res) => {
     res.render("user/otpVerification", {
@@ -245,7 +252,7 @@ export const loadVerifyOtp = (req, res) => {
 export const getProfile = async (req, res) => {
     try {
         if (!req.session.user) {
-            return res.redirect('/login');
+            return res.redirect('/auth/login');
         }
         const user = await User.findById(req.session.user).lean();
         if (!user) {
@@ -308,7 +315,7 @@ export const postChangePassword = async (req, res) => {
 
 export const getAddress = async (req, res) => {
     try {
-        if (!req.session.user) return res.redirect('/login');
+        if (!req.session.user) return res.redirect('/auth/login');
         const user = await User.findById(req.session.user).lean();
         if (!user) return res.status(404).send('User not found');
         res.render("user/address", { user, currentPath: req.path });
@@ -403,7 +410,7 @@ export const patchDefaultAddress = async (req, res) => {
 };
 export const geteditProfile = async (req, res) => {
     try {
-        if (!req.session.user) return res.redirect('/login');
+        if (!req.session.user) return res.redirect('/auth/login');
         const user = await User.findById(req.session.user).lean();
         if (!user) return res.status(404).send('User not found');
         const msg = req.query.error || req.query.success || '';
@@ -417,7 +424,7 @@ export const geteditProfile = async (req, res) => {
 
 export const postEditProfile = async (req, res) => {
     try {
-        if (!req.session.user) return res.redirect('/login');
+        if (!req.session.user) return res.redirect('/auth/login');
         const result = await updateUserProfile(req.session.user, req.body);
         if (!result.success) {
             return res.redirect('/editProfile?error=' + encodeURIComponent(result.message));

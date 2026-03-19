@@ -1,5 +1,6 @@
-import admin from '../../models/admin.js';
-import User from '../../models/User.js';
+import admin from '../../models/admin/admin.js';
+import User from '../../models/user/User.js';
+import Address from '../../models/user/Address.js';
 import bcrypt from 'bcryptjs';
 import { adminLogin} from '../../services/admin/adminServices.js';
 import {
@@ -12,34 +13,38 @@ import {
 
 
 export const getAdminLogin = (req, res) => {
-    res.render('admin/adminLogin', { title: 'Admin Login' });
+    res.render('admin/adminLogin', { title: 'Admin Login', error:null});
 }
 export const postAdminLogin = async (req, res) => {
- try {
+  try {
+
     const { email, password } = req.body;
 
     const result = await adminLogin({ email, password });
-   console.log(result);
+
     if (!result.success) {
-      return res.render('admin/adminLogin', { title: 'Admin Login', error: result.message });
+      return res.render("admin/adminLogin", {
+        title: "Admin Login",
+        error: result.message
+      });
     }
 
-    //  Create session
+    // Create admin session
     req.session.admin = {
       email,
-      role: "admin",
+      role: "admin"
     };
 
-    return res.redirect('/admin/dashboard');
-
-      
-    
-    
+    return res.redirect("/admin/dashboard");
 
   } catch (error) {
-    return res.status(500).json({ message: "Server error" });
+    console.log(error);
+    return res.status(500).render("admin/adminLogin", {
+      title: "Admin Login",
+      error: "Server error"
+    });
   }
-}
+};
 
 export const getAdminDashboard = (req, res) => {
     res.render('admin/adminDashboard', { title: 'Admin Dashboard' });
@@ -65,7 +70,7 @@ export const getAdminManagement = async (req, res) => {
 
         const pageQuery = parseInt(req.query.page, 10);
         const limitQuery = parseInt(req.query.limit, 10);
-
+        
         const page = Number.isFinite(pageQuery) && pageQuery > 0 ? pageQuery : 1;
         const limit = Number.isFinite(limitQuery) && limitQuery > 0 ? limitQuery : 4;
         const search = rawSearch.trim();
@@ -182,8 +187,18 @@ export const postEdit = async (req, res) => {
 export const adminLogout = (req, res) => {
     req.session.destroy((error) => {
         if (error) console.log(error);
-        res.redirect('/admin/login');
+        res.redirect('/admin/auth/login');
     });
 };
 
 
+export const getProductManagement = async (req, res) => {
+    try {
+        res.render("admin/product/adminProductManagement",{
+            categories
+        });
+    } catch (error) {
+        console.log(error);
+        res.redirect("/pageNotFound");
+    }
+};

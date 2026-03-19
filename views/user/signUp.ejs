@@ -83,7 +83,7 @@ body {
 <div class="signup-card">
     <h4 class="text-center mb-3">Create your Account</h4>
 
-    <form id="signupForm" method="post" action="/signup">
+    <form id="signupForm" method="post" action="/auth/signup">
 
         <!-- Full Name -->
         <div class="mb-3">
@@ -123,13 +123,13 @@ body {
         </div>
 
         <!-- Google Signup Button -->
-       <button type="button" onclick="window.location.href='/google'" class="btn google-btn w-100 mb-3" aria-label="Sign up with Google">
+       <button type="button" onclick="window.location.href='/auth/google'" class="btn google-btn w-100 mb-3" aria-label="Sign up with Google">
                 <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" width="18" class="me-2">
                 Sign up with Google
             </button>
 
         <div class="text-center mt-3">
-            <small>Already have an account? <a href="/login">Login</a></small>
+            <small>Already have an account? <a href="/auth/login">Login</a></small>
         </div>
 
     </form>

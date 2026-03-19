@@ -12,129 +12,36 @@
   <!-- Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Chart JS -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Admin Premium Styles -->
+  <link rel="stylesheet" href="/admin/css/admin-style.css">
 
   <style>
-    :root {
-      --primary: #50C878;
-      --bg-dark: #0A1A14;
-      --surface-dark: #11261E;
-      --border-dark: #1e3d31;
+    /* Specific overrides for Dashboard charts and mobile layout */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      padding: 40px;
+      transition: var(--transition);
     }
 
-    body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg-dark);
-      color: white;
-    }
-
-    /* Sidebar */
     .sidebar {
-      width: 260px;
+      width: var(--sidebar-w);
       height: 100vh;
       position: fixed;
       background: var(--bg-dark);
-      border-right: 1px solid var(--border-dark);
+      border-right: 1px solid var(--border);
     }
 
-    .sidebar a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 20px;
-      text-decoration: none;
-      color: #9fb3aa;
-      transition: .3s;
-    }
-
-    .sidebar a:hover {
-      color: var(--primary);
-      background: rgba(80, 200, 120, .05);
-    }
-
-    .sidebar .active {
-      background: rgba(80, 200, 120, .1);
-      color: var(--primary);
-      border-radius: 10px;
-    }
-
-    /* Main */
-    .main-content {
-      margin-left: 260px;
-      padding: 40px;
-    }
-
-    /* Glass */
-    .glass-card {
-      background: rgba(17, 38, 30, .6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(80, 200, 120, .2);
-      border-radius: 16px;
-    }
-
-    /* Table */
-    .custom-table th,
-    .custom-table td {
-      background: transparent !important;
-      border-color: var(--border-dark);
-      color: white;
-    }
-
-    .custom-table thead {
-      color: #6c757d;
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-
-    .progress {
-      height: 6px;
-      background: #1b3a2d;
-    }
-
-    .progress-bar {
-      background: var(--primary);
-    }
-
-    /* Responsive Styles */
     @media (max-width: 768px) {
       .sidebar {
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
         z-index: 1050;
       }
-
       .sidebar.open {
         transform: translateX(0);
       }
-
       .main-content {
         margin-left: 0;
-        padding: 15px;
-      }
-
-      .mobile-nav-toggle {
-        background: transparent;
-        border: none;
-        color: white;
-        padding: 0;
-      }
-
-      .glass-card {
-        overflow-x: auto;
-      }
-
-      .custom-table {
-        min-width: 500px;
-      }
-
-      .d-flex.justify-content-between.align-items-center.mb-4 {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 15px;
+        padding: 20px;
       }
     }
   </style>
@@ -143,22 +50,32 @@
 <body>
 
   <!-- Sidebar -->
-  <div class="sidebar p-3 d-flex flex-column">
-    <h4 class="fw-bold mb-4">
-      <span class="material-icons-outlined">diamond</span>
-      Starzo
-    </h4>
+  <div class="sidebar reveal-init">
+    <div class="p-4 mb-4 font-heading">
+      <div class="logo-box">
+        <span class="material-symbols-outlined text-primary text-2xl font-bold">smartphone</span>
+        <span class="logo-text">Starzo</span>
+      </div>
+    </div>
 
-    <a href="#" class="active"><span class="material-icons-outlined">dashboard</span>Dashboard</a>
-    <a href="#"><span class="material-icons-outlined">shopping_cart</span>Orders</a>
-    <a href="#"><span class="material-icons-outlined">inventory_2</span>Products</a>
-    <a href="#"><span class="material-icons-outlined">category</span>Categories</a>
-    <a href="#"><span class="material-icons-outlined">confirmation_number</span>Coupons</a>
-    <a href="/admin/management"><span class="material-icons-outlined">people</span>Customers</a>
+    <nav class="flex-column px-2">
+      <a href="/admin/dashboard" class="sidebar-link active">
+        <span class="material-symbols-outlined">dashboard</span>Dashboard
+      </a>
+      <a href="/admin/product/productManagement" class="sidebar-link">
+        <span class="material-symbols-outlined">inventory_2</span>Products
+      </a>
+      <a href="/admin/category/categories" class="sidebar-link">
+        <span class="material-symbols-outlined">category</span>Categories
+      </a>
+      <a href="/admin/management" class="sidebar-link">
+        <span class="material-symbols-outlined">people</span>Customers
+      </a>
+    </nav>
 
-    <div class="mt-auto pt-3 border-top border-secondary">
-      <small>Mohammad Anshad</small><br>
-      <small class="text-secondary">Admin Account</small>
+    <div class="mt-auto pt-3 border-top border-light">
+      <small class="text-dim">Mohammad Anshad</small><br>
+      <small class="text-muted">Admin Account</small>
     </div>
   </div>
 
@@ -166,50 +83,50 @@
   <div class="main-content">
 
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 stagger-1">
       <div class="d-flex align-items-center gap-3">
-        <button class="mobile-nav-toggle d-md-none"
+        <button class="mobile-nav-toggle d-md-none border-0 bg-transparent text-main"
           onclick="document.querySelector('.sidebar').classList.toggle('open')">
           <span class="material-icons-outlined">menu</span>
         </button>
         <div>
           <h3 class="fw-bold mb-0">Admin Dashboard</h3>
-          <small class="text-secondary">Welcome back, here's what's happening today.</small>
+          <small class="text-dim">Welcome back, here's what's happening today.</small>
         </div>
       </div>
 
-      <button class="btn btn-success d-flex align-items-center gap-2">
+      <button class="btn-premium">
         <span class="material-icons-outlined">assessment</span>
         View Sales Report
       </button>
     </div>
 
-    <!-- Stats -->
-    <div class="row g-4 mb-4">
+
+    <div class="row g-4 mb-4 stagger-2">
       <div class="col-md-3">
-        <div class="glass-card p-4">
-          <small class="text-secondary">Total Revenue</small>
+        <div class="admin-card p-4">
+          <small class="text-muted">Total Revenue</small>
           <h4 class="fw-bold mt-2">$45,231.89</h4>
           <small class="text-success">+20% this month</small>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="glass-card p-4">
-          <small class="text-secondary">Total Orders</small>
+        <div class="admin-card p-4">
+          <small class="text-muted">Total Orders</small>
           <h4 class="fw-bold mt-2">2,350</h4>
           <small class="text-success">+15%</small>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="glass-card p-4">
-          <small class="text-secondary">Pending Orders</small>
+        <div class="admin-card p-4">
+          <small class="text-muted">Pending Orders</small>
           <h4 class="fw-bold mt-2">48</h4>
           <small class="text-warning">Needs Attention</small>
         </div>
       </div>
       <div class="col-md-3">
-        <div class="glass-card p-4">
-          <small class="text-secondary">Active Users</small>
+        <div class="admin-card p-4">
+          <small class="text-muted">Active Users</small>
           <h4 class="fw-bold mt-2">12,234</h4>
           <small class="text-success">+7%</small>
         </div>
@@ -217,9 +134,9 @@
     </div>
 
     <!-- Revenue Chart -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 stagger-3">
       <div class="col-lg-8">
-        <div class="glass-card p-4">
+        <div class="admin-card p-4">
           <h5 class="fw-bold mb-3">Revenue Overview</h5>
           <canvas id="revenueChart" height="120"></canvas>
         </div>
@@ -227,24 +144,24 @@
 
       <!-- Recent Sales -->
       <div class="col-lg-4">
-        <div class="glass-card p-4">
+        <div class="admin-card p-4">
           <h5 class="fw-bold mb-3">Recent Sales</h5>
 
           <div class="d-flex justify-content-between mb-3">
             <span>Olivia Martin</span>
-            <strong>$1,999</strong>
+            <strong class="text-main">$1,999</strong>
           </div>
           <div class="d-flex justify-content-between mb-3">
             <span>Jackson Lee</span>
-            <strong>$39</strong>
+            <strong class="text-main">$39</strong>
           </div>
           <div class="d-flex justify-content-between mb-3">
             <span>Isabella Nguyen</span>
-            <strong>$299</strong>
+            <strong class="text-main">$299</strong>
           </div>
           <div class="d-flex justify-content-between">
             <span>William Chen</span>
-            <strong>$1,999</strong>
+            <strong class="text-main">$1,999</strong>
           </div>
 
         </div>
@@ -254,65 +171,67 @@
     <!-- Products + Categories -->
     <div class="row g-4">
       <div class="col-lg-8">
-        <div class="glass-card p-4">
+        <div class="admin-card p-4">
           <h5 class="fw-bold mb-3">Top Trending Products</h5>
 
-          <table class="table custom-table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Category</th>
-                <th class="text-end">Sales</th>
-                <th class="text-end">Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Galaxy S23 Ultra</td>
-                <td>Samsung</td>
-                <td class="text-end">342</td>
-                <td class="text-end">$1,995,390</td>
-              </tr>
-              <tr>
-                <td>iPhone 17 Pro</td>
-                <td>Apple</td>
-                <td class="text-end">288</td>
-                <td class="text-end">$999,988</td>
-              </tr>
-              <tr>
-                <td>Redmi Note 13 Pro</td>
-                <td>Xiaomi</td>
-                <td class="text-end">245</td>
-                <td class="text-end">$1,290,999</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="premium-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th class="text-end">Sales</th>
+                  <th class="text-end">Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Galaxy S23 Ultra</td>
+                  <td>Samsung</td>
+                  <td class="text-end">342</td>
+                  <td class="text-end">$1,995,390</td>
+                </tr>
+                <tr>
+                  <td>iPhone 17 Pro</td>
+                  <td>Apple</td>
+                  <td class="text-end">288</td>
+                  <td class="text-end">$999,988</td>
+                </tr>
+                <tr>
+                  <td>Redmi Note 13 Pro</td>
+                  <td>Xiaomi</td>
+                  <td class="text-end">245</td>
+                  <td class="text-end">$1,290,999</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- Categories -->
       <div class="col-lg-4">
-        <div class="glass-card p-4">
+        <div class="admin-card p-4">
           <h5 class="fw-bold mb-3">Top Categories</h5>
 
-          <p class="mb-1">Samsung 45%</p>
-          <div class="progress mb-3">
-            <div class="progress-bar" style="width:45%"></div>
+          <p class="mb-1 text-dim">Samsung 45%</p>
+          <div class="progress mb-3" style="background: var(--border-light); height: 8px;">
+            <div class="progress-bar" style="width:45%; background: var(--primary);"></div>
           </div>
 
-          <p class="mb-1">Xiaomi 28%</p>
-          <div class="progress mb-3">
-            <div class="progress-bar" style="width:28%"></div>
+          <p class="mb-1 text-dim">Xiaomi 28%</p>
+          <div class="progress mb-3" style="background: rgba(238, 238, 238, 0.05); height: 8px;">
+            <div class="progress-bar" style="width:28%; background: var(--primary);"></div>
           </div>
 
-          <p class="mb-1">Apple 15%</p>
-          <div class="progress mb-3">
-            <div class="progress-bar" style="width:15%"></div>
+          <p class="mb-1 text-dim">Apple 15%</p>
+          <div class="progress mb-3" style="background: rgba(238, 238, 238, 0.05); height: 8px;">
+            <div class="progress-bar" style="width:15%; background: var(--primary);"></div>
           </div>
 
-          <p class="mb-1">Others 12%</p>
-          <div class="progress">
-            <div class="progress-bar" style="width:12%"></div>
+          <p class="mb-1 text-dim">Others 12%</p>
+          <div class="progress" style="background: rgba(238, 238, 238, 0.05); height: 8px;">
+            <div class="progress-bar" style="width:12%; background: var(--primary);"></div>
           </div>
 
         </div>
@@ -340,8 +259,8 @@
       options: {
         plugins: { legend: { display: false } },
         scales: {
-          x: { ticks: { color: '#aaa' } },
-          y: { ticks: { color: '#aaa' } }
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,0.02)' } },
+          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,0.02)' } }
         }
       }
     });
@@ -353,10 +272,10 @@
     <script>
       Swal.fire({
         title: "<%=msg%>",
-        text: "That thing is still around?",
+        text: "Success!",
         icon: "<%=icon%>",
-        background: '#102a0f',
-        color: '#DADACE',
+        background: '#ffffff',
+        color: '#0f172a',
       });
 
       const url = window.location.protocol + "//" + window.location.host + window.location.pathname;

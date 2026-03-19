@@ -1,29 +1,38 @@
-import admin from "../../models/admin.js";
+import admin from "../../models/admin/admin.js";
+import Address from "../../models/user/Address.js";
 import bcrypt from 'bcryptjs';
 import dotenv from "dotenv";
 dotenv.config();
-import User from "../../models/User.js";
+import User from "../../models/user/User.js";
 
 
 // services/adminService.js
 
 export const adminLogin = async ({ email, password }) => {
+    console.log('Admin')
+    const admin = await User.findOne({ email, isAdmin: true });
+    console.log(admin)
 
-  if (
-    email === process.env.ADMIN_EMAIL &&
-    password === process.env.ADMIN_PASSWORD
-  ) {
-    return { success: true };
-  }
+    if (admin) {
+        const isMatch = await bcrypt.compare(password, admin.password);
+        console.log(isMatch)
 
-  return {
-    success: false,
-    message: "Invalid credentials",
-  };
+        if (isMatch) {
+            return {
+                success: true,
+                message: "Login Successfully"
+            };
+        }
+    }
+
+    return {
+        success: false,
+        message: "Invalid credentials"
+    };
 };
 export const adminLogout = (req, res) => {
     req.session.destroy(err => {
-        if (err){
+        if (err) {
             console.error('Logout error:', err);
             return res.status(500).json({ message: 'Server error' });
         }
@@ -67,10 +76,11 @@ export const getDashboardUsersService = async (search, page, limit, status) => {
         const skip = (safePage - 1) * safeLimit;
         const normalizedSearch = String(search || '').trim();
 
-        const andFilters = [];
+        const andFilters = [{ isAdmin: false }];
 
         if (normalizedSearch) {
             const escapedSearch = normalizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
             andFilters.push({
                 $or: [
                     { name: { $regex: escapedSearch, $options: 'i' } },
@@ -86,29 +96,34 @@ export const getDashboardUsersService = async (search, page, limit, status) => {
                     { isBlocked: true }
                 ]
             });
-        
+
         } else if (status === "active") {
             andFilters.push({ status: { $ne: 0 } });
             andFilters.push({ isBlocked: { $ne: true } });
         }
 
-        const query = andFilters.length ? { $and: andFilters } : {};
+        const query = { $and: andFilters };
 
         const totalUsers = await User.countDocuments(query);
         const totalPages = Math.ceil(totalUsers / safeLimit);
+
 
         const users = await User.find(query)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(safeLimit);
 
+            console.log(users)
+
         return {
             users,
             totalUsers,
             totalPages
         };
+
     } catch (err) {
         console.log(err);
+
         return {
             users: [],
             totalUsers: 0,

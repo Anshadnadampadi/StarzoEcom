@@ -1,4 +1,5 @@
-import User from "../../models/User.js";
+import User from "../../models/user/User.js";
+import Address from "../../models/user/Address.js";
 import bcrypt from "bcryptjs";
 import { transporter } from "../../config/mailer.js";
 import dotenv from "dotenv"
@@ -87,7 +88,7 @@ export const sendOtpService = async ({ name, email, password }) => {
      
         const otp = generateOTP();
 
-        const otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+        const otpExpiry = Date.now() + 1 * 60 * 1000; // 1 minutes
         
 
         let user;
@@ -194,7 +195,7 @@ export const forgotPasswordService=async(email)=>{
         }
     const otp=generateOTP();
     user.otp=otp;
-    user.otpExpiry=Date.now()+5*60*1000;
+    user.otpExpiry=Date.now()+1*60*1000;
     await user.save();
     await transporter.sendMail({
         from: process.env.EMAIL_USER,
@@ -350,33 +351,50 @@ export const validateAndNormalizeAddress = async (rawAddress = {}) => {
 };
 
 // --- address management helpers ---
+
 export const addUserAddress = async (userId, addr) => {
     try {
+
         const user = await User.findById(userId);
-        if (!user) return { success: false, message: 'User not found' };
+        if (!user) {
+            return { success: false, message: 'User not found' };
+        }
 
         const validation = await validateAndNormalizeAddress(addr);
         if (!validation.success) return validation;
+
         const validatedAddress = validation.address;
 
+        // unset previous default addresses
         if (validatedAddress.default) {
-            // unset previous defaults
-            user.addresses.forEach(a => a.default = false);
+
+            const userAddresses = await Address.find({ _id: { $in: user.addresses } });
+
+            for (let address of userAddresses) {
+                address.default = false;
+                await address.save();
+            }
         }
-        user.addresses.push(validatedAddress);
+
+        // create new address document
+        const newAddress = new Address(validatedAddress);
+        await newAddress.save();
+
+        // push ObjectId into user
+        user.addresses.push(newAddress._id);
+
         await user.save();
-        // return the newly added address (last item)
-        const added = user.addresses[user.addresses.length - 1];
+
         return {
             success: true,
-            address: added
+            address: newAddress
         };
+
     } catch (error) {
         console.log('Add address error:', error);
         return { success: false, message: 'Failed to add address' };
     }
 };
-
 export const updateUserAddress = async (userId, addrId, addr) => {
     try {
         const user = await User.findById(userId);

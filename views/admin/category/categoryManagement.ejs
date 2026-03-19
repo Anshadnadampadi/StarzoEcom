@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Starzo - Category Management</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    
+    <!-- Admin Premium Styles -->
+    <link rel="stylesheet" href="/admin/css/admin-style.css">
+
+    <style>
+        /* Keeping some utility overrides for consistency with the new theme */
+        .glass-card {
+            background: var(--bg-surface) !important;
+            border-color: var(--border) !important;
+        }
+        .error-msg { color: var(--danger); font-size: 0.75rem; margin-top: 4px; display: none; text-transform: uppercase; font-weight: bold; letter-spacing: 0.05em; }
+        .input-error { border-color: var(--danger) !important; }
+        
+        /* Soft Delete Styling */
+        .status-unlisted { opacity: 0.5; filter: grayscale(0.8); }
+
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            z-index: 1000;
+        }
+        .modal-active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    
+    <div class="relative z-10 flex min-h-screen flex-col lg:flex-row">
+        <!-- Sidebar -->
+        <aside class="sidebar reveal-init">
+            <div class="p-8 font-heading">
+                <div class="logo-box">
+                    <span class="material-symbols-outlined text-primary text-2xl font-bold">smartphone</span>
+                    <span class="logo-text">Starzo</span>
+                </div>
+            </div>
+            
+            <nav class="flex-1 px-6 space-y-2 mt-4">
+                <a href="/admin/dashboard" class="sidebar-link">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/admin/category/categories" class="sidebar-link active">
+                    <span class="material-symbols-outlined">category</span>
+                    <span class="font-bold">Categories</span>
+                </a>
+                <a href="/admin/product/productManagement" class="sidebar-link">
+                    <span class="material-symbols-outlined">inventory_2</span>
+                    <span>Products</span>
+                </a>
+                <a href="/admin/management" class="sidebar-link">
+                    <span class="material-symbols-outlined">people</span>
+                    <span>Customers</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Mobile Header (Hidden on Desktop) -->
+        <header class="lg:hidden p-4 bg-white border-b border-slate-100 flex justify-between items-center">
+             <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">smartphone</span>
+                <span class="font-black text-primary uppercase italic">Starzo</span>
+            </div>
+            <button class="text-primary"><span class="material-symbols-outlined">menu</span></button>
+        </header>
+
+        <main class="flex-1 p-4 md:p-8 lg:p-12">
+            <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-8 lg:mb-10 gap-6 stagger-1">
+                <div>
+                    <div class="flex items-center gap-2 text-primary/60 text-[10px] uppercase font-bold tracking-[0.2em] mb-2">
+                        <span>Admin Portal</span>
+                        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+                        <span class="text-primary">Inventory</span>
+                    </div>
+                    <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-slate-900">Category Management</h1>
+                </div>
+
+<div class="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+    
+    <div class="relative w-full sm:w-64 md:w-80 flex-grow sm:flex-grow-0">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40">search</span>
+        <input type="text" id="searchInput" placeholder="Search categories..." value="<%= searchQuery %>"
+               class="w-full bg-slate-100 border-none rounded-2xl py-3 pl-12 pr-10 text-sm focus:ring-2 focus:ring-primary/20 transition-all">
+        <% if (searchQuery) { %>
+            <button onclick="window.location.href='/admin/categories'" 
+                    class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary text-lg">
+                close
+            </button>
+        <% } %>
+    </div>
+
+    <button onclick="performSearch()"
+            class="hidden md:flex bg-slate-100 text-slate-600 px-5 py-3 rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest text-[10px] font-bold whitespace-nowrap">
+        Search
+    </button>
+
+    <button onclick="openAddModal()" 
+            class="w-full sm:w-auto flex-shrink-0 bg-slate-900 hover:bg-black text-white font-black px-6 py-3 rounded-2xl transition-all shadow-lg flex justify-center items-center gap-2 uppercase tracking-[0.1em] text-xs whitespace-nowrap">
+        <span class="material-symbols-outlined text-lg">add</span> 
+        Add New
+    </button>
+</div>
+            </div>
+
+            <div class="admin-card glass-card border rounded-3xl lg:rounded-[2.5rem] p-4 md:p-8 relative overflow-hidden stagger-2">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th
+                                    class="px-4 py-6 text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                    Name</th>
+                                <th
+                                    class="px-4 py-6 text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                    Stats</th>
+                                <th
+                                    class="px-4 py-6 text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                    Display Order</th>
+                                <th
+                                    class="px-4 py-6 text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                    Status</th>
+                                <th
+                                    class="px-4 py-6 text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-[0.2em] text-right">
+                                    Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <% categories.forEach(cat=> { %>
+                                <tr
+                                    class="<%= cat.isUnlisted ? 'status-unlisted' : '' %> hover:bg-slate-50 transition-colors group border-b border-slate-50">
+                                    <td class="px-4 py-6">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                                <span class="material-symbols-outlined text-primary text-xl">
+                                                    <%= cat.icon || 'category' %>
+                                                </span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-bold text-slate-900">
+                                                    <%= cat.name %>
+                                                </span>
+                                                <span
+                                                    class="text-[10px] text-slate-400 font-mono uppercase tracking-tighter">
+                                                    <%= cat.slug %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-4 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-bold text-slate-900">0 Products</span>
+                                            <span class="text-[10px] text-slate-400 uppercase">Total Items</span>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-4 py-6">
+                                        <span
+                                            class="px-3 py-1 rounded-lg bg-slate-100 text-xs font-mono text-slate-600">
+                                            #<%= cat.displayOrder || 0 %>
+                                        </span>
+                                    </td>
+
+                                    <td class="px-4 py-6">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="w-1.5 h-1.5 rounded-full <%= cat.isUnlisted ? 'bg-slate-300' : 'bg-primary' %>">
+                                            </div>
+                                            <span
+                                                class="text-[10px] font-bold uppercase tracking-widest <%= cat.isUnlisted ? 'text-slate-400' : 'text-primary' %>">
+                                                <%= cat.isUnlisted ? 'Hidden' : 'Active' %>
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-4 py-6 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <button onclick="openEditModal('<%= cat._id %>')"
+                                                class="p-2 bg-slate-100 hover:bg-primary/10 text-slate-400 hover:text-primary rounded-xl transition-all border border-slate-200">
+                                                <span class="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                            <button onclick="promptSoftDelete('<%= cat._id %>', '<%= cat.isUnlisted %>')"
+                                                class="p-2 bg-slate-100 hover:bg-<%= cat.isUnlisted ? 'primary' : 'red' %>-500/10 text-slate-400 hover:text-<%= cat.isUnlisted ? 'primary' : 'red' %>-600 rounded-xl transition-all border border-slate-200">
+                                                <span class="material-symbols-outlined text-sm"><%= cat.isUnlisted ? 'visibility' : 'visibility_off' %></span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex items-center justify-between mt-8 px-2 border-t border-slate-100 pt-6">
+                    <p class="text-[10px] font-bold text-primary/40 uppercase tracking-widest">
+                        Showing Page <%= currentPage %> of <%= totalPages %>
+                    </p>
+
+                    <div class="flex gap-2">
+                        <% if (currentPage > 1) { %>
+                            <a href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>"
+                                class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center hover:bg-primary/10 hover:text-primary text-slate-500 transition-all">
+                                <span class="material-symbols-outlined text-sm">chevron_left</span>
+                            </a>
+                            <% } %>
+
+                                <% for(let i=1; i <=totalPages; i++) { %>
+                                    <a href="?page=<%= i %>&search=<%= searchQuery %>"
+                                        class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold transition-all border 
+                                <%= i === currentPage ? 'bg-primary text-white border-primary shadow-lg' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-primary/50' %>">
+                                        <%= i %>
+                                    </a>
+                                    <% } %>
+
+                                        <% if (currentPage < totalPages) { %>
+                                            <a href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>"
+                                                class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center hover:bg-primary/10 hover:text-primary text-slate-500 transition-all">
+                                                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                                            </a>
+                                            <% } %>
+                    </div>
+                </div>
+
+
+            </div>
+
+
+        </main>
+    </div>
+
+    <div id="addModal" class="modal-overlay fixed inset-0 items-center justify-center p-4">
+        <div
+            class="admin-card glass-card w-full max-w-4xl rounded-3xl lg:rounded-[2.5rem] p-6 lg:p-10 relative overflow-y-auto max-h-[90vh]">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div class="flex flex-col">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Admin Portal >
+                        Inventory</div>
+                    <h2 id="modalTitle" class="text-2xl lg:text-3xl font-bold text-slate-900">Add New Category</h2>
+                </div>
+                <div class="flex gap-3 w-full md:w-auto">
+                    <button onclick="closeModal('addModal')"
+                        class="flex-1 md:flex-none px-4 lg:px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">Discard</button>
+                    <button id="saveBtn" onclick="saveCategory()"
+                        class="flex-1 md:flex-none bg-primary text-white font-black px-6 lg:px-8 py-3 rounded-xl uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-lg">
+                        <span class="material-symbols-outlined text-lg">check_circle</span>
+                        <span id="saveBtnText">Create Category</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+                <div class="space-y-5 lg:space-y-6">
+                    <div class="flex items-center gap-2 text-primary">
+                        <span class="material-symbols-outlined text-xl">fingerprint</span>
+                        <h3 class="font-bold uppercase tracking-widest text-xs">Category Identity</h3>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Category
+                            Name</label>
+                        <input id="catName" type="text" class="w-full input-glass rounded-xl p-4 text-sm"
+                            placeholder="e.g. Gaming Phones">
+                        <p id="catNameError" class="error-msg">Min 3 characters required</p>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">URL Slug</label>
+                        <input id="catSlug" type="text" class="w-full input-glass rounded-xl p-4 text-sm"
+                            placeholder="gaming-phones">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Category Icon
+                            (Material Name)</label>
+                        <input id="catIcon" type="text" class="w-full input-glass rounded-xl p-4 text-sm"
+                            placeholder="rocket_launch">
+                    </div>
+                </div>
+
+                <div class="space-y-5 lg:space-y-6">
+                    <div class="flex items-center gap-2 text-primary">
+                        <span class="material-symbols-outlined text-xl">hub</span>
+                        <h3 class="font-bold uppercase tracking-widest text-xs">Hierarchy & SEO</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Display
+                                Order</label>
+                            <input id="catOrder" type="number" class="w-full input-glass rounded-xl p-4 text-sm"
+                                value="5">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Items</label>
+                            <input id="catItemsCount" type="number" class="w-full input-glass rounded-xl p-4 text-sm"
+                                value="0">
+                        </div>
+                    </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Meta Description
+                                (SEO)</label>
+                            <textarea id="catMeta" rows="3" class="w-full input-glass rounded-xl p-4 text-sm resize-none"
+                                placeholder="SEO description..."></textarea>
+                        </div>
+                    <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 hidden md:flex gap-4">
+                        <span class="material-symbols-outlined text-primary">info</span>
+                        <p class="text-[10px] text-slate-500 leading-relaxed uppercase font-bold">
+                            Unlisting a category hides it from the public shop without deleting your associated product
+                            data.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="unlistModal" class="modal-overlay fixed inset-0 items-center justify-center p-4">
+        <div class="admin-card glass-card max-w-sm w-full rounded-[2rem] p-8 text-center border-slate-100">
+            <div id="unlistIconBox"
+                class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span id="unlistIcon" class="material-symbols-outlined text-primary text-3xl">visibility_off</span>
+            </div>
+            <h3 id="unlistTitle" class="text-xl font-bold text-slate-900 mb-2">Unlist Category?</h3>
+            <p id="unlistDesc" class="text-sm text-slate-500 mb-8">This category will be hidden from the storefront but
+                remain in your inventory.</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('unlistModal')"
+                    class="flex-1 py-3 text-xs font-bold uppercase tracking-widest text-slate-400">Cancel</button>
+                <button id="confirmUnlist"
+                    class="flex-1 bg-slate-900 hover:bg-black text-white font-black py-3 rounded-xl uppercase text-xs transition-all shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+   
+    <script>
+        let editId = null;
+        let actionId = null;
+
+        // --- Toast System ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return; // Safety check
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-card'; // Matches the CSS above
+
+            const icon = type === 'success' ? 'check_circle' : 'error';
+            const iconColor = type === 'success' ? 'text-emerald-400' : 'text-red-400';
+
+            toast.innerHTML = `
+        <span class="material-symbols-outlined ${iconColor}">${icon}</span>
+        <span class="text-xs font-bold uppercase tracking-widest text-white">${message}</span>
+    `;
+
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('toast-active'), 10);
+
+            // Remove toast
+            setTimeout(() => {
+                toast.classList.remove('toast-active');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+        // --- Modal Controls ---
+        function openModal(id) { document.getElementById(id).classList.add('modal-active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
+
+        function openAddModal() {
+            editId = null;
+            resetForm();
+            document.getElementById('modalTitle').innerText = "Add New Category";
+            document.getElementById('saveBtnText').innerText = "Create Category";
+            openModal('addModal');
+        }
+
+        // --- Fetch Data for Edit ---
+        async function openEditModal(id) {
+            editId = id;
+            try {
+                const response = await fetch(`/admin/categories/api/${id}`);
+                const cat = await response.json();
+
+                document.getElementById('catName').value = cat.name;
+                document.getElementById('catSlug').value = cat.slug;
+                document.getElementById('catOrder').value = cat.displayOrder || 1;
+                document.getElementById('catIcon').value = cat.icon || '';
+                document.getElementById('catMeta').value = cat.metaDescription || '';
+
+                document.getElementById('modalTitle').innerText = "Edit Category";
+                document.getElementById('saveBtnText').innerText = "Update Category";
+                openModal('addModal');
+            } catch (error) {
+                showToast("Could not load category", "error");
+            }
+        }
+
+        // --- Save (Add/Update) ---
+        async function saveCategory() {
+            const nameEl = document.getElementById('catName');
+            const nameVal = nameEl.value.trim();
+
+            if (nameVal.length < 3) {
+                nameEl.classList.add('input-error');
+                document.getElementById('catNameError').style.display = 'block';
+                return;
+            }
+
+            // Map your HTML IDs to your Schema Keys exactly
+            const categoryData = {
+                name: nameVal,
+                slug: document.getElementById('catSlug').value.trim() || nameVal.toLowerCase().replace(/\s+/g, '-'),
+                icon: document.getElementById('catIcon').value || 'category',
+                displayOrder: Number(document.getElementById('catOrder').value) || 0, // Convert to Number
+                metaDescription: document.getElementById('catMeta').value,
+
+                isUnlisted: false
+            };
+
+            const url = editId ? `/admin/categories/edit/${editId}` : '/admin/categories/add';
+            const method = editId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(categoryData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showToast(editId ? "Category Updated!" : "Category Created!");
+                    closeModal('addModal');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    // This will now show the actual error from MongoDB (e.g., "Slug already exists")
+                    showToast(result.message || "Failed to save category", "error");
+                }
+            } catch (error) {
+                showToast("Network connection error", "error");
+            }
+        }
+        // --- Soft Delete (Unlist) ---
+        function promptSoftDelete(id, isUnlisted) {
+            actionId = id;
+            const status = isUnlisted === 'true'; // Handle string from EJS
+            document.getElementById('unlistTitle').innerText = status ? "Relist Category?" : "Unlist Category?";
+            openModal('unlistModal');
+        }
+
+        document.getElementById('confirmUnlist').onclick = async () => {
+            try {
+                const response = await fetch(`/admin/categories/delete/${actionId}`, { method: 'PATCH' });
+                if (response.ok) {
+                    showToast("Status changed!");
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } catch (error) {
+                showToast("Failed to update", "error");
+            }
+        };
+
+        function resetForm() {
+            ['catName', 'catSlug', 'catMeta', 'catIcon'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('catOrder').value = '5';
+        }
+
+ document.getElementById('searchInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        const query = this.value.trim();
+        // Always reset to page 1 when starting a new search
+        window.location.href = `/admin/categories?page=1&search=${encodeURIComponent(query)}`;
+    }
+});
+function performSearch() {
+    const query = document.getElementById('searchInput').value.trim();
+    if (query) {
+        // Redirect to page 1 with the search term
+        window.location.href = `/admin/categories?page=1&search=${encodeURIComponent(query)}`;
+    } else {
+        // If empty, just go to the main list
+        window.location.href = `/admin/categories`;
+    }
+}
+
+// Trigger search when user presses "Enter" in the input field
+document.getElementById('searchInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        performSearch();
+    }
+});
+    </script>
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[100] flex flex-col gap-3"></div>
+</body>
+
+</html>
