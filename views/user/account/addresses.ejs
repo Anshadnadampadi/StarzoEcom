@@ -1,0 +1,418 @@
+<!-- views/user/account/addresses.ejs -->
+<%- contentFor('body') %>
+
+<div class="min-h-screen bg-black py-24" x-data="addressManager()">
+    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <div class="fade-up">
+                <span class="text-accent text-label font-bold uppercase mb-4 block">Delivery Points</span>
+                <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">ADDRESS BOOK.</h1>
+            </div>
+            <button @click="openModal('add')" 
+                    class="bg-white text-black text-label font-bold uppercase px-8 py-4 hover:bg-accent transition-all btn-press">
+                Add New Address
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            <!-- Sidebar Nav -->
+            <%- include('../../partials/account-sidebar', { activeTab: 'address' }) %>
+
+            <!-- Main Panel -->
+            <div class="lg:col-span-3">
+                <% if (addresses.length > 0) { %>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <% addresses.forEach(addr => { %>
+                            <div class="bg-black-elevated border border-black-border p-8 flex flex-col justify-between hover:border-white/20 transition-all relative group shadow-2xl">
+                                <% if (addr.default) { %>
+                                    <span class="absolute top-4 right-4 text-accent text-[9px] font-bold tracking-widest uppercase bg-accent/10 px-2 py-1">DEFAULT</span>
+                                <% } %>
+                                <div>
+                                    <div class="flex items-center gap-3 mb-6">
+                                        <h4 class="text-white text-label font-bold uppercase"><%= addr.type %></h4>
+                                        <% if (!addr.default) { %>
+                                            <button @click="setDefault('<%= addr._id %>')" class="text-[8px] font-bold tracking-widest uppercase text-text-muted hover:text-accent transition-colors">Set Default</button>
+                                        <% } %>
+                                    </div>
+                                    <div class="text-text-muted text-sm leading-relaxed space-y-1">
+                                        <p class="font-bold text-white mb-2 text-base"><%= addr.name %></p>
+                                        <p><%= addr.addr1 %></p>
+                                        <% if (addr.addr2) { %><p><%= addr.addr2 %></p><% } %>
+                                        <p><%= addr.city %>, <%= addr.state %> - <%= addr.zip %></p>
+                                        <p class="text-[10px] mt-4 font-mono text-white/40 tracking-widest">+91 <%= addr.phone %></p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-8 mt-10 pt-8 border-t border-black-border">
+                                    <button @click="openModal('edit', $el.getAttribute('data-address'))" 
+                                            data-address='<%- JSON.stringify(addr).replace(/'/g, "&apos;") %>'
+                                            class="text-white/40 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">Edit</button>
+                                    <button @click="deleteAddress('<%= addr._id %>')" 
+                                            class="text-status-danger/40 hover:text-status-danger text-[10px] font-bold uppercase tracking-widest transition-colors">Remove</button>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <div class="py-32 text-center bg-black-elevated border border-black-border border-dashed">
+                        <p class="text-text-muted text-label font-bold uppercase mb-8 italic">No addresses saved yet.</p>
+                        <button @click="openModal('add')" class="text-accent underline text-xs font-bold tracking-wider uppercase hover:text-white transition-colors">Add Your First Address</button>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Backdrop -->
+    <div x-show="modalOpen" 
+         x-cloak
+         class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex justify-end"
+         @click.self="modalOpen = false">
+        
+        <!-- Slide-over Modal -->
+        <div x-show="modalOpen"
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transition ease-in duration-300"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="w-full max-w-xl bg-black border-l border-black-border h-full overflow-y-auto p-12 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+            
+            <div class="flex justify-between items-center mb-16">
+                <h2 class="text-white text-2xl font-bold uppercase tracking-tight" x-text="mode === 'add' ? 'NEW POINT.' : 'REDEFINE POINT.'"></h2>
+                <button @click="modalOpen = false" class="text-white/20 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <form @submit.prevent="saveAddress" class="space-y-8">
+                <!-- Address Type -->
+                <div class="space-y-4">
+                    <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">Location Type</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <template x-for="type in ['Home', 'Work', 'Other']">
+                            <button type="button" 
+                                    @click="form.type = type"
+                                    :class="form.type === type ? 'bg-white text-black' : 'bg-black-elevated text-white/40 border-black-border border'"
+                                    class="py-3 text-[10px] font-bold uppercase tracking-widest transition-all"
+                                    x-text="type"></button>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">Full Name</label>
+                        <input type="text" x-model="form.name" required placeholder="Receiver's name"
+                               @input="validateField('name')"
+                               :class="errors.name ? 'border-status-danger' : 'border-black-border'"
+                               class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all">
+                        <span x-show="errors.name" x-text="errors.name" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">Phone Number</label>
+                        <input type="tel" x-model="form.phone" required placeholder="Delivery contact"
+                               @input="validateField('phone')"
+                               :class="errors.phone ? 'border-status-danger' : 'border-black-border'"
+                               class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all">
+                        <span x-show="errors.phone" x-text="errors.phone" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">Street Address</label>
+                        <input type="text" x-model="form.addr1" required placeholder="House/Apartment/Street"
+                               @input="validateField('addr1')"
+                               :class="errors.addr1 ? 'border-status-danger' : 'border-black-border'"
+                               class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all mb-4">
+                        <span x-show="errors.addr1" x-text="errors.addr1" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block mb-4"></span>
+                        
+                        <input type="text" x-model="form.addr2" placeholder="Area/Landmark (Optional)"
+                               @input="if(errors.addr2) delete errors.addr2"
+                               :class="errors.addr2 ? 'border-status-danger' : 'border-black-border'"
+                               class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all">
+                        <span x-show="errors.addr2" x-text="errors.addr2" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">City</label>
+                            <input type="text" x-model="form.city" required
+                                   @input="validateField('city')"
+                                   :class="errors.city ? 'border-status-danger' : 'border-black-border'"
+                                   class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all">
+                            <span x-show="errors.city" x-text="errors.city" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">State</label>
+                            <input type="text" x-model="form.state" required
+                                   @input="validateField('state')"
+                                   :class="errors.state ? 'border-status-danger' : 'border-black-border'"
+                                   class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all">
+                            <span x-show="errors.state" x-text="errors.state" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">Postal Code</label>
+                            <input type="text" x-model="form.zip" required
+                                   @input="validateField('zip')"
+                                   :class="errors.zip ? 'border-status-danger' : 'border-black-border'"
+                                   class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all font-mono">
+                            <span x-show="errors.zip" x-text="errors.zip" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1">Country</label>
+                            <select x-model="form.country" required
+                                    @change="if(errors.country) delete errors.country"
+                                    :class="errors.country ? 'border-status-danger' : 'border-black-border'"
+                                    class="w-full bg-black-elevated border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all appearance-none uppercase font-bold tracking-widest">
+                                <option value="India">India</option>
+                                <option value="UAE">UAE</option>
+                                <option value="USA">USA</option>
+                            </select>
+                            <span x-show="errors.country" x-text="errors.country" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 pt-6">
+                    <input type="checkbox" x-model="form.default" id="set-default" 
+                           class="w-5 h-5 bg-black border-black-border border rounded-sm text-accent focus:ring-accent focus:ring-offset-black">
+                    <label for="set-default" class="text-[10px] font-bold uppercase text-white/60 tracking-widest cursor-pointer">Set as default delivery point</label>
+                </div>
+
+                <div class="pt-10 flex gap-4">
+                    <button type="submit" 
+                            :disabled="saving"
+                            class="flex-1 bg-accent text-black font-bold py-5 text-sm tracking-[0.2em] uppercase hover:bg-white transition-all btn-press disabled:opacity-50"
+                            x-text="saving ? 'COMMITTING...' : (mode === 'add' ? 'SAVE LOGIC' : 'UPDATE LOGIC')"></button>
+                    <button type="button" 
+                            @click="modalOpen = false"
+                            class="px-10 border border-black-border text-white text-[10px] font-bold uppercase tracking-widest hover:border-white transition-all">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Deletion Modal -->
+    <div x-show="confirmDeleteOpen" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-6 backdrop-blur-md bg-black/60">
+        <div class="bg-black border border-white/10 w-full max-w-sm p-10 text-center space-y-8 shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
+            <div class="space-y-4">
+                <h3 class="text-white text-xl font-bold uppercase tracking-tight">Purge Location?</h3>
+                <p class="text-white/40 text-[10px] leading-relaxed uppercase tracking-widest">This action will permanently delete this delivery point from your vault.</p>
+            </div>
+            <div class="flex gap-4">
+                <button @click="executeDelete" class="flex-1 bg-status-danger text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Destroy</button>
+                <button @click="confirmDeleteOpen = false" class="flex-1 border border-white/5 text-white/40 py-4 text-[10px] font-black uppercase tracking-widest hover:border-white hover:text-white transition-all">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addressManager() {
+    return {
+        modalOpen: false,
+        confirmDeleteOpen: false,
+        deleteTarget: null,
+        mode: 'add',
+        saving: false,
+        errors: {},
+        form: {
+            id: null,
+            type: 'Home',
+            name: '',
+            phone: '',
+            addr1: '',
+            addr2: '',
+            city: '',
+            state: '',
+            zip: '',
+            country: 'India',
+            default: false
+        },
+
+        openModal(mode, data = null) {
+            this.mode = mode;
+            this.errors = {};
+            if (mode === 'edit' && data) {
+                // Parse if string (from data-attribute)
+                const addressData = typeof data === 'string' ? JSON.parse(data) : data;
+                this.form = { ...addressData, id: addressData._id };
+            } else {
+                this.form = {
+                    id: null,
+                    type: 'Home',
+                    name: '',
+                    phone: '',
+                    addr1: '',
+                    addr2: '',
+                    city: '',
+                    state: '',
+                    zip: '',
+                    country: 'India',
+                    default: false
+                };
+            }
+            this.modalOpen = true;
+        },
+
+        validateField(field) {
+            switch (field) {
+                case 'name':
+                    this.errors.name = this.form.name.trim().length < 3 ? 'Full name is too short (min 3)' : '';
+                    break;
+                case 'phone':
+                    const phoneRegex = /^[0-9]{10}$/;
+                    this.errors.phone = !phoneRegex.test(this.form.phone) ? 'Enter a valid 10-digit phone number' : '';
+                    break;
+                case 'addr1':
+                    this.errors.addr1 = this.form.addr1.trim().length < 5 ? 'Address is too short' : '';
+                    break;
+                case 'city':
+                    this.errors.city = this.form.city.trim().length < 2 ? 'Invalid city name' : '';
+                    break;
+                case 'state':
+                    this.errors.state = this.form.state.trim().length < 2 ? 'Invalid state name' : '';
+                    break;
+                case 'zip':
+                    const zipRegex = /^[0-9]{6}$/;
+                    this.errors.zip = !zipRegex.test(this.form.zip) ? 'Enter a valid 6-digit postal code' : '';
+                    break;
+            }
+        },
+
+        validateForm() {
+            this.validateField('name');
+            this.validateField('phone');
+            this.validateField('addr1');
+            this.validateField('city');
+            this.validateField('state');
+            this.validateField('zip');
+            return !Object.values(this.errors).some(error => error !== '');
+        },
+
+        async saveAddress() {
+            if (!this.validateForm()) {
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: 'Some fields are invalid. Please check.', type: 'error' } 
+                }));
+                return;
+            }
+            this.saving = true;
+            try {
+                const url = this.mode === 'add' ? '/account/address' : `/account/address/${this.form.id}`;
+                const method = this.mode === 'add' ? 'POST' : 'PUT';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.form)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: `Delivery point ${this.mode === 'add' ? 'secured' : 'refined'} successfully`, type: 'success' } 
+                    }));
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    this.errors = result.errors || {};
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: result.message || 'Validation failed on server', type: 'error' } 
+                    }));
+                }
+            } catch (err) {
+                console.error(err);
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: 'Network breakdown. Try again.', type: 'error' } 
+                }));
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async deleteAddress(id) {
+            this.deleteTarget = id;
+            this.confirmDeleteOpen = true;
+        },
+
+        async executeDelete() {
+            if (!this.deleteTarget) return;
+            try {
+                const response = await fetch(`/account/address/${this.deleteTarget}`, { method: 'DELETE' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Location purged successfully.', type: 'info' } 
+                    }));
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (err) {
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: err.message || 'Purge failed.', type: 'error' } 
+                }));
+            } finally {
+                this.confirmDeleteOpen = false;
+                this.deleteTarget = null;
+            }
+        },
+
+        async setDefault(id) {
+            try {
+                const response = await fetch(`/account/address/default/${id}`, { method: 'PATCH' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.reload();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    }
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+
+.bg-black-elevated {
+    background: #0D0D0D;
+}
+
+.bg-black-card {
+    background: #0A0A0A;
+}
+
+.border-black-border {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.btn-press:active {
+    transform: scale(0.98);
+}
+
+/* Custom Scrollbar for slide-over */
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+</style>

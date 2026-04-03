@@ -1,0 +1,19 @@
+<!-- views/partials/account-sidebar.ejs -->
+<% 
+  if (typeof activeTab === 'undefined') { activeTab = ''; }
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', href: '/account' },
+    { id: 'profile', label: 'Profile', href: '/profile' },
+    { id: 'orders', label: 'My Orders', href: '/account/orders' },
+    { id: 'wishlist', label: 'Wishlist', href: '/account/wishlist' },
+    { id: 'address', label: 'Address Book', href: '/account/address' }
+  ];
+%>
+<aside class="space-y-1">
+    <% tabs.forEach(tab => { %>
+        <a href="<%= tab.href %>" 
+           class="block px-6 py-4 border transition-all text-label font-bold uppercase <%= activeTab === tab.id ? 'bg-white text-black border-white' : 'border-black-border text-text-muted hover:text-white hover:border-white' %>">
+            <%= tab.label %>
+        </a>
+    <% }) %>
+</aside>

@@ -1,0 +1,162 @@
+<!-- views/admin/customers/index.ejs -->
+<%- contentFor('body') %>
+
+<div class="space-y-10">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">CUSTOMER BASE.</h1>
+            <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">View and manage registered users</p>
+        </div>
+        <div class="flex gap-4">
+            <button class="px-6 py-4 bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-white/10 transition-colors">Export CSV</button>
+        </div>
+    </div>
+
+    <!-- Stats summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Total Users</h4>
+            <p class="text-white text-3xl font-mono font-bold"><%= totalUsers %></p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Active Users</h4>
+            <p class="text-status-success text-3xl font-mono font-bold"><%= customers.filter(c => !c.isBlocked).length %></p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Blocked Users</h4>
+            <p class="text-status-danger text-3xl font-mono font-bold"><%= customers.filter(c => c.isBlocked).length %></p>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <form action="/admin/customers" method="GET" class="bg-black-surface border border-white/5 p-6 flex flex-wrap items-center justify-between gap-6">
+        <div class="flex flex-wrap items-center gap-6">
+            <div class="relative">
+                <input type="text" name="search" value="<%= search %>" placeholder="Search by name or email..." class="bg-black border border-white/10 px-6 py-3 text-xs text-white focus:outline-none focus:border-accent w-80 placeholder:text-white/10">
+            </div>
+            <select name="status" onchange="this.form.submit()" class="bg-black border border-white/10 px-4 py-3 text-[10px] font-bold tracking-widest uppercase text-white/60 focus:outline-none">
+                <option value="" <%= status === '' ? 'selected' : '' %>>All Status</option>
+                <option value="active" <%= status === 'active' ? 'selected' : '' %>>Active</option>
+                <option value="blocked" <%= status === 'blocked' ? 'selected' : '' %>>Blocked</option>
+            </select>
+            <select name="sortBy" onchange="this.form.submit()" class="bg-black border border-white/10 px-4 py-3 text-[10px] font-bold tracking-widest uppercase text-white/60 focus:outline-none">
+                <option value="createdAt" <%= sortBy === 'createdAt' ? 'selected' : '' %>>Sort by: Joined Date</option>
+                <option value="name" <%= sortBy === 'name' ? 'selected' : '' %>>Sort by: Name</option>
+                <option value="email" <%= sortBy === 'email' ? 'selected' : '' %>>Sort by: Email</option>
+            </select>
+            <select name="sortOrder" onchange="this.form.submit()" class="bg-black border border-white/10 px-4 py-3 text-[10px] font-bold tracking-widest uppercase text-white/60 focus:outline-none">
+                <option value="desc" <%= sortOrder === 'desc' ? 'selected' : '' %>>Descending</option>
+                <option value="asc" <%= sortOrder === 'asc' ? 'selected' : '' %>>Ascending</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/admin/customers" class="text-[10px] text-white/20 hover:text-white font-bold uppercase transition-all">Clear All</a>
+            <button type="submit" class="px-6 py-3 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all">Filter</button>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="bg-black-surface border border-white/5 overflow-hidden">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-white/[0.02] border-b border-white/5">
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">User Identity</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Joined</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Total Spend</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Status</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                <% if (customers && customers.length > 0) { %>
+                    <% customers.forEach(customer => { %>
+                        <tr class="hover:bg-white/[0.01] transition-colors group">
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-black font-bold text-xs">
+                                        <%= (customer.name ? customer.name[0] : (customer.firstName ? customer.firstName[0] : customer.email[0])).toUpperCase() %>
+                                    </div>
+                                    <div>
+                                        <p class="text-white text-xs font-bold uppercase mb-1">
+                                            <%= (customer.name || (customer.firstName + ' ' + (customer.lastName || '')) || customer.email.split('@')[0]) %>
+                                        </p>
+                                        <p class="text-white/30 text-[9px] truncate w-40 tracking-wider"><%= customer.email %></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 text-white text-xs font-bold uppercase">
+                                <%= new Date(customer.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) %>
+                            </td>
+                            <td class="px-8 py-6 text-white font-mono text-sm">
+                                ₹<%= (customer.totalSpend || 0).toLocaleString() %>
+                            </td>
+                            <td class="px-8 py-6">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full <%= customer.isBlocked ? 'bg-status-danger' : 'bg-status-success' %>"></span>
+                                    <span class="text-[9px] font-bold uppercase tracking-widest text-white/60"><%= customer.isBlocked ? 'Blocked' : 'Active' %></span>
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 text-right">
+                                <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button class="px-4 py-2 border border-white/10 text-white/40 hover:text-white transition-all text-[9px] font-bold uppercase tracking-widest">Profile</button>
+                                    <% if (customer.isBlocked) { %>
+                                        <button onclick="executeUserAction('/admin/unblock/<%= customer._id %>', 'Unblock this user?', 'success')" class="px-4 py-2 border border-white/10 text-status-success/40 hover:text-status-success transition-all text-[9px] font-bold uppercase tracking-widest">Unblock</button>
+                                    <% } else { %>
+                                        <button onclick="executeUserAction('/admin/block/<%= customer._id %>', 'Block this user?', 'danger')" class="px-4 py-2 border border-white/10 text-status-danger/40 hover:text-status-danger transition-all text-[9px] font-bold uppercase tracking-widest">Block</button>
+                                    <% } %>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" class="px-8 py-20 text-center">
+                            <p class="text-white/20 text-xs font-bold uppercase tracking-widest font-mono">No customers found matching your criteria.</p>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <%- include('../partials/pagination') %>
+</div>
+
+<script>
+    async function executeUserAction(url, title, type = 'warning') {
+        const confirmed = await window.confirmAction({
+            title: title.toUpperCase(),
+            message: "This action will update the user's status protocol.",
+            type: type
+        });
+
+        if (confirmed) {
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: result.message, type: 'success' } 
+                    }));
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: result.message || 'Protocol failure.', type: 'error' } 
+                    }));
+                }
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: 'Internal synchronization failure.', type: 'error' } 
+                }));
+            }
+        }
+    }
+</script>
+

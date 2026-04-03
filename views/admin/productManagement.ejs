@@ -1,0 +1,594 @@
+<%- contentFor('body') %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+
+    <div class="space-y-10" x-data="productManager()">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">INVENTORY CONTROL.</h1>
+                <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Manage your product
+                    catalog and listings</p>
+            </div>
+            <div class="flex gap-4">
+                <button
+                    class="px-6 py-4 bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-white/10 transition-colors">Export
+                    CSV</button>
+                <a href="/admin/products/add"
+                    class="px-8 py-4 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all btn-press shadow-[0_0_15px_rgba(255,255,255,0.1)] inline-block">Add
+                    Product</a>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <form action="/admin/productManagement" method="GET"
+            class="bg-black-surface border border-white/5 p-6 flex flex-wrap items-center justify-between gap-6"
+            x-ref="filterForm">
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    <input type="text" name="search"
+                        value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+                        placeholder="Search products..."
+                        class="bg-black border border-white/10 px-6 py-3 text-xs text-white focus:outline-none focus:border-accent w-80 placeholder:text-white/10">
+                </div>
+                <select name="sortBy" @change="$refs.filterForm.submit()"
+                    class="bg-black border border-white/10 px-4 py-3 text-[10px] font-bold tracking-widest uppercase text-white/60 focus:outline-none">
+                    <option value="newest" <%=typeof sortBy !=='undefined' && sortBy==='newest' ? 'selected' : '' %>
+                        >Latest</option>
+                    <option value="stock_low" <%=typeof sortBy !=='undefined' && sortBy==='stock_low' ? 'selected' : ''
+                        %>>Stock: Low to High</option>
+                    <option value="stock_high" <%=typeof sortBy !=='undefined' && sortBy==='stock_high' ? 'selected'
+                        : '' %>>Stock: High to Low</option>
+                    <option value="A-Z" <%=typeof sortBy !=='undefined' && sortBy==='A-Z' ? 'selected' : '' %>>Name: A
+                        to Z</option>
+                    <option value="Z-A" <%=typeof sortBy !=='undefined' && sortBy==='Z-A' ? 'selected' : '' %>>Name: Z
+                        to A</option>
+
+                </select>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/admin/productManagement"
+                    class="text-[10px] text-white/20 hover:text-white font-bold uppercase transition-all">Clear</a>
+                <button type="submit"
+                    class="px-6 py-3 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all">Filter</button>
+            </div>
+        </form>
+
+        <!-- Table -->
+        <div class="bg-black-surface border border-white/5 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-white/[0.02] border-b border-white/5">
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Product
+                            Details</th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Category
+                        </th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Brand
+                        </th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Stock
+                        </th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Status
+                        </th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30 text-right">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 text-xs">
+                    <% if (products && products.length> 0) { %>
+                        <% products.forEach(product=> { %>
+                            <tr class="hover:bg-white/[0.01] transition-colors group">
+                                <td class="px-8 py-6">
+                                    <div>
+                                        <p class="text-white text-xs font-bold uppercase mb-1">
+                                            <%= product.name %>
+                                        </p>
+
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span class="text-white/60 text-[10px] font-bold uppercase tracking-widest">
+                                        <%= product.category?.name %>
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span class="text-white/40 text-[10px] font-bold uppercase tracking-widest">
+                                        <%= product.brand %>
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
+                                            <div class="h-full <%= product.stock < 10 ? 'bg-status-danger' : 'bg-status-success' %>"
+                                                style="width: <%= Math.min(product.stock, 100) %>%"></div>
+                                        </div>
+                                        <span
+                                            class="text-[10px] font-mono font-bold <%= product.stock < 10 ? 'text-status-danger' : 'text-white/40' %>">
+                                            <%= product.stock %>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-6">
+                                    <span class="flex items-center gap-2">
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full <%= !product.isBlocked && product.isListed ? 'bg-status-success' : 'bg-status-danger' %>"></span>
+                                        <span class="text-[9px] font-bold uppercase tracking-widest text-white/60">
+                                            <%= (!product.isBlocked && product.isListed) ? 'Active' : 'Hidden' %>
+                                        </span>
+                                    </span>
+                                </td>
+                                <td class="px-8 py-6 text-right">
+                                    <div
+                                        class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <a href="/admin/products/details/<%= product._id %>"
+                                            class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-white hover:border-white transition-all"
+                                            title="View Details">👁️</a>
+                                        <button @click="toggleStatus('<%= product._id %>')"
+                                            class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-white hover:border-white transition-all"
+                                            title="<%= product.isListed ? 'Unlist Product' : 'List Product' %>">
+                                            <%= product.isListed ? '🔓' : '🔒' %>
+                                        </button>
+                                        <button @click="openEdit('<%= product._id %>')"
+                                            class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-white hover:border-white transition-all"
+                                            title="Edit Product">✎</button>
+                                        <button @click="deleteProduct('<%= product._id %>')"
+                                            class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-status-danger hover:border-status-danger transition-all"
+                                            title="<%= product.isBlocked ? 'Restore Product' : 'Delete Product' %>">
+                                            <%= product.isBlocked ? '🔄' : '✕' %>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6" class="px-8 py-20 text-center">
+                                            <p
+                                                class="text-white/20 text-xs font-bold uppercase tracking-widest font-mono">
+                                                No products found matching your criteria.</p>
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <% let query=typeof searchQuery !=='undefined' && searchQuery ? `search=${searchQuery}` : '' %>
+            <%- include('../partials/pagination', { currentPage, totalPages, query }) %>
+
+
+                <!-- Edit Product Modal -->
+                <div x-show="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-6" x-cloak>
+                    <div class="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100" @click="showEditModal = false"></div>
+                    <div class="bg-black-surface border border-white/10 w-full max-w-2xl relative shadow-[0_30px_60px_rgba(0,0,0,0.8)]"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+                        x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+
+                        <div class="p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                            <div class="flex justify-between items-center mb-10">
+                                <div>
+                                    <h2 class="text-white text-xl font-bold uppercase tracking-tight mb-1">Update
+                                        Inventory Entry</h2>
+                                    <p class="text-[9px] font-bold tracking-widest text-white/30 uppercase">Catalog
+                                        Modification Protocol</p>
+                                </div>
+                                <button @click="showEditModal = false"
+                                    class="w-8 h-8 flex items-center justify-center text-white/20 hover:text-white transition-colors">✕</button>
+                            </div>
+
+                            <form @submit.prevent="submitForm(true)" class="space-y-6">
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Product
+                                            Name</label>
+                                        <input type="text" x-model="form.name" @input="errors.name = ''"
+                                            class="w-full bg-black border border-white/5 py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                                            :class="errors.name ? 'border-status-danger/50' : ''">
+                                        <p x-show="errors.name"
+                                            class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                            x-text="errors.name"></p>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Brand</label>
+                                        <input type="text" x-model="form.brand" @input="errors.brand = ''"
+                                            class="w-full bg-black border border-white/5 py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                                            :class="errors.brand ? 'border-status-danger/50' : ''">
+                                        <p x-show="errors.brand"
+                                            class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                            x-text="errors.brand"></p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-6">
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Category</label>
+                                        <select x-model="form.category" @change="errors.category = ''"
+                                            class="w-full bg-black border border-white/5 py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                                            :class="errors.category ? 'border-status-danger/50' : ''">
+                                            <option value="">Select Category</option>
+                                            <% if (typeof categories !=='undefined' ) { %>
+                                                <% categories.forEach(cat=> { %>
+                                                    <option value="<%= cat._id %>">
+                                                        <%= cat.name %>
+                                                    </option>
+                                                    <% }) %>
+                                                        <% } %>
+                                        </select>
+                                        <p x-show="errors.category"
+                                            class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                            x-text="errors.category"></p>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Price
+                                            (INR)</label>
+                                        <input type="number" x-model="form.price" @input="errors.price = ''"
+                                            class="w-full bg-black border border-white/5 py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                                            :class="errors.price ? 'border-status-danger/50' : ''">
+                                        <p x-show="errors.price"
+                                            class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                            x-text="errors.price"></p>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label
+                                            class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Stock
+                                            Level</label>
+                                        <input type="number" x-model="form.stock" @input="errors.stock = ''"
+                                            class="w-full bg-black border border-white/5 py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                                            :class="errors.stock ? 'border-status-danger/50' : ''">
+                                        <p x-show="errors.stock"
+                                            class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                            x-text="errors.stock"></p>
+                                    </div>
+                                </div>
+
+                                <!-- Asset Management moved to Variants -->
+
+                                <div class="pt-6">
+                                    <button type="submit" :disabled="isSubmitting"
+                                        class="w-full bg-white text-black font-bold py-4 text-[10px] tracking-widest uppercase hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-press">
+                                        <span x-show="!isSubmitting">Apply Modifications</span>
+                                        <span x-show="isSubmitting">Updating Catalog...</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crop Modal -->
+                <div x-show="showCropModal" class="fixed inset-0 z-[60] flex items-center justify-center p-6" x-cloak>
+                    <div class="absolute inset-0 bg-black/95 backdrop-blur-xl"></div>
+                    <div class="bg-black-surface border border-white/10 w-full max-w-md relative shadow-2xl overflow-hidden"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+
+                        <div class="p-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h2 class="text-white text-lg font-bold uppercase tracking-tight">Focus & Align
+                                        Assets</h2>
+                                    <p class="text-[8px] font-bold tracking-[0.2em] text-white/30 uppercase">Protocol:
+                                        High-Fidelity Optimization</p>
+                                </div>
+                            </div>
+
+                            <div class="aspect-square bg-black border border-white/5 overflow-hidden mb-6">
+                                <img x-ref="cropImage" src="" class="max-w-full">
+                            </div>
+
+                            <div class="flex gap-4">
+                                <button type="button" @click="cancelCrop()"
+                                    class="flex-1 px-6 py-4 border border-white/10 text-white/40 text-[10px] font-bold tracking-widest uppercase hover:text-white hover:bg-white/5 transition-all">Abort</button>
+                                <button type="button" @click="confirmCrop()"
+                                    class="flex-2 px-8 py-4 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all">Optimize
+                                    Asset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+
+    <style>
+        /* Custom Scrollbar for Modals */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Cropper Custom Styles */
+        .cropper-view-box,
+        .cropper-face {
+            border-radius: 0;
+        }
+
+        .cropper-line {
+            background-color: #ffffff;
+        }
+
+        .cropper-point {
+            background-color: #ffffff;
+        }
+
+        .cropper-bg {
+            background-image: none;
+        }
+    </style>
+
+
+    <script>
+        function productManager() {
+            return {
+                showEditModal: false,
+                showCropModal: false,
+                isSubmitting: false,
+                cropper: null,
+                fileQueue: [],
+                editPreviews: [],
+                editSelectedFiles: [],
+                isEditMode: false,
+                form: { id: '', name: '', brand: '', category: '', price: '', stock: '' },
+                errors: {},
+
+                validate() {
+                    this.errors = {};
+                    let isValid = true;
+
+                    if (!this.form.name || this.form.name.trim().length < 3) {
+                        this.errors.name = 'Name must be at least 3 characters.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.brand || this.form.brand.trim() === '') {
+                        this.errors.brand = 'Brand is required.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.category) {
+                        this.errors.category = 'Category is required.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.price || parseFloat(this.form.price) <= 0) {
+                        this.errors.price = 'Price must be a positive number.';
+                        isValid = false;
+                    }
+
+                    if (this.form.stock === '' || parseInt(this.form.stock) < 0) {
+                        this.errors.stock = 'Stock must be non-negative.';
+                        isValid = false;
+                    }
+
+                    // Asset Management moved to Variants
+
+                    return isValid;
+                },
+
+                async openEdit(id) {
+                    this.errors = {};
+                    try {
+                        const res = await fetch(`/admin/products/json/${id}`);
+                        const result = await res.json();
+                        if (result.success) {
+                            const prod = result.product;
+                            this.form = {
+                                id: prod._id,
+                                name: prod.name,
+                                brand: prod.brand,
+                                category: prod.category?._id || "",
+                                price: prod.price,
+                                stock: prod.stock
+                            };
+                            this.editPreviews = prod.images || [];
+                            this.editSelectedFiles = [];
+                            this.showEditModal = true;
+                        } else {
+                            this.showError(result.message || 'Could not fetch product details.');
+                        }
+                    } catch (error) {
+                        this.showError('Could not fetch product details.');
+                    }
+                },
+
+                handleFileChange(e, isEdit = false) {
+                    const files = Array.from(e.target.files);
+                    if (files.length === 0) return;
+
+                    const currentCount = isEdit ? this.editSelectedFiles.length : 0;
+                    if (currentCount + files.length > 5) {
+                        this.showError("You can upload maximum 5 images.");
+                        e.target.value = '';
+                        return;
+                    }
+
+                    this.isEditMode = isEdit;
+                    this.fileQueue = [...files];
+                    this.processNextInQueue();
+                    e.target.value = '';
+                },
+
+                processNextInQueue() {
+                    if (this.fileQueue.length === 0) return;
+
+                    const file = this.fileQueue.shift();
+                    const reader = new FileReader();
+
+                    reader.onload = (event) => {
+                        this.showCropModal = true;
+                        setTimeout(() => {
+                            this.$refs.cropImage.src = event.target.result;
+                            if (this.cropper) this.cropper.destroy();
+                            this.cropper = new Cropper(this.$refs.cropImage, {
+                                aspectRatio: 1,
+                                viewMode: 1,
+                                autoCropArea: 1,
+                                background: false,
+                                zoomable: true
+                            });
+                        }, 100);
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                confirmCrop() {
+                    if (!this.cropper) return;
+
+                    this.cropper.getCroppedCanvas({
+                        width: 600,
+                        height: 600
+                    }).toBlob((blob) => {
+                        const imageObj = {
+                            file: blob,
+                            url: URL.createObjectURL(blob)
+                        };
+
+                        if (this.isEditMode) {
+                            this.editSelectedFiles.push(imageObj);
+                        }
+
+                        this.closeCropModal();
+
+                        if (this.fileQueue.length > 0) {
+                            setTimeout(() => this.processNextInQueue(), 300);
+                        }
+                    }, "image/jpeg", 0.9);
+                },
+
+                cancelCrop() {
+                    this.closeCropModal();
+                    this.fileQueue = [];
+                },
+
+                closeCropModal() {
+                    if (this.cropper) {
+                        this.cropper.destroy();
+                        this.cropper = null;
+                    }
+                    this.showCropModal = false;
+                },
+
+                removeFile(index, isEdit = false) {
+                    const targetArray = isEdit ? this.editSelectedFiles : [];
+                    if (targetArray[index]) {
+                        URL.revokeObjectURL(targetArray[index].url);
+                        targetArray.splice(index, 1);
+                    }
+                },
+
+                async submitForm(isEdit = false) {
+                    if (this.isSubmitting) return;
+
+                    if (!this.validate()) {
+                        return this.showError(Object.values(this.errors)[0]);
+                    }
+
+                    this.isSubmitting = true;
+                    const formData = new FormData();
+
+                    formData.append('name', this.form.name);
+                    formData.append('brand', this.form.brand);
+                    formData.append('category', this.form.category);
+                    formData.append('price', this.form.price);
+                    formData.append('stock', this.form.stock);
+
+                    // Asset Management moved to Variants
+
+                    try {
+                        const url = isEdit
+                            ? "/admin/products/update/" + this.form.id
+                            : "/admin/products/add";
+
+                        const method = isEdit ? 'PATCH' : 'POST';
+                        const res = await fetch(url, { method, body: formData });
+                        const result = await res.json();
+
+                        if (result.success) {
+                            this.showSuccess(result.message);
+                        } else {
+                            this.showError(result.message);
+                        }
+                    } catch (err) {
+                        this.showError("Something went wrong during synchronization.");
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+
+                async toggleStatus(id) {
+                    const confirmed = await window.confirmAction({
+                        title: 'TOGGLE VISIBILITY?',
+                        message: 'This will change how the product appears to customers.',
+                        type: 'warning'
+                    });
+
+                    if (confirmed) {
+                        try {
+                            const res = await fetch(`/admin/products/toggle-status/${id}`, { method: 'PATCH' });
+                            const result = await res.json();
+                            if (result.success) {
+                                this.showSuccess(result.message);
+                            } else {
+                                this.showError(result.message);
+                            }
+                        } catch (error) {
+                            this.showError('Failed to toggle status.');
+                        }
+                    }
+                },
+
+                async deleteProduct(id) {
+                    const confirmed = await window.confirmAction({
+                        title: 'TOGGLE PRODUCT ACCESS?',
+                        message: 'This will change the product\'s availability in the public store.',
+                        type: 'danger'
+                    });
+
+                    if (confirmed) {
+                        try {
+                            const res = await fetch(`/admin/products/delete/${id}`, { method: 'DELETE' });
+                            const resData = await res.json();
+                            if (resData.success) {
+                                this.showSuccess(resData.message);
+                            } else {
+                                this.showError(resData.message);
+                            }
+                        } catch (error) {
+                            this.showError('Failed to delete product.');
+                        }
+                    }
+                },
+
+                showSuccess(message) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: message, type: 'success' }
+                    }));
+                    setTimeout(() => window.location.reload(), 1500);
+                },
+
+                showError(message) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                        detail: { message: message, type: 'error' }
+                    }));
+                }
+            }
+        }
+    </script>

@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Backgrounds */
+    --color-bg-base:        #000000;
+    --color-bg-surface:     #0D0D0D;
+    --color-bg-card:        #111111;
+    --color-bg-elevated:    #1A1A1A;
+    --color-bg-border:      #222222;
+
+    /* Text */
+    --color-text-primary:   #FFFFFF;
+    --color-text-secondary: #999999;
+    --color-text-muted:     #555555;
+    --color-text-invert:    #000000;
+
+    /* Accent */
+    --color-accent:         #FF6A00;
+    --color-accent-hover:   #E05A00;
+    --color-accent-light:   #FF8C33;
+    --color-accent-subtle:  rgba(255, 106, 0, 0.12);
+
+    /* Semantic */
+    --color-success:        #22C55E;
+    --color-warning:        #F59E0B;
+    --color-danger:         #EF4444;
+    --color-info:           #3B82F6;
+  }
+
+  body {
+    @apply bg-black text-text-primary font-sans antialiased;
+    color-scheme: dark;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  /* Motion System */
+  .fade-up {
+    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.35s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Image hover zoom */
+  .img-zoom {
+    @apply overflow-hidden;
+  }
+
+  .img-zoom img {
+    @apply transition-transform duration-500 ease-expo-out;
+  }
+
+  .img-zoom:hover img {
+    @apply scale-[1.04];
+  }
+
+  /* Button press feel */
+  .btn-press:active {
+    @apply scale-[0.97] transition-transform;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    @apply bg-black/85 backdrop-blur-xl saturate-[180%];
+  }
+
+  /* Marquee Animation */
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+    display: flex;
+    width: max-content;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-black-border hover:bg-text-muted transition-colors;
+}

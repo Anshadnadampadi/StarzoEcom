@@ -9,21 +9,30 @@ import { getAdminLogin,
       postDelete,
       postEdit
      } from '../../controllers/admin/adminControlller.js';
+import adminAuth from "../../middlewares/adminAuth.js";
+import categoryRoutes from '../products/categoryRoutes.js';
+import productRoutes from '../products/productRoutes.js';
+
 const router = express.Router();
-import { adminAuth } from '../../middlewares/adminAuth.js';
-import authRoutes from '../../routes/admin/authRoutes.js';
-import categoryRoutes from '../../routes/admin/category/categoryRoutes.js';
-import productRoutes from '../../routes/admin/product/productRoutes.js';
 
-router.use('/auth', authRoutes);
-router.use('/category', categoryRoutes);
-router.use('/product', productRoutes);
+// Public Admin Routes
+router.get('/login', getAdminLogin);
+router.post('/login', postAdminLogin);
+router.get('/logout', adminLogout);
 
-router.get('/dashboard', adminAuth, getAdminDashboard);
-router.get('/management', adminAuth, getAdminManagement);
+// Protected Admin Routes (Require adminAuth)
+router.use('/', adminAuth);
+
+// Content Management
+router.use('/', categoryRoutes);
+router.use('/', productRoutes);
+
+// User & Dashboard Management
+router.get('/dashboard', getAdminDashboard);
+router.get('/customers', getAdminManagement);
 router.post('/block/:id', postBlock);
 router.post('/unblock/:id', postUnblock);
 router.post('/delete/:id', postDelete);
 router.post('/edit', postEdit);
 
-export default router;
+export default router;

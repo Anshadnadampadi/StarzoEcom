@@ -1,0 +1,1862 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+  rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --card: #111;
+      --elevated: #1a1a1a;
+      --border: #222;
+      --accent: #ff6a00;
+      --accent-h: #e05800;
+      --accent-s: rgba(255, 106, 0, .1);
+      --t1: #fff;
+      --t2: #888;
+      --t3: #444;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--t1);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    /* ── TYPOGRAPHY ── */
+    .font-syne {
+      font-family: 'Syne', sans-serif;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── DIVIDERS ── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #000;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 16px 32px;
+      border: none;
+      cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-h);
+    }
+
+    .btn-primary:active {
+      transform: scale(.97);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      color: var(--t1);
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 15px 32px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--t1);
+      background: rgba(255, 255, 255, .04);
+    }
+
+    .btn-secondary:active {
+      transform: scale(.97);
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: transparent;
+      color: var(--t2);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: color .2s, border-color .2s;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+    }
+
+    .btn-ghost:hover {
+      color: var(--t1);
+      border-color: #444;
+    }
+
+    .btn-icon {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      color: var(--t2);
+      transition: color .2s, border-color .2s, background .2s;
+    }
+
+    .btn-icon:hover {
+      color: var(--t1);
+      border-color: #444;
+      background: var(--card);
+    }
+
+    .btn-icon.active {
+      color: var(--danger);
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, .06);
+    }
+
+    /* ── INPUTS ── */
+    .input-dark {
+      width: 100%;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--t1);
+      padding: 12px 16px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .input-dark::placeholder {
+      color: var(--t3);
+    }
+
+    .input-dark:focus {
+      border-color: var(--accent);
+    }
+
+    .select-dark {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--t1);
+      padding: 11px 16px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      cursor: pointer;
+      transition: border-color .2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+    }
+
+    .select-dark:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── GALLERY ── */
+    .gallery-main {
+      aspect-ratio: 1;
+      background: var(--card);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .gallery-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .gallery-main:hover img {
+      transform: scale(2);
+      cursor: zoom-in;
+    }
+
+    .gallery-thumb {
+      aspect-ratio: 1;
+      background: var(--card);
+      overflow: hidden;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+
+    .gallery-thumb.active {
+      border-color: var(--accent);
+    }
+
+    .gallery-thumb:hover:not(.active) {
+      border-color: #444;
+    }
+
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform .3s;
+    }
+
+    .gallery-thumb:hover img {
+      transform: scale(1.06);
+    }
+
+    /* ── VARIANT PILLS ── */
+    .variant-pill {
+      padding: 10px 24px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--t2);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      transition: all .2s cubic-bezier(.16, 1, .3, 1);
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .variant-pill:hover {
+      border-color: #555;
+      color: var(--t1);
+    }
+
+    .variant-pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-s);
+    }
+
+    .variant-pill.disabled {
+      opacity: .3;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    /* ── COLOR SWATCH ── */
+    .color-swatch {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+      transition: outline-color .2s;
+    }
+
+    .color-swatch.active {
+      outline-color: var(--accent);
+    }
+
+    .color-swatch:hover:not(.active) {
+      outline-color: #555;
+    }
+
+    /* ── TABS ── */
+    .tab-btn {
+      padding: 14px 0;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background: transparent;
+      border: none;
+      color: var(--t3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--t2);
+    }
+
+    .tab-btn.active {
+      color: var(--t1);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── PRODUCT CARD ── */
+    .product-card {
+      background: var(--card);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .product-card .card-img {
+      aspect-ratio: 1;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .product-card .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .product-card:hover .card-img img {
+      transform: scale(1.06);
+    }
+
+    .product-card .quick-add {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      transform: translateY(100%);
+      background: var(--accent);
+      color: #000;
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .35s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .product-card:hover .quick-add {
+      transform: translateY(0);
+    }
+
+    /* ── RATING STARS ── */
+    .star {
+      color: var(--accent);
+      font-size: 14px;
+    }
+
+    .star.empty {
+      color: var(--border);
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+    }
+
+    .badge-new {
+      background: var(--accent-s);
+      color: var(--accent);
+      border: 1px solid rgba(255, 106, 0, .3);
+    }
+
+    .badge-hot {
+      background: rgba(239, 68, 68, .1);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, .25);
+    }
+
+    .badge-sale {
+      background: rgba(34, 197, 94, .1);
+      color: var(--success);
+      border: 1px solid rgba(34, 197, 94, .25);
+    }
+
+    .badge-stock {
+      background: rgba(245, 158, 11, .08);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, .2);
+    }
+
+    /* ── QUANTITY STEPPER ── */
+    .qty-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--t1);
+      cursor: pointer;
+      font-size: 18px;
+      transition: background .2s, border-color .2s;
+    }
+
+    .qty-btn:hover {
+      background: var(--card);
+      border-color: #444;
+    }
+
+    .qty-display {
+      width: 52px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+    }
+
+    /* ── OFFERS ── */
+    .offer-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .offer-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-s);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    /* ── SPEC TABLE ── */
+    .spec-row {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+    }
+
+    .spec-key {
+      width: 200px;
+      flex-shrink: 0;
+      padding: 12px 0;
+      color: var(--t2);
+      font-size: 13px;
+    }
+
+    .spec-val {
+      flex: 1;
+      padding: 12px 16px;
+      color: var(--t1);
+      font-size: 13px;
+    }
+
+    /* ── TOAST ── */
+    .toast-wrap {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      min-width: 280px;
+      max-width: 360px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translateX(120%);
+      transition: transform .35s cubic-bezier(.16, 1, .3, 1);
+      pointer-events: all;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .toast-success .toast-icon {
+      background: rgba(34, 197, 94, .1);
+      color: var(--success);
+    }
+
+    .toast-error .toast-icon {
+      background: rgba(239, 68, 68, .1);
+      color: var(--danger);
+    }
+
+    .toast-info .toast-icon {
+      background: var(--accent-s);
+      color: var(--accent);
+    }
+
+    /* ── STICKY PDP BAR ── */
+    .sticky-pdp {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, .92);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .sticky-pdp.visible {
+      transform: translateY(0);
+    }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--t3);
+    }
+
+    .breadcrumb a {
+      color: var(--t3);
+      text-decoration: none;
+      transition: color .15s;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--accent);
+    }
+
+    .breadcrumb span {
+      color: var(--t1);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-up {
+      animation: fadeUp .5s cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .fade-up-d1 {
+      animation-delay: .07s;
+    }
+
+    .fade-up-d2 {
+      animation-delay: .14s;
+    }
+
+    /* Sticky product panel offset */
+    @media (min-width: 1024px) {
+      .sticky-purchase {
+        position: sticky;
+        top: 80px;
+      }
+    }
+
+    /* ── TABS CONTENT ── */
+    .tab-content {
+      animation: fadeIn .4s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* ── PROGRESS BAR (ratings) ── */
+    .rating-bar {
+      height: 4px;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rating-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: var(--accent);
+      transition: width .8s cubic-bezier(.16, 1, .3, 1);
+    }
+  </style>
+
+  <!-- ═══════════════════════════════════════════════════════════ PDP MAIN -->
+  <main class="max-w-[1400px] w-full mx-auto px-4 sm:px-8 py-8 md:py-12">
+
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_480px] gap-8 lg:gap-16 items-start">
+
+      <!-- LEFT: GALLERY -->
+      <div class="fade-up">
+        <!-- Badges row -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+          <span class="badge badge-new">New</span>
+          <span class="badge badge-hot">Bestseller</span>
+          <span class="badge badge-sale">15% Off</span>
+        </div>
+
+        <!-- Main Image -->
+        <div class="gallery-main" id="mainGallery">
+          <img id="mainImg" src="<%= defaultImage || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
+          <!-- Zoom hint -->
+          <div
+            style="position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,.7);padding:6px 10px;font-size:11px;color:var(--t2);display:flex;align-items:center;gap:6px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+              <line x1="11" y1="8" x2="11" y2="14" />
+              <line x1="8" y1="11" x2="14" y2="11" />
+            </svg>
+            Hover to zoom
+          </div>
+        </div>
+
+        <!-- Thumbnails -->
+        <div id="galleryThumbnails" class="grid grid-cols-5 gap-2 mt-3">
+          <% if (initialImages && initialImages.length> 0) { %>
+            <% initialImages.forEach((img, index)=> { %>
+              <div class="gallery-thumb <%= index === 0 ? 'active' : '' %>" onclick="changeImg(this,'<%= img %>')">
+                <img src="<%= img %>" alt="<%= product.name %>">
+              </div>
+              <% }) %>
+                <% } %>
+        </div>
+
+        <!-- Tabs Section -->
+        <div style="margin-top:56px;">
+          <div style="display:flex;gap:32px;border-bottom:1px solid var(--border);margin-bottom:32px;">
+            <button class="tab-btn active" onclick="switchTab(this,'overview')">Overview</button>
+            <button class="tab-btn" onclick="switchTab(this,'specs')">Specifications</button>
+            <button class="tab-btn" onclick="switchTab(this,'reviews')">Reviews (247)</button>
+            <button class="tab-btn" onclick="switchTab(this,'inbox')">In the Box</button>
+          </div>
+
+          <!-- OVERVIEW TAB -->
+          <div id="tab-overview" class="tab-content" style="padding-top: 24px;">
+            <h2 class="font-syne" style="font-size:22px;font-weight:700;margin-bottom:20px;">About this phone</h2>
+            <p style="color:var(--t2);line-height:1.8;margin-bottom:16px;">The Samsung Galaxy S25 Ultra represents the
+              pinnacle of mobile engineering — a device that doesn't compromise on anything. From its titanium frame to
+              its built-in S Pen to its quad-camera system capable of 200MP shots, this is the phone for professionals
+              who demand the absolute best.</p>
+            <p style="color:var(--t2);line-height:1.8;margin-bottom:32px;">Powered by the Snapdragon 8 Elite chip
+              (custom-tuned by Samsung), the S25 Ultra delivers desktop-class performance in your pocket. The 6.9-inch
+              Dynamic AMOLED 2X display with 2600 nits peak brightness makes outdoor visibility effortless.</p>
+
+            <!-- Feature highlight grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[1px] mb-8" style="background:var(--border);">
+              <div style="background:var(--card);padding:24px 20px;">
+                <div style="color:var(--accent);margin-bottom:12px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="5" y="2" width="14" height="20" rx="2" />
+                    <line x1="12" y1="18" x2="12.01" y2="18" />
+                  </svg>
+                </div>
+                <div class="font-syne" style="font-size:13px;font-weight:700;margin-bottom:4px;">6.9" Display</div>
+                <div style="font-size:12px;color:var(--t2);">Dynamic AMOLED 2X, 120Hz</div>
+              </div>
+              <div style="background:var(--card);padding:24px 20px;">
+                <div style="color:var(--accent);margin-bottom:12px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                      d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+                  </svg>
+                </div>
+                <div class="font-syne" style="font-size:13px;font-weight:700;margin-bottom:4px;">200MP Camera</div>
+                <div style="font-size:12px;color:var(--t2);">Quad rear system, 100× zoom</div>
+              </div>
+              <div style="background:var(--card);padding:24px 20px;">
+                <div style="color:var(--accent);margin-bottom:12px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M5 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2M19 3h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2" />
+                    <rect x="5" y="3" width="14" height="18" rx="1" />
+                  </svg>
+                </div>
+                <div class="font-syne" style="font-size:13px;font-weight:700;margin-bottom:4px;">S Pen Built-in</div>
+                <div style="font-size:12px;color:var(--t2);">Pressure sensitive, AI features</div>
+              </div>
+              <div style="background:var(--card);padding:24px 20px;">
+                <div style="color:var(--accent);margin-bottom:12px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                </div>
+                <div class="font-syne" style="font-size:13px;font-weight:700;margin-bottom:4px;">Snapdragon 8 Elite
+                </div>
+                <div style="font-size:12px;color:var(--t2);">4nm process, fastest mobile chip</div>
+              </div>
+              <div style="background:var(--card);padding:24px 20px;">
+                <div style="color:var(--accent);margin-bottom:12px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z" />
+                  </svg>
+                </div>
+                <div class="font-syne" style="font-size:13px;font-weight:700;margin-bottom:4px;">5000 mAh Battery</div>
+                <div style="font-size:12px;color:var(--t2);">45W wired, 15W wireless</div>
+              </div>
+              <div style="background:var(--card);padding:24px 20px;">
+                <div style="color:var(--accent);margin-bottom:12px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+                <div class="font-syne" style="font-size:13px;font-weight:700;margin-bottom:4px;">IP68 Rated</div>
+                <div style="font-size:12px;color:var(--t2);">Titanium frame, Gorilla Armor</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPECS TAB -->
+          <div id="tab-specs" class="tab-content" style="display:none;">
+            <div style="margin-bottom:32px;">
+              <div class="font-syne"
+                style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">
+                Display</div>
+              <div class="spec-row">
+                <div class="spec-key">Screen Size</div>
+                <div class="spec-val">6.9 inches</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Technology</div>
+                <div class="spec-val">Dynamic AMOLED 2X</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Resolution</div>
+                <div class="spec-val">3088 × 1440 px (WQHD+)</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Refresh Rate</div>
+                <div class="spec-val">1–120Hz adaptive</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Brightness</div>
+                <div class="spec-val">2600 nits peak</div>
+              </div>
+            </div>
+            <div style="margin-bottom:32px;">
+              <div class="font-syne"
+                style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">
+                Camera</div>
+              <div class="spec-row">
+                <div class="spec-key">Main Camera</div>
+                <div class="spec-val">200MP, f/1.7, OIS</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Ultra Wide</div>
+                <div class="spec-val">50MP, f/1.9, 120°</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Telephoto 1</div>
+                <div class="spec-val">10MP, f/2.4, 3× optical</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Telephoto 2</div>
+                <div class="spec-val">50MP, f/3.4, 5× optical, 100× Space Zoom</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Front Camera</div>
+                <div class="spec-val">12MP, f/2.2</div>
+              </div>
+            </div>
+            <div>
+              <div class="font-syne"
+                style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">
+                Performance</div>
+              <div class="spec-row">
+                <div class="spec-key">Processor</div>
+                <div class="spec-val">Snapdragon 8 Elite (4nm)</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">RAM</div>
+                <div class="spec-val">12GB LPDDR5X</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Storage</div>
+                <div class="spec-val">256GB / 512GB / 1TB UFS 4.0</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">OS</div>
+                <div class="spec-val">Android 15, One UI 7</div>
+              </div>
+              <div class="spec-row">
+                <div class="spec-key">Battery</div>
+                <div class="spec-val">5000 mAh · 45W wired · 15W wireless</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REVIEWS TAB -->
+          <div id="tab-reviews" class="tab-content" style="display:none;">
+            <!-- Rating summary -->
+            <div class="grid grid-cols-1 md:grid-cols-[160px_1fr] gap-8 md:gap-12 mb-10 items-start">
+              <div style="text-align:center;">
+                <div class="font-syne" style="font-size:64px;font-weight:800;line-height:1;color:var(--accent);">4.6
+                </div>
+                <div style="display:flex;justify-content:center;gap:3px;margin:10px 0 6px;">
+                  <span class="star">★</span><span class="star">★</span><span class="star">★</span><span
+                    class="star">★</span><span class="star" style="opacity:.5;">★</span>
+                </div>
+                <div style="font-size:12px;color:var(--t2);">247 reviews</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding-top:8px;">
+                <div style="display:flex;align-items:center;gap:12px;"><span
+                    style="font-size:12px;color:var(--t2);width:14px;">5</span>
+                  <div class="rating-bar" style="flex:1;">
+                    <div class="rating-bar-fill" style="width:72%;"></div>
+                  </div><span style="font-size:12px;color:var(--t2);width:30px;text-align:right;">72%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;"><span
+                    style="font-size:12px;color:var(--t2);width:14px;">4</span>
+                  <div class="rating-bar" style="flex:1;">
+                    <div class="rating-bar-fill" style="width:18%;"></div>
+                  </div><span style="font-size:12px;color:var(--t2);width:30px;text-align:right;">18%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;"><span
+                    style="font-size:12px;color:var(--t2);width:14px;">3</span>
+                  <div class="rating-bar" style="flex:1;">
+                    <div class="rating-bar-fill" style="width:6%;"></div>
+                  </div><span style="font-size:12px;color:var(--t2);width:30px;text-align:right;">6%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;"><span
+                    style="font-size:12px;color:var(--t2);width:14px;">2</span>
+                  <div class="rating-bar" style="flex:1;">
+                    <div class="rating-bar-fill" style="width:2%;"></div>
+                  </div><span style="font-size:12px;color:var(--t2);width:30px;text-align:right;">2%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;"><span
+                    style="font-size:12px;color:var(--t2);width:14px;">1</span>
+                  <div class="rating-bar" style="flex:1;">
+                    <div class="rating-bar-fill" style="width:2%;"></div>
+                  </div><span style="font-size:12px;color:var(--t2);width:30px;text-align:right;">2%</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;">
+              <button class="btn-ghost" style="font-size:11px;">Most Helpful</button>
+              <button class="btn-ghost" style="font-size:11px;">Most Recent</button>
+              <button class="btn-ghost" style="font-size:11px;">With Photos</button>
+              <button class="btn-ghost" style="font-size:11px;">Verified Only</button>
+            </div>
+            <!-- Review cards -->
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <div class="review-card">
+                <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div
+                      style="width:36px;height:36px;border-radius:50%;background:var(--elevated);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent);">
+                      R</div>
+                    <div>
+                      <div style="font-size:14px;font-weight:600;">Rahul M.</div>
+                      <div style="font-size:11px;color:var(--t2);">Verified Purchase · 2 weeks ago</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:2px;"><span class="star">★</span><span class="star">★</span><span
+                      class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+                </div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Camera system is absolutely insane</div>
+                <p style="font-size:13px;color:var(--t2);line-height:1.7;">The 200MP sensor paired with the 100× Space
+                  Zoom is genuinely mind-blowing. I've been shooting RAW and the level of detail you can pull out is
+                  something I'd expect from a DSLR. Battery easily lasts the full day with heavy usage. The titanium
+                  frame feels incredibly premium.</p>
+              </div>
+              <div class="review-card">
+                <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div
+                      style="width:36px;height:36px;border-radius:50%;background:var(--elevated);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent);">
+                      P</div>
+                    <div>
+                      <div style="font-size:14px;font-weight:600;">Priya K.</div>
+                      <div style="font-size:11px;color:var(--t2);">Verified Purchase · 1 month ago</div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:2px;"><span class="star">★</span><span class="star">★</span><span
+                      class="star">★</span><span class="star">★</span><span class="star empty">★</span></div>
+                </div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Worth every rupee</div>
+                <p style="font-size:13px;color:var(--t2);line-height:1.7;">Switched from iPhone 15 Pro Max and I don't
+                  regret it one bit. The S Pen is something unique and actually useful for note-taking and sketching.
+                  Display is the best I've ever seen on a phone.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- IN THE BOX TAB -->
+          <div id="tab-inbox" class="tab-content" style="display:none;">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-[1px]" style="background:var(--border);">
+              <div style="background:var(--card);padding:20px;text-align:center;">
+                <div style="font-size:32px;margin-bottom:10px;">📱</div>
+                <div style="font-size:13px;font-weight:600;">Galaxy S25 Ultra</div>
+                <div style="font-size:11px;color:var(--t2);margin-top:4px;">× 1</div>
+              </div>
+              <div style="background:var(--card);padding:20px;text-align:center;">
+                <div style="font-size:32px;margin-bottom:10px;">🔌</div>
+                <div style="font-size:13px;font-weight:600;">USB-C Cable</div>
+                <div style="font-size:11px;color:var(--t2);margin-top:4px;">× 1</div>
+              </div>
+              <div style="background:var(--card);padding:20px;text-align:center;">
+                <div style="font-size:32px;margin-bottom:10px;">📌</div>
+                <div style="font-size:13px;font-weight:600;">SIM Ejector Pin</div>
+                <div style="font-size:11px;color:var(--t2);margin-top:4px;">× 1</div>
+              </div>
+              <div style="background:var(--card);padding:20px;text-align:center;">
+                <div style="font-size:32px;margin-bottom:10px;">📄</div>
+                <div style="font-size:13px;font-weight:600;">Quick Start Guide</div>
+                <div style="font-size:11px;color:var(--t2);margin-top:4px;">× 1</div>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--t3);margin-top:16px;">* Charger sold separately. Samsung has removed
+              charger from box since 2021.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: PURCHASE PANEL -->
+      <div class="sticky-purchase fade-up fade-up-d1">
+        <!-- Brand + Title -->
+        <div style="margin-bottom:20px;">
+          <p
+            style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:8px;">
+            <%= product.brand %>
+          </p>
+          <h1 class="font-syne" style="font-size:26px;font-weight:800;line-height:1.2;margin-bottom:6px;">
+            <%= product.name %>
+          </h1>
+          <p style="font-size:12px;color:var(--t3);font-family:'JetBrains Mono',monospace;">SKU: <%= product._id %>
+          </p>
+        </div>
+
+        <!-- Rating row -->
+        <div
+          style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px;">
+          <div style="display:flex;gap:2px;">
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span
+              class="star">★</span><span class="star" style="opacity:.5;">★</span>
+          </div>
+          <a href="#" onclick="switchTab(document.querySelector('[onclick*=reviews]'),'reviews')"
+            style="font-size:13px;color:var(--t2);text-decoration:none;">4.6 (247 reviews)</a>
+          <span style="color:var(--border);">|</span>
+          <span id="stockStatusBadge" style="font-size:12px;color:var(--success);font-weight:600;">
+            <% if ((defaultVariant ? defaultVariant.stock : product.stock)> 0) { %>● IN STOCK<% } else { %><span
+                  style="color:var(--danger)">● OUT OF STOCK</span>
+                <% } %>
+          </span>
+        </div>
+
+        <!-- Price -->
+        <div style="margin-bottom:20px;" class="fade-up fade-up-d2">
+          <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+            <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%=
+                (defaultVariant ? defaultVariant.price : product.price).toLocaleString() %></span>
+          </div>
+          <p style="font-size:11px;color:var(--t3);margin-top:4px;">Incl. 18% GST · Free delivery</p>
+        </div>
+
+        <% 
+          // Helper to normalize units (e.g., "128" -> "128 GB", "512 gb" -> "512 GB")
+          const normalizeUnit = (s) => {
+            if (!s) return "";
+            let v = s.toString().trim();
+            if (/^\d+$/.test(v)) return v + " GB";
+            if (v.toLowerCase().endsWith("gb")) return v.slice(0, -2).trim() + " GB";
+            return v;
+          };
+
+          // Normalize variants to prevent duplication and mismatch issues
+          if (product && product.variants) {
+            product.variants = product.variants.map(v => ({
+              ...v,
+              color: (v.color || "").trim(),
+              storage: normalizeUnit(v.storage),
+              ram: normalizeUnit(v.ram)
+            }));
+          }
+
+          // Case-insensitive unique options extraction
+          const uniqueColors = [...new Map(product.variants.map(v => [v.color.toLowerCase(), v.color])).values()];
+          const uniqueStorages = [...new Map(product.variants.map(v => [v.storage.toLowerCase(), v.storage])).values()];
+          const uniqueRams = [...new Map(product.variants.map(v => [v.ram.toLowerCase(), v.ram])).values()];
+
+          // Find default variant based on first color and first storage
+           const variant=defaultVariant; const image=(variant && variant.images && variant.images.length> 0)
+            ? variant.images[0]
+            : '/images/placeholder.jpg';
+
+            function getHexForColor(colorName) {
+            const name = colorName.toLowerCase();
+            if (name.includes('black')) return '#1a1a1a';
+            if (name.includes('white')) return '#fcfcfc';
+            if (name.includes('gray') || name.includes('grey')) return '#888888';
+            if (name.includes('brown')) return '#6f4f37';
+            if (name.includes('blue')) return '#3b82f6';
+            if (name.includes('red')) return '#ef4444';
+            if (name.includes('green')) return '#22c55e';
+            if (name.includes('gold') || name.includes('yellow')) return '#fbbf24';
+            if (name.includes('purple') || name.includes('violet')) return '#8b5cf6';
+            if (name.includes('pink')) return '#ec4899';
+            if (name.includes('silver')) return '#e5e7eb';
+            return '#444444';
+            }
+            %>
+
+            <% if (uniqueColors.length> 0) { %>
+              <!-- Color Variant -->
+              <div style="margin-bottom:20px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <span
+                    style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);">Color</span>
+                  <span id="selectedColor" style="font-size:13px;color:var(--t1);font-weight:600;text-transform:capitalize;">
+                    <%= defaultVariant ? defaultVariant.color : uniqueColors[0] %>
+                  </span>
+                </div>
+                <div style="display:flex;gap:10px;" id="colorSwatches">
+                  <% uniqueColors.forEach((color, i)=> { %>
+                    <button
+                      class="color-swatch <%= (defaultVariant && color === defaultVariant.color) ? 'active' : '' %>"
+                      style="background:<%= getHexForColor(color) %>; <%= color.toLowerCase().includes('white') ? 'border:1px solid var(--border);' : '' %>"
+                      onclick="selectColor(this,'<%= color %>')" title="<%= color %>"></button>
+                    <% }) %>
+                </div>
+              </div>
+              <% } %>
+
+                <% if (uniqueStorages.length> 0) { %>
+                  <!-- Storage Variant -->
+                  <div style="margin-bottom:20px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                      <span
+                        style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);">Storage</span>
+                      <span id="selectedStorage" style="font-size:13px;color:var(--t1);font-weight:500;">
+                        <%= defaultVariant ? defaultVariant.storage : uniqueStorages[0] %>
+                      </span>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="storagePills">
+                      <% uniqueStorages.forEach((storage, i)=> { %>
+                        <button
+                          class="variant-pill <%= (defaultVariant && storage === defaultVariant.storage) ? 'active' : '' %>"
+                          onclick="selectStorage(this,'<%= storage %>')">
+                          <%= storage %>
+                        </button>
+                        <% }) %>
+                    </div>
+                  </div>
+                  <% } %>
+
+                <% if (uniqueRams.length > 0) { %>
+                  <!-- RAM Variant -->
+                  <div style="margin-bottom:20px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                      <span
+                        style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);">RAM</span>
+                      <span id="selectedRam" style="font-size:13px;color:var(--t1);font-weight:500;">
+                        <%= defaultVariant ? defaultVariant.ram : uniqueRams[0] %>
+                      </span>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="ramPills">
+                      <% uniqueRams.forEach((ram, i) => { %>
+                        <button
+                          class="variant-pill <%= (defaultVariant && ram === defaultVariant.ram) ? 'active' : '' %>"
+                          onclick="selectRam(this,'<%= ram %>')">
+                          <%= ram %>
+                        </button>
+                      <% }) %>
+                    </div>
+                  </div>
+                <% } %>
+
+                    <!-- Qty + CTA -->
+                    <div style="margin-bottom:20px;">
+                      <div
+                        style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);margin-bottom:10px;">
+                        Quantity</div>
+                      <div style="display:flex;align-items:center;gap:0;width:fit-content;margin-bottom:16px;">
+                        <button class="qty-btn" onclick="adjustQty(-1)">−</button>
+                        <div class="qty-display" id="qtyDisplay">1</div>
+                        <button class="qty-btn" onclick="adjustQty(1)">+</button>
+                      </div>
+                      <!-- Stock warning -->
+                      <div
+                        style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);margin-bottom:16px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                          <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                          <line x1="12" y1="9" x2="12" y2="13" />
+                          <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                        <span style="font-size:12px;color:var(--warning);font-weight:500;">Only 8 left in stock — order
+                          soon</span>
+                      </div>
+                      <button class="btn-primary" style="width:100%;margin-bottom:10px;" onclick="addToCart()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                          <line x1="3" y1="6" x2="21" y2="6" />
+                          <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                        Add to Cart
+                      </button>
+                      <button class="btn-secondary" style="width:100%;">Buy Now</button>
+                    </div>
+
+                    <!-- Action row -->
+                    <div style="display:flex;gap:8px;margin-bottom:24px;">
+                      <button class="btn-icon" id="wishlistBtn" onclick="toggleWishlist('<%= product._id %>')"
+                        style="flex:1;gap:6px;width:auto;font-size:12px;color:var(--t2);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="1.8">
+                          <path
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                        Wishlist
+                      </button>
+                      <button class="btn-icon" style="flex:1;gap:6px;width:auto;font-size:12px;color:var(--t2);">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="1.8">
+                          <circle cx="18" cy="5" r="3" />
+                          <circle cx="6" cy="12" r="3" />
+                          <circle cx="18" cy="19" r="3" />
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
+                        Share
+                      </button>
+                    </div>
+
+                    <!-- Offers -->
+                    <div style="border:1px solid var(--border);background:var(--card);">
+                      <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+                        <span class="font-syne"
+                          style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Available
+                          Offers</span>
+                      </div>
+                      <div style="padding:0 16px;">
+                        <div class="offer-item">
+                          <div class="offer-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" stroke-width="2">
+                              <rect x="2" y="5" width="20" height="14" rx="2" />
+                              <line x1="2" y1="10" x2="22" y2="10" />
+                            </svg></div>
+                          <div>
+                            <div style="font-size:13px;font-weight:500;margin-bottom:2px;">Bank Offer</div>
+                            <div style="font-size:12px;color:var(--t2);">₹7,000 instant discount on HDFC Bank cards
+                            </div>
+                          </div>
+                        </div>
+                        <div class="offer-item">
+                          <div class="offer-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" stroke-width="2">
+                              <path
+                                d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                              <line x1="7" y1="7" x2="7.01" y2="7" />
+                            </svg></div>
+                          <div>
+                            <div style="font-size:13px;font-weight:500;margin-bottom:2px;">Exchange Bonus</div>
+                            <div style="font-size:12px;color:var(--t2);">Extra ₹5,000 off on exchange of your old phone
+                            </div>
+                          </div>
+                        </div>
+                        <div class="offer-item" style="border-bottom:none;">
+                          <div class="offer-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                              stroke="currentColor" stroke-width="2">
+                              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                            </svg></div>
+                          <div>
+                            <div style="font-size:13px;font-weight:500;margin-bottom:2px;">No Cost EMI</div>
+                            <div style="font-size:12px;color:var(--t2);">Available on SBI, Axis, ICICI cards · 3–24
+                              months</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Delivery check -->
+                    <div style="margin-top:16px;">
+                      <div
+                        style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);margin-bottom:10px;">
+                        Check Delivery</div>
+                      <div style="display:flex;">
+                        <input type="text" placeholder="Enter PIN code" maxlength="6" id="pincodeInput"
+                          class="input-dark" style="flex:1;border-right:none;">
+                        <button onclick="checkDelivery()"
+                          style="background:var(--accent);color:#000;border:none;padding:0 20px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:background .2s;">CHECK</button>
+                      </div>
+                      <div id="deliveryResult" style="margin-top:10px;font-size:13px;display:none;"></div>
+                    </div>
+
+                    <!-- Trust strip -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-[1px] mt-4" style="background:var(--border);">
+                      <div style="background:var(--card);padding:14px 16px;display:flex;align-items:center;gap:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
+                          stroke-width="1.8">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        <div>
+                          <div style="font-size:12px;font-weight:600;">Genuine Product</div>
+                          <div style="font-size:11px;color:var(--t2);">100% authentic</div>
+                        </div>
+                      </div>
+                      <div style="background:var(--card);padding:14px 16px;display:flex;align-items:center;gap:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
+                          stroke-width="1.8">
+                          <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        </svg>
+                        <div>
+                          <div style="font-size:12px;font-weight:600;">1 Year Warranty</div>
+                          <div style="font-size:11px;color:var(--t2);">Samsung India</div>
+                        </div>
+                      </div>
+                      <div style="background:var(--card);padding:14px 16px;display:flex;align-items:center;gap:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
+                          stroke-width="1.8">
+                          <polyline points="3 12 5 12 9 4 15 20 19 12 21 12" />
+                        </svg>
+                        <div>
+                          <div style="font-size:12px;font-weight:600;">7-Day Returns</div>
+                          <div style="font-size:11px;color:var(--t2);">Hassle-free</div>
+                        </div>
+                      </div>
+                      <div style="background:var(--card);padding:14px 16px;display:flex;align-items:center;gap:10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
+                          stroke-width="1.8">
+                          <rect x="1" y="3" width="15" height="13" />
+                          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                          <circle cx="5.5" cy="18.5" r="2.5" />
+                          <circle cx="18.5" cy="18.5" r="2.5" />
+                        </svg>
+                        <div>
+                          <div style="font-size:12px;font-weight:600;">Free Delivery</div>
+                          <div style="font-size:11px;color:var(--t2);">Across India</div>
+                        </div>
+                      </div>
+                    </div>
+
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════ REFERENCE PRODUCTS -->
+  <section style="background:var(--surface);border-top:1px solid var(--border);" class="py-12 md:py-20 mt-10">
+    <div class="max-w-[1400px] w-full mx-auto px-4 sm:px-8">
+
+      <!-- Section header -->
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;">
+        <div>
+          <p
+            style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">
+            You May Also Like</p>
+          <h2 class="font-syne" style="font-size:32px;font-weight:800;">Similar Phones</h2>
+        </div>
+        <a href="/products?brand=<%= product.brand %>"
+          style="font-size:13px;color:var(--t2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .2s;"
+          onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--t2)'">
+          View All <%= product.brand %>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- Product Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[1px]" style="background:var(--border);"
+        id="refProductGrid">
+        <% if (recommendedProducts && recommendedProducts.length> 0) { %>
+          <% recommendedProducts.forEach((recProduct, idx)=> { %>
+            <div class="product-card fade-up <%= idx === 1 ? 'fade-up-d1' : (idx===2 ? 'fade-up-d2' : 'fade-up-d3') %>"
+              style="position:relative;">
+              <div class="card-img" style="position:relative;cursor:pointer;"
+                onclick="window.location.href='/products/<%= recProduct._id %>'">
+                <img
+                  src="<%= recProduct.variants && recProduct.variants[0] && recProduct.variants[0].images && recProduct.variants[0].images[0] ? recProduct.variants[0].images[0] : '/images/placeholder.jpg' %>"
+                  alt="<%= recProduct.name %>">
+                <div class="quick-add"
+                  onclick="event.stopPropagation(); quickAdd('<%= recProduct._id %>', '<%= recProduct.name %>')">Add to
+                  Cart</div>
+              </div>
+              <div style="padding:20px 20px 24px;">
+                <p
+                  style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:6px;">
+                  <%= recProduct.brand %>
+                </p>
+                <h3 class="font-syne"
+                  style="font-size:16px;font-weight:700;margin-bottom:4px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                  title="<%= recProduct.name %>">
+                  <%= recProduct.name %>
+                </h3>
+                <p style="font-size:12px;color:var(--t2);margin-bottom:12px;">
+                  <%= recProduct.category?.name || 'Category' %>
+                </p>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span class="font-mono" style="font-size:17px;font-weight:700;">₹<%= recProduct.price.toLocaleString()
+                      %></span>
+                </div>
+              </div>
+            </div>
+            <% }) %>
+              <% } else { %>
+                <div style="padding: 40px; color: var(--t2); grid-column: span 4; text-align: center;">No similar
+                  products available at the moment.</div>
+                <% } %>
+      </div>
+
+      <!-- Second row: Recently Viewed (dynamic from session) -->
+      <% if (recentlyViewedProducts && recentlyViewedProducts.length > 0) { %>
+      <div style="margin-top:40px;">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;">
+          <div>
+            <p
+              style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">
+              Your History</p>
+            <h2 class="font-syne" style="font-size:28px;font-weight:800;">Recently Viewed</h2>
+          </div>
+          <a href="/products"
+            style="font-size:13px;color:var(--t2);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .2s;"
+            onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--t2)'">
+            View All
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </a>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[1px]" style="background:var(--border);">
+          <% recentlyViewedProducts.forEach((rvProduct, idx) => { %>
+            <div class="product-card fade-up <%= idx === 1 ? 'fade-up-d1' : (idx === 2 ? 'fade-up-d2' : 'fade-up-d3') %>"
+              style="position:relative;">
+              <div class="card-img" style="position:relative;cursor:pointer;"
+                onclick="window.location.href='/products/<%= rvProduct._id %>'">
+                <img
+                  src="<%= rvProduct.variants && rvProduct.variants[0] && rvProduct.variants[0].images && rvProduct.variants[0].images[0] ? rvProduct.variants[0].images[0] : '/images/placeholder.jpg' %>"
+                  alt="<%= rvProduct.name %>">
+                <div class="quick-add"
+                  onclick="event.stopPropagation(); quickAdd('<%= rvProduct._id %>', '<%= rvProduct.name %>')">Add to
+                  Cart</div>
+              </div>
+              <div style="padding:20px 20px 24px;">
+                <p
+                  style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:6px;">
+                  <%= rvProduct.brand %>
+                </p>
+                <h3 class="font-syne"
+                  style="font-size:16px;font-weight:700;margin-bottom:4px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                  title="<%= rvProduct.name %>">
+                  <%= rvProduct.name %>
+                </h3>
+                <p style="font-size:12px;color:var(--t2);margin-bottom:12px;">
+                  <%= rvProduct.category?.name || 'Category' %>
+                </p>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span class="font-mono" style="font-size:17px;font-weight:700;">₹<%= rvProduct.price.toLocaleString()
+                      %></span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════━━ STICKY BOTTOM BAR (Mobile) -->
+  <div class="sticky-pdp" id="stickyBar">
+    <div class="max-w-[1400px] w-full mx-auto px-4 sm:px-8 py-3 flex items-center justify-between">
+      <div>
+        <div style="font-size:12px;color:var(--t2);">Samsung Galaxy S25 Ultra</div>
+        <div class="font-mono" style="font-size:20px;font-weight:700;" id="stickyPrice">₹1,09,999</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-secondary" style="padding:12px 24px;">Wishlist</button>
+        <button class="btn-primary" style="padding:12px 28px;" onclick="addToCart()">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- ═══════════════════════════════════════════════════════════ JAVASCRIPT -->
+  <script>
+    // ── DATA ──────────────────────────────────────────────────────────────────
+    const product = <%- JSON.stringify(product || {}) %>;
+    // Normalize server-side data for client-side consistency
+    const normalizeUnit = (s) => {
+      if (!s) return "";
+      let v = s.toString().trim();
+      if (/^\d+$/.test(v)) return v + " GB";
+      if (v.toLowerCase().endsWith("gb")) return v.slice(0, -2).trim() + " GB";
+      return v;
+    };
+
+    if (product.variants) {
+      product.variants = product.variants.map(v => ({
+        ...v,
+        color: (v.color || "").trim(),
+        storage: normalizeUnit(v.storage),
+        ram: normalizeUnit(v.ram)
+      }));
+    }
+    const serverVariants = product.variants || [];
+
+    let qty = 1;
+    let wishlisted = false;
+
+    // ── GALLERY ───────────────────────────────────────────────────────────────
+    function changeImg(el, url) {
+      document.getElementById('mainImg').src = url;
+      document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    // ── TABS ──────────────────────────────────────────────────────────────────
+    function switchTab(btn, tabId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+      if (typeof btn === 'string') {
+        document.querySelectorAll('.tab-btn').forEach(b => { if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(btn)) b.classList.add('active'); });
+        tabId = btn;
+      } else {
+        btn.classList.add('active');
+      }
+      const el = document.getElementById('tab-' + tabId);
+      if (el) el.style.display = 'block';
+    }
+
+    // ── VARIANT SELECTORS ─────────────────────────────────────────────────────
+    function selectColor(el, name) {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('selectedColor').textContent = name;
+
+      if (serverVariants && serverVariants.length) {
+        const selectedStorage = document.getElementById('selectedStorage')?.textContent?.trim();
+        const selectedRam = document.getElementById('selectedRam')?.textContent?.trim();
+        const match = serverVariants.find(v => v.color === name && v.storage === selectedStorage && v.ram === selectedRam);
+
+        if (!match) {
+          const altVariant = serverVariants.find(v => v.color === name);
+          if (altVariant) {
+            if (document.getElementById('selectedStorage')) {
+              document.getElementById('selectedStorage').textContent = altVariant.storage;
+              document.querySelectorAll('#storagePills .variant-pill').forEach(p => {
+                p.classList.toggle('active', p.textContent.trim() === altVariant.storage);
+              });
+            }
+            if (document.getElementById('selectedRam')) {
+              document.getElementById('selectedRam').textContent = altVariant.ram;
+              document.querySelectorAll('#ramPills .variant-pill').forEach(p => {
+                p.classList.toggle('active', p.textContent.trim() === altVariant.ram);
+              });
+            }
+          }
+        }
+      }
+
+      updateVariantDisplay();
+    }
+
+    function selectStorage(el, name) {
+      document.querySelectorAll('#storagePills .variant-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('selectedStorage').textContent = name;
+
+      if (serverVariants && serverVariants.length) {
+        const selectedColor = document.getElementById('selectedColor')?.textContent?.trim();
+        const selectedRam = document.getElementById('selectedRam')?.textContent?.trim();
+        const match = serverVariants.find(v => v.storage === name && v.color === selectedColor && v.ram === selectedRam);
+
+        if (!match) {
+          const altVariant = serverVariants.find(v => v.storage === name);
+          if (altVariant) {
+            if (document.getElementById('selectedColor')) {
+              document.getElementById('selectedColor').textContent = altVariant.color;
+              document.querySelectorAll('.color-swatch').forEach(s => {
+                s.classList.toggle('active', s.getAttribute('title') === altVariant.color);
+              });
+            }
+            if (document.getElementById('selectedRam')) {
+              document.getElementById('selectedRam').textContent = altVariant.ram;
+              document.querySelectorAll('#ramPills .variant-pill').forEach(p => {
+                p.classList.toggle('active', p.textContent.trim() === altVariant.ram);
+              });
+            }
+          }
+        }
+      }
+
+      updateVariantDisplay();
+      showToast('info', 'Variant selected', `${name} selected`);
+    }
+
+    function selectRam(el, name) {
+      document.querySelectorAll('#ramPills .variant-pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('selectedRam').textContent = name;
+
+      if (serverVariants && serverVariants.length) {
+        const selectedColor = document.getElementById('selectedColor')?.textContent?.trim();
+        const selectedStorage = document.getElementById('selectedStorage')?.textContent?.trim();
+        const match = serverVariants.find(v => v.ram === name && v.color === selectedColor && v.storage === selectedStorage);
+
+        if (!match) {
+          const altVariant = serverVariants.find(v => v.ram === name);
+          if (altVariant) {
+            if (document.getElementById('selectedColor')) {
+              document.getElementById('selectedColor').textContent = altVariant.color;
+              document.querySelectorAll('.color-swatch').forEach(s => {
+                s.classList.toggle('active', s.getAttribute('title') === altVariant.color);
+              });
+            }
+            if (document.getElementById('selectedStorage')) {
+              document.getElementById('selectedStorage').textContent = altVariant.storage;
+              document.querySelectorAll('#storagePills .variant-pill').forEach(p => {
+                p.classList.toggle('active', p.textContent.trim() === altVariant.storage);
+              });
+            }
+          }
+        }
+      }
+
+      updateVariantDisplay();
+      showToast('info', 'Variant selected', `${name} RAM selected`);
+    }
+
+    function updateVariantDisplay() {
+      const selectedStorage = document.getElementById('selectedStorage')?.textContent?.trim();
+      const selectedColor = document.getElementById('selectedColor')?.textContent?.trim();
+      const selectedRam = document.getElementById('selectedRam')?.textContent?.trim();
+
+      if (!selectedStorage || !selectedColor || !serverVariants.length) return;
+
+      const match = serverVariants.find(v => v.storage === selectedStorage && v.color === selectedColor && (!selectedRam || v.ram === selectedRam));
+
+      // Disable unavailable pills/swatches — cascading filter approach
+      // Storage: enabled if ANY variant exists with selected color + this storage (regardless of RAM)
+      document.querySelectorAll('#storagePills .variant-pill').forEach(pill => {
+        const s = pill.textContent.trim();
+        const exists = serverVariants.find(v => v.color === selectedColor && v.storage === s);
+        if (!exists) {
+          pill.classList.add('disabled');
+          pill.title = 'Not available in this color';
+        } else {
+          pill.classList.remove('disabled');
+          pill.title = '';
+        }
+      });
+
+      // RAM: enabled if ANY variant exists with selected color + selected storage + this RAM
+      document.querySelectorAll('#ramPills .variant-pill').forEach(pill => {
+        const r = pill.textContent.trim();
+        const exists = serverVariants.find(v => v.color === selectedColor && v.storage === selectedStorage && v.ram === r);
+        if (!exists) {
+          pill.classList.add('disabled');
+          pill.title = 'Not available in this combination';
+        } else {
+          pill.classList.remove('disabled');
+          pill.title = '';
+        }
+      });
+
+      // Color swatches: enabled if ANY variant exists with this color + selected storage (regardless of RAM)
+      document.querySelectorAll('.color-swatch').forEach(swatch => {
+        const c = swatch.getAttribute('title');
+        const exists = serverVariants.find(v => v.color === c && v.storage === selectedStorage);
+        if (!exists) {
+          swatch.style.opacity = '0.3';
+        } else {
+          swatch.style.opacity = '1';
+        }
+      });
+
+      if (match) {
+        // Update price
+        const formattedPrice = `₹${match.price.toLocaleString()}`;
+        const priceEl = document.getElementById('productPrice');
+        if (priceEl) priceEl.textContent = formattedPrice;
+
+        const stickyPriceEl = document.getElementById('stickyPrice');
+        if (stickyPriceEl) stickyPriceEl.textContent = formattedPrice;
+
+        // Update stock badge
+        const badge = document.getElementById('stockStatusBadge');
+
+        // Manage buy buttons based on stock
+        const actionBtns = [
+          ...document.querySelectorAll('.btn-primary[onclick="addToCart()"]'), // add to cart
+          ...document.querySelectorAll('.btn-secondary[onclick="buyNow()"]') // buy now (using click handler)
+        ];
+
+        if (match.stock > 0) {
+          if (badge) {
+            badge.innerHTML = `● IN STOCK`;
+            badge.style.color = 'var(--success)';
+          }
+          actionBtns.forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            if (btn.classList.contains('btn-primary')) btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Add to Cart';
+          });
+        } else {
+          if (badge) {
+            badge.innerHTML = `● OUT OF STOCK`;
+            badge.style.color = 'var(--danger)';
+          }
+          actionBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
+            if (btn.classList.contains('btn-primary')) btn.innerHTML = 'Out of Stock';
+          });
+        }
+
+        // Update images dynamically
+        let imagesToDisplay = match.images && match.images.length > 0 ? match.images : [];
+        if (imagesToDisplay && imagesToDisplay.length > 0) {
+          const mainImg = document.getElementById('mainImg');
+          if (mainImg) mainImg.src = imagesToDisplay[0];
+
+          const thumbsContainer = document.getElementById('galleryThumbnails');
+          if (thumbsContainer) {
+            thumbsContainer.innerHTML = '';
+            imagesToDisplay.forEach((img, index) => {
+              thumbsContainer.innerHTML += `
+            <div class="gallery-thumb ${index === 0 ? 'active' : ''}" onclick="changeImg(this,'${img}')">
+              <img src="${img}" alt="${product.name}">
+            </div>
+          `;
+            });
+          }
+        }
+      } else {
+        const badge = document.getElementById('stockStatusBadge');
+        if (badge) {
+          badge.innerHTML = `● UNAVAILABLE`;
+          badge.style.color = 'var(--t3)';
+        }
+      }
+    }
+
+    // ── QUANTITY ──────────────────────────────────────────────────────────────
+    function adjustQty(delta) {
+      qty = Math.max(1, Math.min(10, qty + delta));
+      document.getElementById('qtyDisplay').textContent = qty;
+    }
+
+    // ── CART + WISHLIST ───────────────────────────────────────────────────────
+    async function addToCart() {
+      const storageBase = document.getElementById('selectedStorage')?.textContent?.trim() || '';
+      const colorBase = document.getElementById('selectedColor')?.textContent?.trim() || '';
+      const ramBase = document.getElementById('selectedRam')?.textContent?.trim() || '';
+      const variant = storageBase && colorBase ? `${storageBase} ${colorBase} ${ramBase}`.trim() : '';
+      const productId = product._id;
+
+      const btn = (typeof event !== 'undefined' && event ? event.currentTarget : null) || document.querySelector('.btn-primary[onclick="addToCart()"]');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = 'Adding...';
+      btn.disabled = true;
+
+      try {
+        const response = await fetch('/cart/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ productId, variant, qty })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('success', 'Added to cart', `${product.name} ${variant ? '· ' + variant : ''} × ${qty}`);
+          const badge = document.getElementById('cart-badge');
+          if (badge && data.cartCount !== undefined) {
+            badge.textContent = data.cartCount;
+            badge.classList.remove('hidden');
+          }
+          btn.innerHTML = 'In Cart ✓';
+          setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+        } else {
+          showToast('error', 'Failed to add', data.message || 'Something went wrong');
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          if (data.message && data.message.toLowerCase().includes('login')) {
+            setTimeout(() => window.location.href = '/auth/login', 1500);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('error', 'Error', 'Failed to communicate with server');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function quickAdd(productId, name) {
+      try {
+        const response = await fetch('/cart/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ productId, variant: '', qty: 1 })
+        });
+        const data = await response.json();
+        if (data.success) {
+          showToast('success', 'Added to cart', name);
+          const badge = document.getElementById('cart-badge');
+          if (badge && data.cartCount !== undefined) {
+            badge.textContent = data.cartCount;
+            badge.classList.remove('hidden');
+          }
+        } else {
+          showToast('error', 'Failed to add', data.message || 'Something went wrong');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('error', 'Error', 'Failed to communicate with server');
+      }
+    }
+
+    function toggleWishlist() {
+      wishlisted = !wishlisted;
+      const btn = document.getElementById('wishlistBtn');
+      if (btn) btn.classList.toggle('active', wishlisted);
+      showToast(wishlisted ? 'success' : 'info', wishlisted ? 'Added to wishlist' : 'Removed from wishlist', product.name);
+    }
+
+    // ── DELIVERY CHECK ────────────────────────────────────────────────────────
+    function checkDelivery() {
+      const pin = document.getElementById('pincodeInput').value;
+      const res = document.getElementById('deliveryResult');
+      if (pin.length < 6) { showToast('error', 'Invalid PIN', 'Please enter a 6-digit PIN code.'); return; }
+      res.style.display = 'flex';
+      res.style.alignItems = 'center';
+      res.style.gap = '8px';
+      res.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> <span style="color:var(--success);font-weight:600;">Free delivery</span> <span style="color:var(--t2);">to ${pin} by <strong style="color:var(--t1);">Tomorrow</strong></span>`;
+    }
+
+    // ── STICKY BAR ────────────────────────────────────────────────────────────
+    window.addEventListener('scroll', () => {
+      const bar = document.getElementById('stickyBar');
+      if (bar) bar.classList.toggle('visible', window.scrollY > 600);
+    });
+
+    // ── TOAST ─────────────────────────────────────────────────────────────────
+    function showToast(type, title, msg) {
+      window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: msg || title, type: type } }));
+    }
+
+    // ── IMAGE ZOOM ───────────────────────────────────────────────────────────
+    const mainGallery = document.getElementById('mainGallery');
+    const mainImg = document.getElementById('mainImg');
+
+    if (mainGallery && mainImg) {
+      mainGallery.addEventListener('mousemove', (e) => {
+        const rect = mainGallery.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const xPercent = (x / rect.width) * 100;
+        const yPercent = (y / rect.height) * 100;
+
+        mainImg.style.transformOrigin = `${xPercent}% ${yPercent}%`;
+      });
+
+      mainGallery.addEventListener('mouseleave', () => {
+        mainImg.style.transformOrigin = 'center center';
+      });
+    }
+
+    // ── INIT ──────────────────────────────────────────────────────────────────
+    updateVariantDisplay();
+  </script>

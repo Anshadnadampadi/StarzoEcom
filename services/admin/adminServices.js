@@ -68,8 +68,8 @@ export const adminLoginService = async (email, password) => {
 
 
 
-//  Get Dashboard Users (Search + Pagination)
-export const getDashboardUsersService = async (search, page, limit, status) => {
+//  Get Dashboard Users (Search + Pagination + Sorting)
+export const getDashboardUsersService = async (search, page, limit, status, sortBy = 'createdAt', sortOrder = 'desc') => {
     try {
         const safePage = Math.max(1, Number(page) || 1);
         const safeLimit = Math.max(1, Number(limit) || 4);
@@ -108,8 +108,11 @@ export const getDashboardUsersService = async (search, page, limit, status) => {
         const totalPages = Math.ceil(totalUsers / safeLimit);
 
 
+        const sort = {};
+        sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
         const users = await User.find(query)
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
             .limit(safeLimit);
 

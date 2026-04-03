@@ -1,0 +1,49 @@
+<!-- views/admin/settings/general.ejs -->
+<%- contentFor('body') %>
+
+<div class="max-w-4xl mx-auto space-y-12">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">SYSTEM PARAMETERS.</h1>
+        <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Configure global platform behavior</p>
+    </div>
+
+    <div class="space-y-8">
+        <!-- Site Configuration -->
+        <div class="bg-black-surface border border-white/5 p-10 space-y-10">
+            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Global Identity</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Store Name</label>
+                    <input type="text" value="MOBIVERSE" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Support Email</label>
+                    <input type="email" value="ops@mobiverse.com" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Logic -->
+        <div class="bg-black-surface border border-white/5 p-10 space-y-10">
+            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Logistics Constants</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Free Shipping Threshold</label>
+                    <input type="number" value="15000" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Base GST (%)</label>
+                    <input type="number" value="18" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Return Window (Days)</label>
+                    <input type="number" value="7" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-4">
+             <button class="px-12 py-5 bg-white text-black font-bold text-xs tracking-[0.2em] uppercase hover:bg-accent transition-all btn-press shadow-[0_0_20px_rgba(255,255,255,0.05)]">COMMIT CHANGES</button>
+        </div>
+    </div>
+</div>

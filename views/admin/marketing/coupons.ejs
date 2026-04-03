@@ -1,0 +1,46 @@
+<!-- views/admin/marketing/coupons.ejs -->
+<%- contentFor('body') %>
+
+<div class="space-y-10">
+    <div class="flex justify-between items-end">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">MARKETING OFFERS.</h1>
+            <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Configure promotional coupons and discounts</p>
+        </div>
+        <button class="px-8 py-4 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all btn-press shadow-[0_0_15px_rgba(255,255,255,0.1)]">Create Coupon</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <% coupons.forEach(coupon => { %>
+            <div class="bg-black-surface border border-white/5 p-8 relative overflow-hidden group hover:border-accent/30 transition-all">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="bg-accent/10 border border-accent/20 px-3 py-1 font-mono text-accent text-sm font-bold tracking-widest uppercase">
+                        <%= coupon.code %>
+                    </div>
+                    <%- include('../../partials/status-badge', { status: coupon.isActive ? 'active' : 'inactive' }) %>
+                </div>
+                
+                <div class="mb-10">
+                    <h3 class="text-white text-2xl font-black tracking-tight mb-2"><%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue.toLocaleString() %> OFF</h3>
+                    <p class="text-white/40 text-[10px] font-bold tracking-widest uppercase">Min. Purchase: ₹<%= coupon.minPurchase.toLocaleString() %></p>
+                </div>
+
+                <div class="pt-8 border-t border-white/5 flex justify-between items-center">
+                    <div>
+                        <p class="text-white/20 text-[8px] uppercase tracking-widest mb-1">Expires On</p>
+                        <p class="text-white text-[10px] font-bold uppercase"><%= new Date(coupon.expiryDate).toLocaleDateString() %></p>
+                    </div>
+                    <div>
+                        <p class="text-white/20 text-[8px] uppercase tracking-widest mb-1">Usage Count</p>
+                        <p class="text-white text-[10px] font-bold uppercase"><%= coupon.usedCount %> / <%= coupon.maxUsage %></p>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-white transition-all">✎</button>
+                    <button class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-status-danger transition-all">✕</button>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</div>

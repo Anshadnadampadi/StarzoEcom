@@ -1,17 +1,15 @@
 import User from "../../models/user/User.js";
 import Address from "../../models/user/Address.js";
 import bcrypt from "bcryptjs";
-import { registerUser, loginUser, updateUserProfile, changeUserPassword, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultAddress, validateAndNormalizeAddress } from "../../services/user/authServices.js";
+import { registerUser, loginUser, updateUserProfile, changeUserPassword, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultAddress, validateAndNormalizeAddress, generateReferralCode } from "../../services/user/authServices.js";
 import { sendOtpService, verifyOtpService, forgotPasswordService, resendOtpService, requestEmailChangeOtpService, verifyEmailChangeOtpService } from "../../services/user/authServices.js";
+import product from "../../models/product/product.js";
 
 
 export const getHome = async (req, res) => {
     try {
-        const user = req.session.user ? await User.findById(req.session.user).lean() : null;
-
-
-        res.render("user/home", { user });
-
+        const { msg, icon } = req.query;
+        res.render("user/home", { msg: msg || null, icon: icon || null });
     } catch (error) {
         console.log(error);
         res.status(500).send("Server Error");
@@ -20,34 +18,45 @@ export const getHome = async (req, res) => {
 
 
 export const getSignup = (req, res) => {
-    res.render("user/signUp");
+    const { msg, icon } = req.query;
+    res.render("user/auth/register", {
+        breadcrumbs: [
+            { label: 'Register', url: '/auth/signup' }
+        ],
+        msg: msg || null,
+        icon: icon || null
+    });
 };
 
 
 export const postSignup = async (req, res) => {
     try {
+        const { firstName, lastName, email, password } = req.body;
+        const result = await sendOtpService({ firstName, lastName, email, password });
 
-        const result = await sendOtpService(req.body);
-
-        // If service failed
         if (!result.success) {
-            return res.redirect(`/auth/signup?msg=${encodeURIComponent(result.message)}`);
+            return res.json({
+                success: false,
+                message: result.message
+            });
         }
 
-        // OTP sent successfully
-        return res.redirect(`/auth/verify-otp?email=${encodeURIComponent(result.email)}`);
+        return res.json({
+            success: true,
+            redirect: `/auth/verify-otp?email=${encodeURIComponent(result.email)}`
+        });
 
     } catch (error) {
-
         console.error("Signup Controller Error:", error);
-
-        return res.redirect("/auth/signup?msg=Something went wrong");
-
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
     }
 };
 export const getForgotPassword = (req, res) => {
-    res.render("user/forgotPassword");
-
+    const { msg, icon } = req.query;
+    res.render("user/auth/forgotPassword", { msg: msg || null, icon: icon || null });
 };
 
 // handle submission of the forgot-password form
@@ -56,19 +65,26 @@ export const postForgotPassword = async (req, res) => {
         const { email } = req.body;
         const result = await forgotPasswordService(email);
         if (!result.success) {
-            return res.send(result.message);
+            return res.json({
+                success: false,
+                message: result.message
+            });
         }
 
-        // send the user to the OTP verification page and mark the flow as
-        // a password reset by including a query parameter
-        res.redirect(`/auth/verify-otp?email=${encodeURIComponent(email)}&context=reset`);
+        return res.json({
+            success: true,
+            redirect: `/auth/verify-otp?email=${encodeURIComponent(email)}&context=reset`
+        });
     } catch (err) {
         console.error("Forgot password controller error", err);
-        res.status(500).send("Server error");
+        res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
 };
 
- export const getlogin = (req, res) => {
+export const getlogin = (req, res) => {
 
     const { msg, icon, error } = req.query;
 
@@ -78,76 +94,92 @@ export const postForgotPassword = async (req, res) => {
         message = "Your account has been blocked by admin.";
     }
 
-    res.render("user/login", {
+    res.render("user/auth/login", {
+        breadcrumbs: [
+            { label: 'Login', url: '/auth/login' }
+        ],
         msg,
         icon,
         message
     });
 
-}; 
+};
 
 export const postLogin = async (req, res) => {
     try {
 
         const { email, password } = req.body;
 
-        // check empty fields
         if (!email || !password) {
-            return res.redirect("/auth/login?msg=All fields required");
+            return res.status(400).json({ success: false, message: 'All fields required' });
         }
 
-        // find user
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.redirect("/auth/login?msg=Invalid email or password");
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
 
-        // compare password
         const match = await bcrypt.compare(password, user.password);
 
         if (!match) {
-            return res.redirect("/auth/login?msg=Invalid email or password");
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
 
-        // blocked user check
         if (user.isBlocked) {
-            return res.redirect("/auth/login?msg=Your account is blocked");
+            return res.status(403).json({ success: false, message: 'Your account is blocked' });
         }
 
-        // create session
         req.session.user = user._id;
 
-        return res.redirect("/");
+        return res.json({ success: true, redirect: '/' });
 
     } catch (error) {
         console.log(error);
-        res.redirect("/auth/login?msg=Something went wrong");
+        return res.status(500).json({ success: false, message: 'Something went wrong' });
     }
 };
 
 
 export const emailVerify = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
 
-    const user = await User.findOne({ email: req.body.email });
+        if (!user) {
+            return res.json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
-    if (!user) {
-        return res.send("User not found")
+        const result = await sendOtpService(req.body);
+
+        if (!result.success) {
+            return res.json({
+                success: false,
+                message: result.message
+            });
+        }
+
+        return res.json({
+            success: true,
+            redirect: `/auth/verify-otp?email=${result.email}`
+        });
+    } catch (error) {
+        console.error("Email verify error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
-
-    const result = await sendOtpService(req.body);
-
-    if (!result.success) {
-        return res.send(result.message);
-    }
-
-    res.redirect(`/auth/verify-otp?email=${result.email}`);
 };
 
 export const resendOtp = async (req, res) => {
     const { email, context } = req.query;
+    const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes('json'));
+
     if (!email) {
-        return res.redirect('/');
+        return isAjax ? res.json({ success: false, message: 'Email required' }) : res.redirect('/');
     }
     // choose service based on context; reset flow uses forgotPasswordService while signup uses resendOtpService
     let result;
@@ -156,17 +188,22 @@ export const resendOtp = async (req, res) => {
     } else {
         result = await resendOtpService(email);
     }
+
+    if (isAjax) {
+        return res.json(result);
+    }
+
     if (!result.success) {
-        return res.send(result.message);
+        return res.redirect(`/auth/verify-otp?email=${encodeURIComponent(email)}${context ? `&context=${context}` : ''}&msg=${encodeURIComponent(result.message)}&icon=error`);
     }
     res.redirect(`/auth/verify-otp?email=${encodeURIComponent(email)}${context ? `&context=${context}` : ''}`);
 };
 
 export const getOtp = (req, res) => {
-    res.render("user/otpVerification")
+    res.render("user/auth/otpVerification")
 }
 export const resetPassword = (req, res) => {
-    res.render("user/resetPassword", {
+    res.render("user/auth/resetPassword", {
         email: req.query.email,
         msg: req.query.msg || null,
         icon: req.query.icon || null
@@ -180,12 +217,32 @@ export const resetSuccess = (req, res) => {
 export const postResetPassword = async (req, res) => {
     try {
         const { email, password, confirmPassword } = req.body;
-        if (!email) return res.send("Email is required");
-        if (!password || !confirmPassword) return res.send("Password fields required");
-        if (password !== confirmPassword) return res.send("Passwords do not match");
+        if (!email) {
+            return res.json({
+                success: false,
+                message: "Session expired. Please try again."
+            });
+        }
+        if (!password || !confirmPassword) {
+            return res.json({
+                success: false,
+                message: "All fields required"
+            });
+        }
+        if (password !== confirmPassword) {
+            return res.json({
+                success: false,
+                message: "Passwords do not match"
+            });
+        }
 
         const user = await User.findOne({ email });
-        if (!user) return res.send("User not found");
+        if (!user) {
+            return res.json({
+                success: false,
+                message: "User not found"
+            });
+        }
 
         const hashed = await bcrypt.hash(password, 10);
         user.password = hashed;
@@ -193,10 +250,16 @@ export const postResetPassword = async (req, res) => {
         user.otpExpiry = null;
         await user.save();
 
-        // redirect to login with flag so we can show a modal
-        res.redirect("/auth/login?msg=Password updated successfully&icon=success");
+        return res.json({
+            success: true,
+            message: "Password updated successfully"
+        });
     } catch (err) {
-        return res.redirect("/auth/login?msg=Password update failed&icon=error");
+        console.error("Post reset password error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Password update failed"
+        });
     }
 };
 
@@ -204,13 +267,27 @@ export const postResetPassword = async (req, res) => {
 
 /* POST Signup → Send OTP */
 export const otpSignup = async (req, res) => {
-    const result = await sendOtpService(req.body);
+    try {
+        const result = await sendOtpService(req.body);
 
-    if (!result.success) {
-        return res.send(result.message);
+        if (!result.success) {
+            return res.json({
+                success: false,
+                message: result.message
+            });
+        }
+
+        return res.json({
+            success: true,
+            redirect: `/auth/verify-otp?email=${result.email}`
+        });
+    } catch (error) {
+        console.error("OTP signup error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
     }
-
-    res.redirect(`/auth/verify-otp?email=${result.email}`);
 };
 
 /* POST Verify OTP */
@@ -242,10 +319,12 @@ export const postVerifyOtp = async (req, res) => {
 };
 
 export const loadVerifyOtp = (req, res) => {
-    res.render("user/otpVerification", {
-        email: req.query.email,
-        error:null,
-        context: req.query.context || "signup",
+    const email = req.query.email
+    const context = req.query.context || "signup"
+    res.render("user/auth/otpVerification", {
+        email,
+        error: null,
+        context,
     });
 };
 
@@ -258,7 +337,26 @@ export const getProfile = async (req, res) => {
         if (!user) {
             return res.status(404).send('User not found');
         }
-        res.render("user/userProfile", { user, currentPath: req.path });
+
+        // Ensure user has a referral code (lazy sync if needed)
+        if (!user.referralCode) {
+            const updatedUser = await User.findById(req.session.user);
+            updatedUser.referralCode = await generateReferralCode();
+            await updatedUser.save();
+            user.referralCode = updatedUser.referralCode;
+        }
+
+        const { msg, icon } = req.query;
+        res.render("user/account/profile", {
+            user,
+            currentPath: req.path,
+            breadcrumbs: [
+                { label: 'Account', url: '/profile' },
+                { label: 'Profile', url: '/profile' }
+            ],
+            msg: msg || null,
+            icon: icon || null
+        });
     } catch (err) {
         console.error('Get profile error', err);
         res.status(500).send('Server Error');
@@ -315,10 +413,26 @@ export const postChangePassword = async (req, res) => {
 
 export const getAddress = async (req, res) => {
     try {
+
         if (!req.session.user) return res.redirect('/auth/login');
-        const user = await User.findById(req.session.user).lean();
+        const user = await User.findById(req.session.user).populate('addresses').lean();
         if (!user) return res.status(404).send('User not found');
-        res.render("user/address", { user, currentPath: req.path });
+
+        // Pass addresses explicitly for convenience in the view
+        const addresses = user.addresses || [];
+
+        const { msg, icon } = req.query;
+        res.render("user/account/addresses", {
+            user,
+            addresses,
+            currentPath: req.path,
+            breadcrumbs: [
+                { label: 'Account', url: '/profile' },
+                { label: 'My Addresses', url: '/addresses' }
+            ],
+            msg: msg || null,
+            icon: icon || null
+        });
     } catch (err) {
         console.error('Get address error', err);
         res.status(500).send('Server Error');
@@ -348,15 +462,15 @@ export const validateAddress = async (req, res) => {
 export const postAddress = async (req, res) => {
     try {
         if (!req.session.user) return res.status(401).json({ success: false, message: 'Not authenticated' });
-        
-        const validation= await validateAndNormalizeAddress(req.body)
+
+        const validation = await validateAndNormalizeAddress(req.body)
         if (!validation.success) {
             const status = validation.code === 'ADDRESS_VALIDATION_UNAVAILABLE' ? 503 : 400;
-           return res.status(status).json(validation);
+            return res.status(status).json(validation);
         }
-        const result = await addUserAddress(req.session.user,validation.address );
-           
-            return res.json({ success: true, address: result.address });
+        const result = await addUserAddress(req.session.user, validation.address);
+
+        return res.json({ success: true, address: result.address });
 
     } catch (err) {
         console.error('Post address error', err);
@@ -415,7 +529,16 @@ export const geteditProfile = async (req, res) => {
         if (!user) return res.status(404).send('User not found');
         const msg = req.query.error || req.query.success || '';
         const icon = req.query.error ? 'error' : (req.query.success ? 'success' : '');
-        res.render("user/editProfile", { user, currentPath: req.path, msg, icon });
+        res.render("user/editProfile", {
+            user,
+            currentPath: req.path,
+            breadcrumbs: [
+                { label: 'Account', url: '/profile' },
+                { label: 'Edit Profile', url: '/editProfile' }
+            ],
+            msg,
+            icon
+        });
     } catch (err) {
         console.error('Get edit profile error', err);
         res.status(500).send('Server Error');
@@ -487,45 +610,41 @@ export const removeProfileImage = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-    req.session.destroy(err => {
-        if (err) {
-            console.error('Logout error:', err);
-            return res.status(500).json({ message: 'Server error' });
-        }
-        res.clearCookie('connect.sid');
-        res.redirect('/');
-    });
+    if (req.session && req.session.user) {
+        delete req.session.user;
+    }
+    res.redirect('/');
 };
 export const updateProfile = async (req, res) => {
-  
-  try{
-    const userId = req.session.user;
 
-    let updateData = {
-        name: req.body.fullName,
-        displayName: req.body.displayName,
-        phone: req.body.phone,
-        dob: req.body.dob,
-        location: req.body.location,
-        bio: req.body.bio
-    };
-    
-    if (req.file) {
-        updateData.profileImage = "/uploads/profile/" + req.file.filename;
+    try {
+        const userId = req.session.user;
+
+        let updateData = {
+            name: req.body.fullName,
+            displayName: req.body.displayName,
+            phone: req.body.phone,
+            dob: req.body.dob,
+            location: req.body.location,
+            bio: req.body.bio
+        };
+
+        if (req.file) {
+            updateData.profileImage = "/uploads/profile/" + req.file.filename;
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return res.redirect("/profile?msg=No changes made&icon=info");
+        }
+
+
+        await User.findByIdAndUpdate(userId, updateData);
+
+        return res.redirect("/profile?msg=Profile updated successfully&icon=success");
+    } catch (error) {
+        console.log("profile Update error", error)
+        res.redirect("/profile?msg=Something Went Wrong&icon=error")
     }
-
-    if(Object.keys(updateData).length === 0){
-   return res.redirect("/profile?msg=No changes made&icon=info");
-}
-
-
-    await User.findByIdAndUpdate(userId, updateData);
-
-     return res.redirect("/profile?msg=Profile updated successfully&icon=success");
-  } catch(error){
-  console.log("profile Update error",error)
-  res.redirect("/profile?msg=Something Went Wrong&icon=error")
-  }
 };
 
 export const requestEmailChangeOtp = async (req, res) => {
@@ -596,4 +715,5 @@ export const verifyAndActivateEmailChange = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
 

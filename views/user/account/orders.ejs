@@ -1,0 +1,88 @@
+<!-- views/user/account/orders.ejs -->
+<%- contentFor('body') %>
+
+<div class="min-h-screen bg-black py-24">
+    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+        <div class="mb-16 fade-up">
+            <span class="text-accent text-label font-bold uppercase mb-4 block">Order Tracking</span>
+            <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">MY ORDERS.</h1>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            <!-- Sidebar Nav -->
+            <%- include('../../partials/account-sidebar', { activeTab: 'orders' }) %>
+
+            <!-- Main Panel -->
+            <div class="lg:col-span-3">
+                <% if (typeof orders !== 'undefined' && orders.length > 0) { %>
+                    <div class="space-y-6">
+                        <% orders.forEach(order => { %>
+                            <div class="bg-black-card border border-black-border overflow-hidden group hover:border-white/10 transition-all">
+                                <div class="px-8 py-6 border-b border-black-border flex flex-wrap justify-between items-center gap-6">
+                                    <div class="flex items-center gap-12">
+                                        <div>
+                                            <p class="text-text-muted text-[9px] font-bold uppercase mb-1">Order ID</p>
+                                            <p class="text-white text-xs font-mono font-bold tracking-wider">#<%= order.orderId %></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-text-muted text-[9px] font-bold uppercase mb-1">Placed On</p>
+                                            <p class="text-white text-xs font-bold uppercase"><%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-text-muted text-[9px] font-bold uppercase mb-1">Total</p>
+                                            <p class="text-white text-xs font-mono font-bold">₹<%= order.totalAmount.toLocaleString() %></p>
+                                        </div>
+                                    </div>
+                                    <%- include('../../partials/status-badge', { status: order.status }) %>
+                                </div>
+                                <div class="p-8">
+                                    <div class="space-y-6">
+                                        <% order.items.forEach(item => { %>
+                                            <div class="flex items-center justify-between gap-8">
+                                                <div class="flex items-center gap-6">
+                                                    <div class="w-12 h-12 bg-black p-2 border border-white/5 flex-shrink-0">
+                                                        <img src="<%= item.product.images[0].url %>" class="w-full h-full object-contain">
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-white text-[11px] font-bold uppercase"><%= item.product.title %></p>
+                                                        <p class="text-white/30 text-[9px] tracking-wider uppercase mt-1">QTY: <%= item.qty %> · <%= item.variant %></p>
+                                                    </div>
+                                                </div>
+                                                <% if (order.status === 'delivered') { %>
+                                                    <a href="/product/<%= item.product.slug %>/review" class="text-accent text-[9px] font-bold tracking-widest uppercase border border-accent/20 px-3 py-1.5 hover:bg-accent/10 transition-all">Review</a>
+                                                <% } %>
+                                            </div>
+                                        <% }) %>
+                                    </div>
+                                    
+                                    <div class="mt-8 pt-8 border-t border-white/5 flex justify-between items-center">
+                                        <div class="flex gap-4">
+                                            <a href="/account/orders/<%= order._id %>" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-bold tracking-widest uppercase px-6 py-3 transition-all rounded-sm">Order Details</a>
+                                            <% if (order.status === 'delivered') { %>
+                                                <button class="text-white/40 hover:text-white text-[10px] font-bold tracking-widest uppercase transition-all">Download Invoice</button>
+                                            <% } %>
+                                        </div>
+                                        <% if (order.status === 'pending' || order.status === 'processing') { %>
+                                            <button class="text-status-danger/40 hover:text-status-danger text-[10px] font-bold tracking-widest uppercase transition-all">Cancel Order</button>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+
+                    <!-- Pagination -->
+                    <% if (typeof totalPages !== 'undefined') { %>
+                        <%- include('../../partials/pagination') %>
+                    <% } %>
+
+                <% } else { %>
+                    <div class="py-32 text-center bg-black-card border border-black-border">
+                        <p class="text-text-muted text-label font-bold uppercase mb-8 italic">You haven't placed any orders yet.</p>
+                        <a href="/phones" class="bg-accent text-black font-bold px-10 py-5 text-sm tracking-[0.2em] uppercase hover:bg-accent-hover transition-all btn-press">DISCOVER PRODUCTS</a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>

@@ -17,12 +17,12 @@ import {
     logout,
 } from "../../controllers/user/userController.js";
 import { ensureLoggedIn, ensureLoggedOut } from "../../middlewares/authMiddleware.js";
-import passport from "passport";
+
 
 const router = express.Router();
 
 // Sign Up
-router.route("/signup")
+router.route("/register")
     .get(ensureLoggedOut, getSignup)
     .post(ensureLoggedOut, postSignup);
 
@@ -48,18 +48,5 @@ router.get("/reset-password", ensureLoggedOut, resetPassword);
 router.post("/reset-password", ensureLoggedOut, postResetPassword);
 router.get("/reset-success", ensureLoggedOut, resetSuccess);
 
-// Google OAuth
-router.get(
-    "/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
-);
-router.get(
-    "/google/callback",
-    passport.authenticate("google", { failureRedirect: "/auth/login?error=blocked" }),
-    (req, res) => {
-        req.session.user = req.user._id;
-        res.redirect("/");
-    }
-);
 
 export default router;

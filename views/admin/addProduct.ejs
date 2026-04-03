@@ -1,0 +1,200 @@
+<%- contentFor('body') %>
+
+
+    <div class="space-y-10" x-data="addProductManager()">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <a href="/admin/productManagement" class="text-white/20 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                    <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">ADD PRODUCT.</h1>
+                </div>
+                <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Initialize new inventory entry
+                </p>
+            </div>
+        </div>
+
+        <div class="max-w-4xl">
+            <form @submit.prevent="submitForm()" class="bg-black-surface border border-white/5 p-10 space-y-12">
+                <!-- Details -->
+                <div class="space-y-8">
+                    <div class="border-l-2 border-accent pl-6">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-widest">General Information</h3>
+                        <p class="text-[9px] text-white/30 uppercase mt-1">Core product details</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Product
+                                Name</label>
+                            <input type="text" x-model="form.name" @input="errors.name = ''"
+                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold"
+                                :class="errors.name ? 'border-status-danger/50' : ''">
+                            <p x-show="errors.name"
+                                class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                x-text="errors.name"></p>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Brand</label>
+                            <input type="text" x-model="form.brand" @input="errors.brand = ''"
+                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold"
+                                :class="errors.brand ? 'border-status-danger/50' : ''">
+                            <p x-show="errors.brand"
+                                class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                x-text="errors.brand"></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Category</label>
+                            <select x-model="form.category" @change="errors.category = ''"
+                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                                :class="errors.category ? 'border-status-danger/50' : ''">
+                                <option value="">Select Category</option>
+                                <% if (typeof categories !=='undefined' ) { %>
+                                    <% categories.forEach(cat=> { %>
+                                        <option value="<%= cat._id %>">
+                                            <%= cat.name %>
+                                        </option>
+                                        <% }) %>
+                                            <% } %>
+                            </select>
+                            <p x-show="errors.category"
+                                class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                x-text="errors.category"></p>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Base Price
+                                (INR)</label>
+                            <input type="number" x-model="form.price" @input="errors.price = ''"
+                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono"
+                                :class="errors.price ? 'border-status-danger/50' : ''">
+                            <p x-show="errors.price"
+                                class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                x-text="errors.price"></p>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Initial
+                                Stock</label>
+                            <input type="number" x-model="form.stock" @input="errors.stock = ''"
+                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono"
+                                :class="errors.stock ? 'border-status-danger/50' : ''">
+                            <p x-show="errors.stock"
+                                class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
+                                x-text="errors.stock"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info note about images -->
+                <div class="flex items-start gap-4 p-6 border border-white/5 bg-white/[0.02]">
+                    <span class="text-white/30 text-lg mt-0.5">ℹ️</span>
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">Images are managed
+                            per variant</p>
+                        <p class="text-[9px] text-white/30">After creating the product, add variants with images from
+                            the product details page.</p>
+                    </div>
+                </div>
+
+                <div class="pt-10">
+                    <button type="submit" :disabled="isSubmitting"
+                        class="w-full bg-white text-black font-bold py-5 text-[10px] tracking-widest uppercase hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-press">
+                        <span x-show="!isSubmitting">Initialize Product Listing</span>
+                        <span x-show="isSubmitting">Processing Catalog Entry...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+
+    </div>
+
+
+    <script>
+        function addProductManager() {
+            return {
+                isSubmitting: false,
+                form: { name: '', brand: '', category: '', price: '', stock: '' },
+                errors: {},
+
+                validate() {
+                    this.errors = {};
+                    let isValid = true;
+
+                    if (!this.form.name || this.form.name.trim().length < 3) {
+                        this.errors.name = 'Name must be at least 3 characters.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.brand || this.form.brand.trim() === '') {
+                        this.errors.brand = 'Brand is required.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.category) {
+                        this.errors.category = 'Category is required.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.price || parseFloat(this.form.price) <= 0) {
+                        this.errors.price = 'Price must be a positive number.';
+                        isValid = false;
+                    }
+
+                    if (this.form.stock === '' || parseInt(this.form.stock) < 0) {
+                        this.errors.stock = 'Stock must be non-negative.';
+                        isValid = false;
+                    }
+
+                    return isValid;
+                },
+
+                async submitForm() {
+                    if (this.isSubmitting) return;
+
+                    if (!this.validate()) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: Object.values(this.errors)[0] || 'Validation failed.', type: 'warning' }
+                        }));
+                        return;
+                    }
+
+                    this.isSubmitting = true;
+                    const formData = new FormData();
+
+                    Object.keys(this.form).forEach(key => formData.append(key, this.form[key]));
+
+                    try {
+                        const res = await fetch('/admin/products/add', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await res.json();
+                        if (result.success) {
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: { message: 'Product has been successfully initialized.', type: 'success' }
+                            }));
+                            setTimeout(() => {
+                                window.location.href = '/admin/productManagement';
+                            }, 1500);
+                        } else {
+                            throw new Error(result.message);
+                        }
+                    } catch (error) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: error.message || 'An unexpected deployment error occurred.', type: 'error' }
+                        }));
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                }
+            };
+        }
+    </script>

@@ -1,0 +1,80 @@
+<!-- views/partials/nav-user.ejs -->
+<nav class="h-20 glass border-b border-black-border sticky top-0 z-40 flex items-center justify-between px-6 lg:px-12">
+    <!-- Logo -->
+    <div class="flex items-center gap-8">
+        <a href="/" class="text-white font-bold tracking-widest text-xl">STARZO</a>
+
+        <!-- Desktop Menu -->
+        <div class="hidden lg:flex items-center gap-8">
+            <a href="/products"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">All
+                Phones</a>
+            <a href="/brands"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">Brands</a>
+            <a href="/deals"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">Deals</a>
+            <a href="/support"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">Support</a>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-6">
+        <!-- Search -->
+        <div class="relative group hidden md:block">
+            <form action="/search" method="GET">
+                <input type="text" name="q" placeholder="Search..."
+                    class="bg-white/5 border border-white/10 rounded-sm px-4 py-2 text-xs text-white focus:outline-none focus:border-accent/50 w-48 transition-all focus:w-64">
+            </form>
+        </div>
+
+        <!-- User Actions -->
+        <a href="/account/wishlist" class="text-white/60 hover:text-white transition-colors" title="Wishlist">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                </path>
+            </svg>
+        </a>
+
+        <a href="/cart" class="text-white/60 hover:text-white transition-colors relative" title="Cart">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <span id="cart-badge"
+                class="absolute -top-2 -right-2 bg-accent text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center <%= (typeof cartCount === 'undefined' || cartCount === 0) ? 'hidden' : '' %>">
+                <%= typeof cartCount !== 'undefined' ? cartCount : 0 %>
+            </span>
+        </a>
+
+        <!-- Profile Avatar Link -->
+        <a href="/profile" class="relative group" title="Account Settings">
+            <% if (locals.user && locals.user.profileImage) { %>
+                <div
+                    class="w-8 h-8 rounded-sm overflow-hidden border border-white/10 group-hover:border-accent transition-colors">
+                    <img src="<%= locals.user.profileImage %>" class="w-full h-full object-cover">
+                </div>
+                <% } else { %>
+                    <div class="text-white/60 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <% } %>
+        </a>
+
+        <!-- Logout -->
+        <a href="/auth/logout"
+            class="text-[10px] font-bold tracking-[0.2em] text-white/40 hover:text-accent transition-colors uppercase">Logout</a>
+
+
+        <!-- Mobile Toggle -->
+        <button class="lg:hidden text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+    </div>
+</nav>

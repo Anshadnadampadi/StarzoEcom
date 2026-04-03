@@ -30,7 +30,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Multer instance
+// Multer instance for Profile
 export const uploadProfileImage = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -39,3 +39,47 @@ export const uploadProfileImage = multer({
   }
 });
 
+// Category Icon Storage
+const categoryStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(process.cwd(), "uploads", "categories");
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = "cat-" + Date.now() + path.extname(file.originalname);
+    cb(null, uniqueName);
+  }
+});
+
+export const uploadCategoryIcon = multer({
+  storage: categoryStorage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 1 * 1024 * 1024 // 1MB
+  }
+});
+// Product Image Storage
+const productStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(process.cwd(), "uploads", "products");
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = "prod-" + Date.now() + "-" + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
+    cb(null, uniqueName);
+  }
+});
+
+export const uploadProductImage = multer({
+  storage: productStorage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB per file
+  }
+});

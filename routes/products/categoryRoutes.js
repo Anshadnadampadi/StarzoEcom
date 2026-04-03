@@ -1,0 +1,26 @@
+import express from "express";
+import { adminAuth } from "../../middlewares/adminAuth.js";
+import { uploadCategoryIcon } from "../../middlewares/uploadMiddleware.js";
+import { 
+    getCategories, 
+    getCategoryById,
+    addCategory, 
+    updateCategory, 
+    toggleCategoryStatus
+} from "../../controllers/admin/category/categoryController.js";
+import { categoryValidation, handleValidationErrors } from "../../middlewares/admin/validation.js";
+
+const router = express.Router();
+
+// 1. Page Load Route
+router.get("/categories", adminAuth, getCategories);
+
+// 2. API Route to get data for the Edit Modal
+router.get("/categories/api/:id", adminAuth, getCategoryById);
+
+// 3. Action Routes
+router.post("/categories/add", adminAuth, uploadCategoryIcon.single('icon'), categoryValidation, handleValidationErrors, addCategory);           // Create
+router.put("/categories/edit/:id", adminAuth, uploadCategoryIcon.single('icon'), categoryValidation, handleValidationErrors, updateCategory);    // Update
+router.patch("/categories/delete/:id", adminAuth, toggleCategoryStatus);// Toggle Visibility
+
+export default router;

@@ -4,6 +4,8 @@ const userSchema = new mongoose.Schema({
 
   name: { type: String },
   displayName: { type: String },
+  firstName: { type: String },
+  lastName: { type: String },
   gender: { type: String, enum: ['male','female','other','prefer_not'] },
   bio: { type: String },
   location: { type: String },
@@ -47,6 +49,23 @@ const userSchema = new mongoose.Schema({
   },
 
 
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
+  referralCount: {
+    type: Number,
+    default: 0
+  },
+  walletBalance: {
+    type: Number,
+    default: 0
+  },
   addresses: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Address"

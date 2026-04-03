@@ -36,6 +36,8 @@ passport.use(
           const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
           user = await User.create({
+            firstName: profile.name?.givenName || "",
+            lastName: profile.name?.familyName || "",
             name: profile.displayName || email.split("@")[0],
             displayName: profile.displayName || "",
             email,
@@ -44,12 +46,26 @@ passport.use(
             isGoogleUser: true,
             isVerified: true,
           });
-        } else if (!user.isGoogleUser) {
-          user.isGoogleUser = true;
+        } else {
+          // Update missing fields for existing users
+          let updated = false;
+          if (!user.isGoogleUser) {
+            user.isGoogleUser = true;
+            updated = true;
+          }
+          if (!user.firstName && profile.name?.givenName) {
+            user.firstName = profile.name.givenName;
+            updated = true;
+          }
+          if (!user.lastName && profile.name?.familyName) {
+            user.lastName = profile.name.familyName;
+            updated = true;
+          }
           if (!user.avatar && profile?.photos?.[0]?.value) {
             user.avatar = profile.photos[0].value;
+            updated = true;
           }
-          await user.save();
+          if (updated) await user.save();
         }
 
         return done(null, user);

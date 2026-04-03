@@ -1,0 +1,310 @@
+<%- contentFor('body') %>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+
+<div class="space-y-10" x-data="variantManager('<%= product._id %>', '<%= variantIndex %>', <%= JSON.stringify(variant) %>)">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <a href="/admin/products/details/<%= product._id %>" class="text-white/20 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold tracking-tight uppercase text-white">EDIT VARIANT.</h1>
+            </div>
+            <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Modify specifications for <%= product.name %></p>
+        </div>
+    </div>
+
+    <div class="max-w-4xl">
+        <form @submit.prevent="submitForm()" class="bg-black-surface border border-white/5 p-10 space-y-12">
+            <!-- Specifications -->
+            <div class="space-y-8">
+                <div class="border-l-2 border-accent pl-6">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-widest">Configuration Protocol</h3>
+                    <p class="text-[9px] text-white/30 uppercase mt-1">Review hardware and aesthetic parameters</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Color / Finish</label>
+                        <input type="text" x-model="form.color" required placeholder="e.g., Titanium Gray"
+                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">RAM Capacity</label>
+                        <input type="text" x-model="form.ram" required placeholder="e.g., 12GB"
+                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Storage Volume</label>
+                        <input type="text" x-model="form.storage" required placeholder="e.g., 256GB"
+                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Pricing (INR)</label>
+                        <input type="number" x-model="form.price" required
+                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Inventory Level</label>
+                        <input type="number" x-model="form.stock" required
+                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Asset Deployment -->
+            <div class="space-y-8">
+                <div class="border-l-2 border-accent pl-6">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-widest">Asset Management</h3>
+                    <p class="text-[9px] text-white/30 uppercase mt-1">Direct modification. Selectively delete or replace assets.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block">Active Assets Configuration</label>
+                    <div class="flex flex-row overflow-x-auto gap-3 pb-2 custom-scrollbar">
+                        <% variant.images.forEach((img, imgIndex) => { %>
+                            <div class="w-16 h-16 bg-black border border-white/10 p-1 flex-shrink-0 relative group">
+                                <img src="<%= img %>" class="w-full h-full object-contain">
+                                <button type="button" @click="deleteExistingAsset(<%= imgIndex %>)"
+                                    class="absolute -top-1 -right-1 w-4 h-4 bg-status-danger text-white text-[8px] flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                     <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Upload New Assets</label>
+                    <div class="flex flex-wrap gap-6">
+                        <template x-for="(preview, index) in previews" :key="index">
+                            <div class="bg-black border border-white/5 relative group overflow-hidden flex-shrink-0" style="width: 120px; height: 120px;">
+                                <img :src="preview.url" class="w-full h-full object-cover">
+                                <button type="button" @click="removeFile(index)"
+                                    class="absolute top-2 right-2 w-6 h-6 bg-status-danger text-white text-[10px] flex items-center justify-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
+                            </div>
+                        </template>
+                        
+                        <button x-show="previews.length + existingImageCount < 5" type="button" @click="$refs.imageInput.click()"
+                            class="border border-dashed border-white/10 flex flex-col items-center justify-center hover:border-white/30 transition-all gap-2 group flex-shrink-0" style="width: 120px; height: 120px;">
+                            <span class="text-2xl text-white/10 group-hover:text-white/40 transition-colors">+</span>
+                            <span class="text-[9px] font-bold text-white/10 group-hover:text-white/40 uppercase tracking-widest">Add Asset</span>
+                        </button>
+                    </div>
+                    <input type="file" x-ref="imageInput" @change="handleFileChange" accept="image/*" multiple class="hidden">
+                    <p class="text-[8px] text-white/20 uppercase tracking-widest">Note: New assets will be added to the existing collection (Max 5 total).</p>
+                </div>
+            </div>
+
+            <div class="pt-10">
+                <button type="submit" :disabled="isSubmitting"
+                    class="w-full bg-white text-black font-bold py-5 text-[10px] tracking-widest uppercase hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all btn-press">
+                    <span x-show="!isSubmitting">Update Variant Parameters</span>
+                    <span x-show="isSubmitting">Processing Catalog Synchronization...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Crop Modal -->
+    <div x-show="showCropModal" class="fixed inset-0 z-[60] flex items-center justify-center p-6" x-cloak>
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-xl"></div>
+        <div class="bg-black-surface border border-white/10 w-full max-w-md relative shadow-2xl overflow-hidden"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-white text-lg font-bold uppercase tracking-tight">Focus & Align Assets</h2>
+                        <p class="text-[8px] font-bold tracking-[0.2em] text-white/30 uppercase">Protocol: 1:1 Aspect Ratio Optimization</p>
+                    </div>
+                </div>
+
+                <div class="aspect-square bg-black border border-white/5 overflow-hidden mb-6">
+                    <img x-ref="cropImage" src="" class="max-w-full">
+                </div>
+
+                <div class="flex gap-4">
+                    <button @click="cancelCrop()"
+                        class="flex-1 px-6 py-4 border border-white/10 text-white/40 text-[10px] font-bold tracking-widest uppercase hover:text-white hover:bg-white/5 transition-all">Abort</button>
+                    <button @click="confirmCrop()"
+                        class="flex-2 px-8 py-4 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all">Optimize Asset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <script>
+    function variantManager(productId, variantIndex, existingData) {
+        return {
+            productId,
+            variantIndex,
+            showCropModal: false,
+            isSubmitting: false,
+            cropper: null,
+            previews: [],
+            fileQueue: [],
+            existingImageCount: (existingData.images || []).length,
+            form: {
+                color: existingData.color,
+                ram: existingData.ram,
+                storage: existingData.storage,
+                price: existingData.price,
+                stock: existingData.stock
+            },
+
+            handleFileChange(e) {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                if (this.previews.length + this.existingImageCount + files.length > 5) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: 'Maximum 5 assets total allowed.', type: 'error' } 
+                    }));
+                    return;
+                }
+
+                this.fileQueue = [...files];
+                this.processNextInQueue();
+                e.target.value = '';
+            },
+
+            processNextInQueue() {
+                if (this.fileQueue.length === 0) return;
+
+                const file = this.fileQueue.shift();
+                const reader = new FileReader();
+
+                reader.onload = (event) => {
+                    this.showCropModal = true;
+                    setTimeout(() => {
+                        this.$refs.cropImage.src = event.target.result;
+                        if (this.cropper) this.cropper.destroy();
+                        this.cropper = new Cropper(this.$refs.cropImage, {
+                          //  aspectRatio: 1,
+                            viewMode: 1,
+                            autoCropArea: 1,
+                            background: false,
+                            zoomable: true,
+                        });
+                    }, 100);
+                };
+                reader.readAsDataURL(file);
+            },
+
+            confirmCrop() {
+                if (!this.cropper) return;
+                this.cropper.getCroppedCanvas({ width: 600, height: 600 }).toBlob((blob) => {
+                    this.previews.push({
+                        file: blob,
+                        url: URL.createObjectURL(blob)
+                    });
+                    this.closeCropModal();
+                    if (this.fileQueue.length > 0) {
+                        setTimeout(() => this.processNextInQueue(), 300);
+                    }
+                }, 'image/jpeg', 0.9);
+            },
+
+            cancelCrop() {
+                this.closeCropModal();
+                this.fileQueue = []; 
+            },
+
+            closeCropModal() {
+                if (this.cropper) {
+                    this.cropper.destroy();
+                    this.cropper = null;
+                }
+                this.showCropModal = false;
+            },
+
+            removeFile(index) {
+                URL.revokeObjectURL(this.previews[index].url);
+                this.previews.splice(index, 1);
+            },
+
+            async deleteExistingAsset(imgIndex) {
+                const confirmed = await window.confirmAction({
+                    title: 'PURGE ASSET?',
+                    message: 'This image will be permanently removed from this configuration.',
+                    type: 'danger'
+                });
+
+                if (confirmed) {
+                    try {
+                        const res = await fetch(`/admin/products/variant/delete-asset/${this.productId}/${this.variantIndex}/${imgIndex}`, {
+                            method: 'DELETE'
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { 
+                                detail: { message: 'Asset purged from catalog.', type: 'success' } 
+                            }));
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    } catch (error) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { 
+                            detail: { message: error.message || 'Error deleting asset', type: 'error' } 
+                        }));
+                    }
+                }
+            },
+
+            async submitForm() {
+                if (this.isSubmitting) return;
+
+                this.isSubmitting = true;
+                const formData = new FormData();
+                
+                Object.keys(this.form).forEach(key => formData.append(key, this.form[key]));
+                
+                this.previews.forEach((p, i) => {
+                    formData.append('images', p.file, `variant-update-${Date.now()}-${i}.jpg`);
+                });
+
+                try {
+                    const res = await fetch(`/admin/products/variant/update/${this.productId}/${this.variantIndex}`, {
+                        method: 'PATCH',
+                        body: formData
+                    });
+                    
+                    const result = await res.json();
+                    if (result.success) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { 
+                            detail: { message: 'Synchronization complete. Catalog updated.', type: 'success' } 
+                        }));
+                        setTimeout(() => {
+                            window.location.href = `/admin/products/details/${this.productId}`;
+                        }, 1500);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (error) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: error.message || 'An unexpected synchronization error occurred.', type: 'error' } 
+                    }));
+                } finally {
+                    this.isSubmitting = false;
+                }
+            }
+        };
+    }
+</script>
+
+<style>
+    .cropper-view-box, .cropper-face { border-radius: 0; }
+    .cropper-line, .cropper-point { background-color: #ffffff; }
+    .cropper-bg { background-image: none; background-color: #000; }
+</style>

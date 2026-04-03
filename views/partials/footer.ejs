@@ -1,0 +1,72 @@
+<!-- views/partials/footer.ejs -->
+<footer class="bg-black border-t border-black-border pt-20 pb-10">
+    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-12 mb-20">
+            <!-- Branding -->
+            <div class="col-span-2 lg:col-span-1">
+                <a href="/" class="text-white font-bold tracking-widest text-xl mb-4 block">STARZO</a>
+                <p class="text-white/40 text-xs leading-relaxed mb-6">
+                    India's premier destination for high-end mobile technology. Curating the best flagship experiences since 2024.
+                </p>
+                <div class="flex gap-4">
+                    <!-- Social icons (simplified) -->
+                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white transition-all cursor-pointer">IG</div>
+                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white transition-all cursor-pointer">X</div>
+                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white transition-all cursor-pointer">FB</div>
+                </div>
+            </div>
+
+            <!-- Shop -->
+            <div>
+                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Shop</h4>
+                <ul class="space-y-4">
+                    <li><a href="/phones" class="text-white/40 hover:text-white text-xs transition-colors">All Phones</a></li>
+                    <li><a href="/brands/apple" class="text-white/40 hover:text-white text-xs transition-colors">Apple</a></li>
+                    <li><a href="/brands/samsung" class="text-white/40 hover:text-white text-xs transition-colors">Samsung</a></li>
+                    <li><a href="/deals" class="text-white/40 hover:text-white text-xs transition-colors">Special Offers</a></li>
+                </ul>
+            </div>
+
+            <!-- Account -->
+            <div>
+                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Account</h4>
+                <ul class="space-y-4">
+                    <li><a href="/account" class="text-white/40 hover:text-white text-xs transition-colors">Profile</a></li>
+                    <li><a href="/account/orders" class="text-white/40 hover:text-white text-xs transition-colors">My Orders</a></li>
+                    <li><a href="/account/wishlist" class="text-white/40 hover:text-white text-xs transition-colors">Wishlist</a></li>
+                    <li><a href="/cart" class="text-white/40 hover:text-white text-xs transition-colors">Shopping Cart</a></li>
+                </ul>
+            </div>
+
+            <!-- Help -->
+            <div>
+                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Help</h4>
+                <ul class="space-y-4">
+                    <li><a href="/support" class="text-white/40 hover:text-white text-xs transition-colors">Support Center</a></li>
+                    <li><a href="/shipping-policy" class="text-white/40 hover:text-white text-xs transition-colors">Shipping Info</a></li>
+                    <li><a href="/return-policy" class="text-white/40 hover:text-white text-xs transition-colors">Returns</a></li>
+                    <li><a href="/exchange" class="text-white/40 hover:text-white text-xs transition-colors">Exchange</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsltter -->
+            <div class="col-span-2 lg:col-span-1">
+                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Updates</h4>
+                <p class="text-white/40 text-xs mb-4">Be the first to know about flagship launches.</p>
+                <form class="flex gap-2">
+                    <input type="email" placeholder="Email" class="bg-white/5 border border-white/10 px-4 py-2 text-xs text-white focus:outline-none focus:border-accent w-full">
+                    <button class="bg-accent text-black px-4 py-2 text-[10px] font-bold">SUBMIT</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p class="text-white/20 text-[10px] tracking-widest uppercase">© 2024 STARZO PLATFORM. ALL RIGHTS RESERVED.</p>
+            <div class="flex gap-6">
+                <a href="/privacy-policy" class="text-white/20 hover:text-white text-[10px] tracking-widest uppercase transition-colors">Privacy Policy</a>
+                <a href="/terms" class="text-white/20 hover:text-white text-[10px] tracking-widest uppercase transition-colors">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+</footer>

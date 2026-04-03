@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    <%= title || "Browse All Phones — MobiVerse" %>
+  </title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    :root {
+      --bg: #000;
+      --surface: #0d0d0d;
+      --card: #111;
+      --elevated: #1a1a1a;
+      --border: #222;
+      --accent: #ff6a00;
+      --accent-h: #e05800;
+      --accent-s: rgba(255, 106, 0, .1);
+      --t1: #fff;
+      --t2: #888;
+      --t3: #444;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--t1);
+      font-family: 'DM Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .font-syne {
+      font-family: 'Syne', sans-serif;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* :: SELECTION :: */
+    ::selection {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* :: SCROLLBAR :: */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--t3);
+    }
+
+    /* :: HEADER :: */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(0, 0, 0, .8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: all .3s ease;
+    }
+
+    .nav-link {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--t2);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--t1);
+    }
+
+    .header-icon {
+      color: var(--t2);
+      transition: color .2s;
+      position: relative;
+    }
+
+    .header-icon:hover {
+      color: var(--t1);
+    }
+
+    .pill-badge {
+      position: absolute;
+      top: -5px;
+      right: -8px;
+      background: var(--accent);
+      color: #000;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 10px;
+      line-height: 1;
+    }
+
+    /* :: BREADCRUMB :: */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--t3);
+    }
+
+    .breadcrumb a {
+      color: var(--t2);
+      text-decoration: none;
+      transition: color .2s;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--t1);
+    }
+
+    /* :: SIDEBAR :: */
+    .sidebar-section {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--t1);
+      margin-bottom: 16px;
+    }
+
+    /* Filter checkboxes */
+    .filter-lbl {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--t2);
+      cursor: pointer;
+      transition: color .2s;
+      margin-bottom: 12px;
+    }
+
+    .filter-lbl:hover,
+    .filter-lbl.active {
+      color: var(--t1);
+    }
+
+    .filter-box {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--t3);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+      background: transparent;
+    }
+
+    .filter-lbl input {
+      display: none;
+    }
+
+    .filter-lbl input:checked+.filter-box {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .filter-lbl input:checked+.filter-box::after {
+      content: '✓';
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    /* :: PRODUCT GRID :: */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    @media (max-width: 1024px) {
+      .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .grid-container {
+        grid-template-columns: repeat(1, 1fr);
+      }
+    }
+
+    .product-card {
+      background: var(--bg);
+      position: relative;
+      transition: background .3s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card:hover {
+      background: var(--surface);
+    }
+
+    .card-img {
+      aspect-ratio: 1;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      cursor: pointer;
+    }
+
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .product-card:hover .card-img img {
+      transform: scale(1.05);
+    }
+
+    /* Quick add btn */
+    .quick-add {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transform: translateY(100%);
+      transition: transform .3s cubic-bezier(.16, 1, .3, 1);
+    }
+
+    .product-card:hover .quick-add {
+      transform: translateY(0);
+    }
+
+    .quick-add:hover {
+      background: var(--accent-h);
+    }
+
+    /* Badges */
+    .badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      z-index: 2;
+    }
+
+    .badge-new {
+      background: #fff;
+      color: #000;
+    }
+
+    .badge-sale {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* Favorite btn */
+    .btn-fav {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--t2);
+      cursor: pointer;
+      transition: all .2s;
+      border: none;
+      z-index: 2;
+    }
+
+    .btn-fav:hover {
+      color: var(--danger);
+      background: var(--elevated);
+    }
+
+    /* Inputs */
+    .input-dark {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      color: var(--t1);
+      font-size: 13px;
+      transition: border-color .2s;
+      outline: none;
+      border-radius: 0;
+    }
+
+    .input-dark:focus {
+      border-color: var(--accent);
+    }
+
+    .input-dark::placeholder {
+      color: var(--t3);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 40px;
+    }
+
+    .page-link {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--t2);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      transition: all .2s;
+      cursor: pointer;
+    }
+
+    .page-link:hover {
+      border-color: var(--t1);
+      color: var(--t1);
+    }
+
+    .page-link.active {
+      background: var(--t1);
+      color: #000;
+      border-color: var(--t1);
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════ HEADER -->
+
+
+  <!-- ═══════════════════════════════════════════════════════════ MAIN -->
+  <main style="padding:40px 0;">
+    <div style="max-width:1400px;margin:0 auto;padding:0 32px;display:flex;gap:40px;align-items:flex-start;">
+
+      <!-- LEFT SIDEBAR -->
+      <aside style="width:260px;flex-shrink:0;position:sticky;top:100px;">
+
+        <!-- Search focus -->
+        <div class="sidebar-section">
+          <div class="sidebar-title">Search</div>
+          <div style="position:relative;display:flex;">
+            <input type="text" id="searchInput" class="input-dark" placeholder="Name, Model, SKU..."
+              value="<%= searchQuery || '' %>">
+            <svg id="searchIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t3)"
+              stroke-width="2"
+              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <button id="clearSearchBtn" onclick="clearSearch()"
+              style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--t2);cursor:pointer;display:none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="sidebar-section">
+          <div class="sidebar-title">Categories</div>
+          <div>
+            <label class="filter-lbl category-item" data-category="">
+              <input type="radio" name="cat" <%=!selectedCategory ? 'checked' : '' %> onchange="applyFilters()">
+              <div class="filter-box"></div>
+              All Collections
+            </label>
+            <% categories.forEach(c=> { %>
+              <label class="filter-lbl category-item" data-category="<%= c._id %>">
+                <input type="radio" name="cat" <%= (selectedCategory && selectedCategory.toString() == c._id.toString()) ? 'checked' : '' %> onchange="applyFilters()">
+                <div class="filter-box"></div>
+                <%= c.name %>
+              </label>
+              <% }) %>
+          </div>
+        </div>
+
+        <!-- Brands -->
+        <div class="sidebar-section">
+          <div class="sidebar-title">Brands</div>
+          <div>
+            <% brands.forEach(b=> { %>
+              <label class="filter-lbl brand-item" data-brand="<%= b %>">
+                <input type="checkbox" <%=selectedBrand && selectedBrand.includes(b) ? 'checked' : '' %> onchange="applyFilters()">
+                <div class="filter-box"></div>
+                <%= b %>
+              </label>
+              <% }) %>
+          </div>
+        </div>
+
+        <!-- Price Range -->
+        <div class="sidebar-section">
+          <div class="sidebar-title">Price Range</div>
+          <div>
+            <label class="filter-lbl price-item" data-price="">
+              <input type="radio" name="price" <%=!selectedPrice ? 'checked' : '' %> onchange="applyFilters()">
+              <div class="filter-box"></div>
+              Any Price
+            </label>
+            <label class="filter-lbl price-item" data-price="0-10000">
+              <input type="radio" name="price" <%=selectedPrice==='0-10000' ? 'checked' : '' %> onchange="applyFilters()">
+              <div class="filter-box"></div>
+              Under ₹10,000
+            </label>
+            <label class="filter-lbl price-item" data-price="10000-50000">
+              <input type="radio" name="price" <%=selectedPrice==='10000-50000' ? 'checked' : '' %> onchange="applyFilters()">
+              <div class="filter-box"></div>
+              ₹10,000 - ₹50,000
+            </label>
+            <label class="filter-lbl price-item" data-price="50000-100000">
+              <input type="radio" name="price" <%=selectedPrice==='50000-100000' ? 'checked' : '' %> onchange="applyFilters()">
+              <div class="filter-box"></div>
+              ₹50,000 - ₹1,00,000
+            </label>
+            <label class="filter-lbl price-item" data-price="100000-">
+              <input type="radio" name="price" <%=selectedPrice==='100000-' ? 'checked' : '' %> onchange="applyFilters()">
+              <div class="filter-box"></div>
+              Over ₹1,00,000
+            </label>
+          </div>
+        </div>
+
+        <!-- Apply btn for mobile usually, but since desktop sticky: -->
+        <button onclick="applyFilters()"
+          style="width:100%;background:var(--t1);color:#000;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:14px;border:none;cursor:pointer;transition:background .2s;"
+          onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background='var(--t1)'">
+          Apply Filters
+        </button>
+      </aside>
+
+      <!-- RIGHT CONTENT -->
+      <div style="flex:1;">
+
+        <!-- Title & Sort -->
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:30px;">
+          <div>
+            <h1 class="font-syne" style="font-size:36px;font-weight:800;line-height:1.1;margin-bottom:8px;">The
+              Collection</h1>
+            <p style="font-size:13px;color:var(--t2);">Showing <span class="font-mono text-white" id="currentCount">
+                <%= products.length %>
+              </span> models match your criteria.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span
+              style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);">Sort
+              By</span>
+            <select id="sortSelect" class="input-dark" style="width:160px;padding:10px 14px;cursor:pointer;"
+              onchange="applyFilters()">
+              <option value="newest" <%=selectedSort==='newest' ? 'selected' : '' %>>Newest Arrivals</option>
+              <option value="priceLow" <%=selectedSort==='priceLow' ? 'selected' : '' %>>Price: Low to High</option>
+              <option value="priceHigh" <%=selectedSort==='priceHigh' ? 'selected' : '' %>>Price: High to Low</option>
+              <option value="aToZ" <%=selectedSort==='aToZ' ? 'selected' : '' %>>Name: A to Z</option>
+              <option value="zToA" <%=selectedSort==='zToA' ? 'selected' : '' %>>Name: Z to A</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="grid-container" id="productContainer">
+          <!-- Initial SSR Render -->
+          <% products.forEach(product=> {
+            const variant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
+            // Use variant images only — product-level images have been removed
+            const image = (variant && variant.images && variant.images.length > 0)
+            ? variant.images[0]
+            : '/images/placeholder.jpg';
+
+            const price = variant ? variant.price : (product.price || 0);
+            const original = product.regularPrice || (price ? (price + Math.floor(price * 0.15)) : 0); // Mock original if missing
+            const discount = (original && price) ? Math.round(((original - price) / original) * 100) : 0;
+            const isNew = true; // Replace with logic checking createdAt within last 30 days
+            %>
+            <div class="product-card">
+
+              <div class="card-img" onclick="window.location.href='/products/<%= product._id %>'">
+                <img src="<%= image %>" alt="<%= product.name %>">
+                <div class="quick-add"
+                  onclick="event.stopPropagation(); quickAdd('<%= product._id %>', '<%= product.name %>');">Add to Cart
+                </div>
+
+                <button class="btn-fav" onclick="event.stopPropagation();">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </button>
+
+                <% if (discount> 10) { %>
+                  <span class="badge badge-sale">Sale <%= discount %>%</span>
+                  <% } else if (isNew) { %>
+                    <span class="badge badge-new" style="background:#fff;color:#000;">New</span>
+                    <% } %>
+              </div>
+
+              <div style="padding:24px;">
+                <p
+                  style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:6px;">
+                  <%= product.brand %>
+                </p>
+                <h3 class="font-syne"
+                  style="font-size:16px;font-weight:700;margin-bottom:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                  title="<%= product.name %>">
+                  <%= product.name %>
+                </h3>
+
+                <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;">
+                  <span style="font-size:11px;color:var(--accent);">★</span>
+                  <span style="font-size:11px;color:var(--accent);">★</span>
+                  <span style="font-size:11px;color:var(--accent);">★</span>
+                  <span style="font-size:11px;color:var(--accent);">★</span>
+                  <span style="font-size:11px;color:var(--t3);">★</span>
+                  <span style="font-size:11px;color:var(--t2);margin-left:4px;">(24)</span>
+                </div>
+
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                  <span class="font-mono" style="font-size:18px;font-weight:700;color:var(--t1);">₹<%=
+                      price.toLocaleString('en-IN') %></span>
+                  <% if(original> price) { %>
+                    <span class="font-mono" style="font-size:13px;color:var(--t3);text-decoration:line-through;">₹<%=
+                        original.toLocaleString('en-IN') %></span>
+                    <% } %>
+                </div>
+              </div>
+
+            </div>
+            <% }) %>
+
+              <% if (products.length===0) { %>
+                <div style="grid-column:1/-1;padding:80px 20px;text-align:center;">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5"
+                    style="margin:0 auto 20px;">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                  </svg>
+                  <h3 class="font-syne" style="font-size:18px;font-weight:700;color:var(--t1);margin-bottom:8px;">No
+                    products found</h3>
+                  <p style="font-size:13px;color:var(--t2);">Try adjusting your search or filters to find what you're
+                    looking for.</p>
+                </div>
+                <% } %>
+        </div>
+
+        <!-- Pagination Container (Rendered Server Side/Updated Client Side) -->
+        <div class="pagination" id="pagination">
+          <!-- Rendered statically for first load, overwritten by JS if filters apply -->
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- :: CLIENT SIDE TEMPLATE :: -->
+  <template id="product-template">
+    <div class="product-card">
+      <div class="card-img">
+        <img src="" alt="">
+        <div class="quick-add">Add to Cart</div>
+        <button class="btn-fav">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+        <span class="badge badge-sale" style="display:none;"></span>
+      </div>
+      <div style="padding:24px;">
+        <p class="brand-name"
+          style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:6px;">
+        </p>
+        <h3 class="prod-name font-syne"
+          style="font-size:16px;font-weight:700;margin-bottom:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        </h3>
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;">
+          <span style="font-size:11px;color:var(--accent);">★</span>
+          <span style="font-size:11px;color:var(--accent);">★</span>
+          <span style="font-size:11px;color:var(--accent);">★</span>
+          <span style="font-size:11px;color:var(--accent);">★</span>
+          <span style="font-size:11px;color:var(--t3);">★</span>
+          <span style="font-size:11px;color:var(--t2);margin-left:4px;">(24)</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span class="price-val font-mono" style="font-size:18px;font-weight:700;color:var(--t1);"></span>
+          <span class="orig-val font-mono" style="font-size:13px;color:var(--t3);text-decoration:line-through;"></span>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ═══════════════════════════════════════════════════════════ TOAST & SCRIPTS -->
+  <div id="toastContainer"
+    style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;">
+  </div>
+
+  <style>
+    .toast {
+      background: #111;
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: 4px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: #fff;
+      width: 340px;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all .3s cubic-bezier(.16, 1, .3, 1);
+      pointer-events: auto;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-success .toast-icon {
+      color: var(--success);
+    }
+
+    .toast-error .toast-icon {
+      color: var(--danger);
+    }
+
+    .toast-info .toast-icon {
+      color: var(--accent);
+    }
+  </style>
+
+  <script>
+    async function quickAdd(productId, name) {
+      try {
+        const response = await fetch('/cart/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ productId, variant: '', qty: 1 })
+        });
+        const data = await response.json();
+        if (data.success) {
+          showToast('success', 'Added to Cart', name);
+
+          // Update Cart Badge
+          const badge = document.getElementById('cart-badge');
+          if (badge && data.cartCount !== undefined) {
+            badge.textContent = data.cartCount;
+            badge.classList.remove('hidden');
+          }
+        } else {
+          showToast('error', 'Failed to Add', data.message || 'Something went wrong');
+          if (data.message && data.message.toLowerCase().includes('login')) {
+            setTimeout(() => window.location.href = '/auth/login', 1500);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('error', 'Error', 'Failed to communicate with server');
+      }
+    }
+
+    function showToast(type, title, msg) {
+      const icons = {
+        success: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`,
+        error: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+        info: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+      };
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      t.innerHTML = `<div class="toast-icon" style="margin-top:2px;">${icons[type]}</div><div><div style="font-size:13px;font-weight:700;margin-bottom:4px;letter-spacing:.05em;">${title}</div><div style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.4;">${msg}</div></div>`;
+      document.getElementById('toastContainer').appendChild(t);
+      requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+      setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3500);
+    }
+
+    // State Management
+    let currentPage = 1;
+
+    function getSelectedCategory() {
+      const el = document.querySelector('.category-item input:checked');
+      return el ? el.closest('label').dataset.category : '';
+    }
+
+    function getSelectedBrands() {
+      const brands = [];
+      document.querySelectorAll('.brand-item input:checked').forEach(e => {
+        brands.push(e.closest('label').dataset.brand);
+      });
+      return brands;
+    }
+
+    function getSelectedPrice() {
+      const el = document.querySelector('.price-item input:checked');
+      return el ? el.closest('label').dataset.price : '';
+    }
+
+    function clearSearch() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("clearSearchBtn").style.display = 'none';
+      document.getElementById("searchIcon").style.display = 'block';
+      loadProducts(1);
+    }
+
+    async function loadProducts(page = 1) {
+      currentPage = page;
+      const container = document.getElementById("productContainer");
+
+      // Create loading state that matches Street-Luxury
+      container.innerHTML = `
+      <div style="grid-column:1/-1;padding:100px 0;display:flex;justify-content:center;">
+        <div style="width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;"></div>
+      </div>
+      <style>@keyframes spin { to { transform:rotate(360deg); } }</style>
+    `;
+
+      const search = document.getElementById("searchInput").value;
+      const category = getSelectedCategory();
+      const brand = getSelectedBrands().join(",");
+      const price = getSelectedPrice();
+      const sort = document.getElementById("sortSelect").value;
+
+      const params = new URLSearchParams({ page, search, category, brand, price, sort });
+      
+      // Update browser URL silently
+      if (!window.isPopState) {
+        window.history.pushState({ page, search, category, brand, price, sort }, '', `/products?${params}`);
+      }
+      window.isPopState = false;
+
+      try {
+        const res = await fetch(`/products?${params}`, { headers: { "Accept": "application/json" } });
+        const data = await res.json();
+
+        document.getElementById("currentCount").innerText = data.currentCount;
+        renderProducts(data.products);
+
+        const paginationContainer = document.getElementById("pagination");
+        // Create DOM-based pagination to bind events correctly
+        paginationContainer.innerHTML = '';
+
+        // We parse the HTML strings sent by backend OR just recreate them.
+        // Since backend sends strings like `<button class="pagination-link" data-page="1">1</button>`
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = data.pagination;
+
+        // Re-style pagination links to current design
+        Array.from(tempDiv.children).forEach(btn => {
+          const pageNum = btn.dataset.page;
+          const a = document.createElement('a');
+          a.className = `page-link ${pageNum == currentPage ? 'active' : ''}`;
+          a.textContent = pageNum;
+          a.onclick = (e) => { e.preventDefault(); loadProducts(pageNum); };
+          paginationContainer.appendChild(a);
+        });
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div style="grid-column:1/-1;padding:40px;color:var(--danger);text-align:center;">Failed to load products.</div>`;
+      }
+    }
+
+    function renderProducts(products) {
+      const container = document.getElementById("productContainer");
+      container.innerHTML = "";
+
+      if (products.length === 0) {
+        container.innerHTML = `
+        <div style="grid-column:1/-1;padding:80px 20px;text-align:center;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" style="margin:0 auto 20px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <h3 class="font-syne" style="font-size:18px;font-weight:700;color:var(--t1);margin-bottom:8px;">No products found</h3>
+          <p style="font-size:13px;color:var(--t2);">Try adjusting your search or filters to find what you're looking for.</p>
+        </div>
+      `;
+        return;
+      }
+
+      const template = document.getElementById("product-template");
+
+      products.forEach(p => {
+        const node = template.content.cloneNode(true);
+        const card = node.querySelector('.product-card');
+
+        const variant = p.variants && p.variants.length > 0 ? p.variants[0] : null;
+        // Use variant images only — product-level images have been removed
+        const imageUrl = (variant && variant.images && variant.images.length > 0) ? variant.images[0] : '/images/placeholder.jpg';
+        const price = variant ? variant.price : (p.price || 0);
+        const original = p.regularPrice || (price ? (price + Math.floor(price * 0.15)) : 0);
+        const discount = (original && price) ? Math.round(((original - price) / original) * 100) : 0;
+
+        const imgWrapper = node.querySelector('.card-img');
+        imgWrapper.onclick = () => window.location.href = `/products/${p._id}`;
+
+        node.querySelector("img").src = imageUrl;
+        node.querySelector("img").alt = p.name;
+        node.querySelector(".brand-name").textContent = p.brand;
+        node.querySelector(".prod-name").textContent = p.name;
+        node.querySelector(".prod-name").title = p.name;
+        node.querySelector(".price-val").textContent = "₹" + price.toLocaleString('en-IN');
+
+        if (original > price) {
+          node.querySelector(".orig-val").textContent = "₹" + original.toLocaleString('en-IN');
+        }
+
+        const badge = node.querySelector(".badge-sale");
+        if (discount > 10) {
+          badge.style.display = 'block';
+          badge.textContent = `SALE ${discount}%`;
+        }
+
+        // Action buttons
+        const quickAddBtn = node.querySelector('.quick-add');
+        quickAddBtn.onclick = (e) => { e.stopPropagation(); quickAdd(p._id, p.name); };
+
+        const fav = node.querySelector('.btn-fav');
+        fav.onclick = (e) => { e.stopPropagation(); showToast('info', 'Wishlist', p.name + ' added to wishlist!'); };
+
+        container.appendChild(node);
+      });
+    }
+
+    function applyFilters() {
+      loadProducts(1);
+    }
+
+    let searchTimer;
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      if (e.target.value.length > 0) {
+        document.getElementById("clearSearchBtn").style.display = 'block';
+        document.getElementById("searchIcon").style.display = 'none';
+      } else {
+        document.getElementById("clearSearchBtn").style.display = 'none';
+        document.getElementById("searchIcon").style.display = 'block';
+      }
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadProducts(1), 500);
+    });
+
+    // Setup pagination on initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchVal = document.getElementById("searchInput").value;
+      if (searchVal.length > 0) {
+        document.getElementById("clearSearchBtn").style.display = 'block';
+        document.getElementById("searchIcon").style.display = 'none';
+      }
+
+
+      // Handle back/forward buttons
+      window.addEventListener('popstate', (e) => {
+        if (e.state) {
+          // Restore form values from state and trigger load
+          if (e.state.search !== undefined) document.getElementById("searchInput").value = e.state.search;
+          if (e.state.sort !== undefined) document.getElementById("sortSelect").value = e.state.sort;
+          
+          // Note: Since we are using radio/checkboxes without global state vars here, 
+          // we just reload based on what's in the URL or let loadProducts handle it.
+          window.isPopState = true;
+          loadProducts(e.state.page || 1);
+        }
+      });
+
+      // We already have SSR loaded products, let's just create initial pagination properly
+      const paginationContainer = document.getElementById("pagination");
+      // Just trigger a loadProducts if we are clicking links since the server didn't output full pagination HTML properly in EJS
+      // A quick fetch will sync the visual pagination and standard limits
+      loadProducts(1);
+    });
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,154 @@
+<!-- views/user/auth/otpVerification.ejs -->
+<%- contentFor('body') %>
+
+<div class="min-h-[80vh] flex items-center justify-center bg-black py-20 px-6">
+    <div class="w-full max-w-md fade-up">
+        <div class="text-center mb-12">
+            <h1 class="text-white text-display font-bold tracking-tight uppercase mb-4 font-display">VERIFY CODE.</h1>
+            <p class="text-text-muted text-label font-bold uppercase">Enter the 6-digit OTP sent to your email</p>
+        </div>
+
+        <form @submit.prevent="submitOtp" x-data="otpForm('<%= typeof email !== 'undefined' ? email : '' %>', '<%= typeof context !== 'undefined' ? context : '' %>')" class="space-y-6">
+            <input type="hidden" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>">
+            <input type="hidden" name="context" value="<%= typeof context !== 'undefined' ? context : '' %>">
+            
+            <div class="space-y-2">
+                <label class="text-label font-bold uppercase text-text-muted ml-1">Verification Code</label>
+                <div class="flex justify-between gap-2">
+                    <input type="text" maxlength="6" x-model="otp" @input="validateOtp()"
+                           class="w-full bg-black-elevated border px-6 py-4 text-center text-2xl tracking-[0.5em] font-mono text-white focus:outline-none transition-all"
+                           :class="error ? 'border-status-danger' : 'border-black-border focus:border-accent'"
+                           placeholder="••••••">
+                </div>
+                <p x-show="error" x-text="error" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 text-center"></p>
+            </div>
+
+            <div class="pt-4 space-y-4">
+                <button type="submit" :disabled="loading"
+                        class="w-full bg-accent text-black font-bold py-5 text-sm tracking-[0.2em] uppercase hover:bg-accent-hover transition-all btn-press disabled:opacity-50">
+                    <span x-text="loading ? 'VERIFYING...' : 'VERIFY & PROCEED'"></span>
+                </button>
+
+                <div class="text-center">
+                    <p x-show="timer > 0" class="text-text-muted text-sm font-mono tracking-widest mt-4">
+                        Resend OTP in <span class="text-accent ml-1" x-text="formattedTime"></span>
+                    </p>
+                    <button type="button" x-show="timer === 0" @click="resendOtp" :disabled="resendLoading"
+                            class="text-accent hover:text-white transition-colors text-xs font-bold uppercase tracking-widest underline mt-4">
+                        <span x-text="resendLoading ? 'SENDING...' : 'RESEND OTP'"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <script>
+            function otpForm(initialEmail, initialContext) {
+                return {
+                    otp: '',
+                    error: '',
+                    loading: false,
+                    email: initialEmail,
+                    context: initialContext,
+                    timer: 60,
+                    timerInterval: null,
+                    resendLoading: false,
+
+                    init() {
+                        this.startTimer();
+                    },
+
+                    startTimer() {
+                        this.timer = 60;
+                        clearInterval(this.timerInterval);
+                        this.timerInterval = setInterval(() => {
+                            if (this.timer > 0) {
+                                this.timer--;
+                            } else {
+                                clearInterval(this.timerInterval);
+                            }
+                        }, 1000);
+                    },
+
+                    get formattedTime() {
+                        const m = Math.floor(this.timer / 60).toString().padStart(2, '0');
+                        const s = (this.timer % 60).toString().padStart(2, '0');
+                        return `${m}:${s}`;
+                    },
+
+                    async resendOtp() {
+                        if (this.timer > 0) return;
+                        this.resendLoading = true;
+                        try {
+                            const params = new URLSearchParams({ email: this.email, context: this.context });
+                            const response = await fetch(`/auth/resend-otp?${params.toString()}`, {
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            const result = await response.json();
+                            
+                            if (result.success) {
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { message: 'OTP resent successfully!', type: 'success' }
+                                }));
+                                this.startTimer();
+                            } else {
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { message: result.message || 'Error resending OTP', type: 'error' }
+                                }));
+                            }
+                        } catch (err) {
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: { message: 'Network error. Please try again.', type: 'error' }
+                            }));
+                        } finally {
+                            this.resendLoading = false;
+                        }
+                    },
+
+                    validateOtp() {
+                        this.otp = this.otp.replace(/[^0-9]/g, '');
+                        this.error = (this.otp.length !== 6) ? 'Enter a 6-digit code' : '';
+                    },
+
+                    async submitOtp() {
+                        this.validateOtp();
+                        if (this.error || !this.otp) return;
+
+                        this.loading = true;
+                        try {
+                            const response = await fetch('/auth/verify-otp', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    otp: this.otp,
+                                    email: this.email,
+                                    context: this.context
+                                })
+                            });
+
+                            const status = response.status;
+                            const result = await response.json();
+
+                            if (result.success) {
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { message: 'Identity verified!', type: 'success', status }
+                                }));
+                                setTimeout(() => {
+                                    window.location.href = result.redirect || '/';
+                                }, 1000);
+                            } else {
+                                window.dispatchEvent(new CustomEvent('show-toast', {
+                                    detail: { message: result.message || 'Invalid code', type: 'error', status }
+                                }));
+                                this.error = result.message || 'Invalid code';
+                            }
+                        } catch (err) {
+                            window.dispatchEvent(new CustomEvent('show-toast', {
+                                detail: { message: 'Network error. Please try again.', type: 'error', status: 0 }
+                            }));
+                        } finally {
+                            this.loading = false;
+                        }
+                    }
+                }
+            }
+        </script>

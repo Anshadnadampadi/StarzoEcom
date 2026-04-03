@@ -1,114 +1,137 @@
-import Category from "../../../models/category/category.js";
+import category from "../../../models/category/category.js";
+import * as adminCategoryServices from "../../../services/admin/adminCategoryServices.js";
+import fs from "fs";
 
-// 1. Render Page
 export const getCategories = async (req, res) => {
     try {
-        // 1. Get query parameters
-        const page = parseInt(req.query.page) || 1;
-        const limit = 4; // Items per page
-        const skip = (page - 1) * limit;
-        const searchQuery = req.query.search || "";
-
-        // 2. Build the search filter (searches name or slug)
-        const filter = searchQuery 
-            ? { 
-                $or: [
-                    { name: { $regex: searchQuery, $options: "i" } },
-                    { slug: { $regex: searchQuery, $options: "i" } }
-                ]
-              } 
-            : {};
-
-        // 3. Execute queries in parallel for better performance
-        const [categories, totalCategories] = await Promise.all([
-            Category.find(filter)
-                .sort({ displayOrder: 1 }) // Keeps your preferred sorting
-                .skip(skip)
-                .limit(limit),
-            Category.countDocuments(filter)
-        ]);
-
-        const totalPages = Math.ceil(totalCategories / limit);
-
-        // 4. Render with all necessary pagination data
-        res.render('admin/category/categoryManagement', { 
-            categories,
-            currentPage: page,
-            totalPages,
-            totalCategories,
-            searchQuery :req.query.search|| ""// Sent back to keep the search input populated
+        const data = await adminCategoryServices.getCategoryManagementData(req.query);
+        const { msg, icon } = req.query;
+        res.render('admin/categoryManagement', { 
+            ...data,
+            breadcrumbs: [
+                { label: 'Admin', url: '/admin/dashboard' },
+                { label: 'Categories', url: '/admin/categories' }
+            ],
+            msg: msg || null,
+            icon: icon || null
         });
-
     } catch (error) {
         console.error("Search/Pagination Error:", error);
         res.status(500).send("Internal Server Error");
     }
 };
 
-// 2. API: Get One (for Edit Modal)
 export const getCategoryById = async (req, res) => {
     try {
-        const category = await Category.findById(req.params.id);
+        const category = await adminCategoryServices.getCategoryById(req.params.id);
         res.json(category);
     } catch (error) {
-        res.status(404).json({ message: "Category not found" });
+        res.status(404).json({ message: error.message || "Category not found" });
     }
 };
 
 export const addCategory = async (req, res) => {
     try {
-        const { name, slug, icon, displayOrder, metaDescription } = req.body;
-        
-        const newCategory = new Category({
-            name, 
-            slug, 
-            icon, 
-            displayOrder, 
-            metaDescription 
-        });
-
-        await newCategory.save();
-
-        // CHANGE THIS: Don't redirect, send JSON!
+        await adminCategoryServices.createCategory(req.body, req.file);
         return res.status(201).json({ 
             success: true, 
             message: "Category created successfully!" 
         });
-
     } catch (error) {
         console.error("Backend Error:", error);
         
-        // If it's a duplicate slug, MongoDB error code is 11000
+        if (req.file) {
+            fs.unlinkSync(req.file.path);
+        }
+
         let message = "Error adding category";
         if (error.code === 11000) {
-            message = "This URL Slug already exists. Please use a unique one.";
+            if (error.message.includes('name')) {
+                message = "Category with this name already exists.";
+            } else if (error.message.includes('slug')) {
+                message = "This URL Slug already exists. Please use a unique one.";
+            } else {
+                message = "Duplicate entry found. Please ensure name and slug are unique.";
+            }
         }
 
         return res.status(400).json({ 
             success: false, 
-            message: message 
+            message: error.message || message 
         });
     }
 };
 
-// 4. Update Category
 export const updateCategory = async (req, res) => {
     try {
-        await Category.findByIdAndUpdate(req.params.id, req.body);
+        await adminCategoryServices.updateCategory(req.params.id, req.body, req.file);
+        res.json({ success: true, message: "Category updated successfully!" });
+    } catch (error) {
+        console.error("Update Error:", error);
+        if (req.file) fs.unlinkSync(req.file.path);
+        res.status(500).json({ success: false, message: error.message || "Error updating category" });
+    }
+};
+
+export const toggleCategoryStatus = async (req, res) => {
+    try {
+        await adminCategoryServices.toggleCategoryStatus(req.params.id);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ success: false });
     }
 };
 
-// 5. Toggle Unlist (Soft Delete)
-export const toggleCategoryStatus = async (req, res) => {
-    try {
-        const category = await Category.findById(req.params.id);
-        category.isUnlisted = !category.isUnlisted;
-        await category.save();
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false });
-    }
-};
+// let search = req.query.search||"" 
+// const filter = { name:{regex:search , $option:"i"}}
+
+//let sortoption ={}
+
+//if(sortBy==="low-high")sortoption.price=1;
+//if(sortBy==="high-low")sortoption.price=-1;
+//if(sortBy==="newest")sortoption.createdAt=-1
+
+//const userLoggedIn=(req,res,next)=>{
+  // if(!req.session.user){
+  // return res.redirect("/login")
+  // }
+//next()
+//     }
+
+// admin 
+// const isAdmin=(req,res,next)=>{
+//     if(!req.session.admin){
+//         return res.redirect("/admin/login")
+//     }
+//     next();
+// }
+
+// const existingUser= cart.items.find(
+//     item=>item.productId.toString()===productId
+// )
+// if(existingitem){
+//     existingitem.quantity+=1
+
+// }else{
+//     cart.items.push({
+//         productId.quantity:1
+//     })
+// }
+
+
+// if(product.stock<quantity){
+//     throw new Error("Product out of Stock") 
+// }
+
+// if(category){
+//     filter.category=category
+// }
+
+// await Product.findByIdAndUpdate(id,{
+//   isBlocked:true  
+// })
+
+// let total =0;
+// cart.items.forEach(item=>{
+//     total+=item.price*item.quantity;
+// })

@@ -1,0 +1,32 @@
+<!-- views/user/account/wishlist.ejs -->
+<%- contentFor('body') %>
+
+<div class="min-h-screen bg-black py-24">
+    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+        <div class="mb-16 fade-up">
+            <span class="text-accent text-label font-bold uppercase mb-4 block">Saved Collection</span>
+            <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">MY WISHLIST.</h1>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+            <!-- Sidebar Nav -->
+            <%- include('../../partials/account-sidebar', { activeTab: 'wishlist' }) %>
+
+            <!-- Main Panel -->
+            <div class="lg:col-span-3">
+                <% if (typeof wishlist !== 'undefined' && wishlist.length > 0) { %>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-black-border border border-black-border">
+                        <% wishlist.forEach(product => { %>
+                            <%- include('../../partials/product-card', { product }) %>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <div class="py-32 text-center bg-black-card border border-black-border">
+                        <p class="text-text-muted text-label font-bold uppercase mb-8 italic">No products in your wishlist.</p>
+                        <a href="/phones" class="bg-accent text-black font-bold px-10 py-5 text-sm tracking-[0.2em] uppercase hover:bg-accent-hover transition-all btn-press">VIEW COLLECTION</a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>

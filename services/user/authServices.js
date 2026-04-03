@@ -5,10 +5,9 @@ import { transporter } from "../../config/mailer.js";
 import dotenv from "dotenv"
 dotenv.config()
 
-export const registerUser = async ({ name, email, password }) => {
+export const registerUser = async ({ firstName, lastName, email, password }) => {
     try {
-
-        if (!name || !email || !password) {
+        if (!firstName || !email || !password) {
             return { success: false, message: "All fields required" };
         }
 
@@ -22,11 +21,13 @@ export const registerUser = async ({ name, email, password }) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
         const newUser = await User.create({
-            name,
+            firstName,
+            lastName,
+            name: `${firstName} ${lastName || ''}`.trim(),
             email,
             password: hashedPassword,
             otp,
-            otpExpiry: Date.now() + 5 * 60 * 1000
+            otpExpiry: Date.now() + 1 * 60 * 1000
         });
 
         return { success: true, email };
@@ -69,12 +70,25 @@ const generateOTP = () => {
 };
 
 
+//    GENERATE REFERRAL CODE
+export const generateReferralCode = async () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code;
+    let isUnique = false;
+    while (!isUnique) {
+        code = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        const existing = await User.findOne({ referralCode: code });
+        if (!existing) isUnique = true;
+    }
+    return code;
+};
+
 //    SEND OTP SERVICE
 
-export const sendOtpService = async ({ name, email, password }) => {
+export const sendOtpService = async ({ firstName, lastName, email, password }) => {
     try {
         
-        if (!name || !email || !password) {
+        if (!firstName || !email || !password) {
             return { success: false, message: "All fields required" };
         }
        
@@ -98,14 +112,20 @@ export const sendOtpService = async ({ name, email, password }) => {
             existingUser.otp = otp;
             existingUser.otpExpiry = otpExpiry;
             existingUser.password = hashedPassword;
+            existingUser.firstName = firstName;
+            existingUser.lastName = lastName;
+            existingUser.name = `${firstName} ${lastName || ''}`.trim();
             user = await existingUser.save();
         } else {
             user = await User.create({
-                name,
+                firstName,
+                lastName,
+                name: `${firstName} ${lastName || ''}`.trim(),
                 email,
                 password: hashedPassword,
                 otp,
-                otpExpiry
+                otpExpiry,
+                referralCode: await generateReferralCode()
             });
         }
      console.log("Before sending email...", {
@@ -187,7 +207,7 @@ export const verifyOtpService = async ({ email, otp, context }) => {
 };
 
 
-export const forgotPasswordService=async(email)=>{
+export const forgotPasswordService= async(email)=>{
     try{
         const user=await User.findOne({email:email})
         if(!user){
@@ -399,7 +419,8 @@ export const updateUserAddress = async (userId, addrId, addr) => {
     try {
         const user = await User.findById(userId);
         if (!user) return { success: false, message: 'User not found' };
-        const existing = user.addresses.id(addrId);
+        
+        const existing = await Address.findById(addrId);
         if (!existing) return { success: false, message: 'Address not found' };
 
         const validation = await validateAndNormalizeAddress(addr);
@@ -407,10 +428,16 @@ export const updateUserAddress = async (userId, addrId, addr) => {
         const validatedAddress = validation.address;
 
         if (validatedAddress.default) {
-            user.addresses.forEach(a => a.default = false);
+            // Unset other addresses as default
+            await Address.updateMany(
+                { _id: { $in: user.addresses } },
+                { $set: { default: false } }
+            );
         }
+        
         Object.assign(existing, validatedAddress);
-        await user.save();
+        await existing.save();
+        
         return {
             success: true,
             address: existing
@@ -425,9 +452,12 @@ export const deleteUserAddress = async (userId, addrId) => {
     try {
         const user = await User.findById(userId);
         if (!user) return { success: false, message: 'User not found' };
-        // use pull/filter instead of subdoc remove (prevents errors when doc is plain object)
-        user.addresses = user.addresses.filter(a => a._id.toString() !== addrId.toString());
+
+        await Address.findByIdAndDelete(addrId);
+        
+        user.addresses = user.addresses.filter(id => id.toString() !== addrId);
         await user.save();
+
         return { success: true };
     } catch (error) {
         console.log('Delete address error:', error);
@@ -479,7 +509,7 @@ export const requestEmailChangeOtpService = async ({ userId, newEmail }) => {
         }
 
         const otp = generateOTP();
-        const otpExpiry = Date.now() + 5 * 60 * 1000;
+        const otpExpiry = Date.now() + 1 * 60 * 1000;
 
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
@@ -489,7 +519,7 @@ export const requestEmailChangeOtpService = async ({ userId, newEmail }) => {
                 <h3>Email Change Verification</h3>
                 <p>Use this OTP to confirm your new email address:</p>
                 <h2>${otp}</h2>
-                <p>This OTP expires in 5 minutes.</p>
+                <p>This OTP expires in 1 minute.</p>
             `
         });
 
@@ -560,7 +590,7 @@ export const resendOtpService = async (email) => {
 
         const otp = generateOTP();
         user.otp = otp;
-        user.otpExpiry = Date.now() + 5 * 60 * 1000;
+        user.otpExpiry = Date.now() + 1 * 60 * 1000;
         await user.save();
 
         try {
@@ -572,7 +602,7 @@ export const resendOtpService = async (email) => {
                     <h3>Your OTP Code</h3>
                     <p>Your verification OTP is:</p>
                     <h2>${otp}</h2>
-                    <p>This OTP will expire in 5 minutes.</p>
+                    <p>This OTP will expire in 1 minute.</p>
                 `
             });
         } catch (mailErr) {
@@ -583,5 +613,20 @@ export const resendOtpService = async (email) => {
     } catch (error) {
         console.log('Resend OTP Error:', error);
         return { success: false, message: 'Failed to resend OTP' };
+    }
+};
+
+// Helper to ensure all users have referral codes (run once or as needed)
+export const syncReferralCodes = async () => {
+    try {
+        const usersWithoutCode = await User.find({ referralCode: { $exists: false } });
+        for (const user of usersWithoutCode) {
+            user.referralCode = await generateReferralCode();
+            await user.save();
+        }
+        return { success: true, count: usersWithoutCode.length };
+    } catch (error) {
+        console.error('Sync referral codes error:', error);
+        return { success: false };
     }
 };

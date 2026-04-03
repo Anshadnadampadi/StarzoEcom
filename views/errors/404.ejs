@@ -1,0 +1,26 @@
+<!-- views/errors/404.ejs -->
+<%- contentFor('body') %>
+
+<div class="min-h-screen bg-black flex items-center justify-center py-20 px-6">
+    <div class="text-center fade-up max-w-lg">
+        <h1 class="text-white text-[120px] font-black leading-none tracking-tighter mb-4">404.</h1>
+        <p class="text-accent text-sm font-bold tracking-[0.5em] uppercase mb-12 block">Signal Lost In Hyperspace</p>
+        
+        <p class="text-white/40 text-lg font-medium leading-relaxed mb-16">
+            The technology you're looking for has moved to a different dimension, or simply doesn't exist yet. Explore our current catalog instead.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            <a href="/phones" class="bg-white text-black font-bold px-12 py-5 text-xs tracking-[0.2em] uppercase hover:bg-accent transition-all btn-press">
+                BACK TO CATALOG
+            </a>
+            <a href="/" class="border border-white/20 text-white font-bold px-12 py-5 text-xs tracking-[0.2em] uppercase hover:bg-white/5 transition-all">
+                RETURN HOME
+            </a>
+        </div>
+
+        <div class="mt-24 pt-12 border-t border-white/5">
+            <p class="text-white/20 text-[10px] tracking-widest uppercase">MOBIVERSE ERROR ENGINE v1.0.4</p>
+        </div>
+    </div>
+</div>

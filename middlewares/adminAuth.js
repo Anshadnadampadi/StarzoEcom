@@ -8,3 +8,5 @@ export const adminAuth = (req, res, next) => {
    }
    return res.redirect('/admin/login');
    }
+
+export default adminAuth

@@ -1,0 +1,13 @@
+<%- contentFor('body') %>
+
+<section class="min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
+    <div class="fade-up">
+        <h1 class="text-white text-9xl font-black mb-4 tracking-tighter opacity-10">404</h1>
+        <p class="text-accent text-[10px] font-bold tracking-[0.4em] uppercase mb-6"><%= typeof message !== 'undefined' ? message : "OUT OF BOUNDS" %></p>
+        <h2 class="text-white text-3xl font-bold mb-10 max-w-md mx-auto uppercase">THE PAGE YOU'RE LOOKING FOR DOESN'T EXIST.</h2>
+        
+        <a href="/" class="inline-block bg-accent text-black font-bold px-12 py-5 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all btn-press">
+            RETURN TO HOME
+        </a>
+    </div>
+</section>

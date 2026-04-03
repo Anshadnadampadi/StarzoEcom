@@ -1,0 +1,48 @@
+<!-- views/partials/nav-guest.ejs -->
+<nav class="h-20 glass border-b border-black-border sticky top-0 z-40 flex items-center justify-between px-6 lg:px-12">
+    <!-- Logo -->
+    <div class="flex items-center gap-8">
+        <a href="/" class="text-white font-bold tracking-widest text-xl">STARZO</a>
+
+        <!-- Desktop Menu -->
+        <div class="hidden lg:flex items-center gap-8">
+            <a href="/products"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">All
+                Phones</a>
+            <a href="/brands"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">Brands</a>
+            <a href="/deals"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">Deals</a>
+            <a href="/support"
+                class="text-[11px] font-semibold tracking-widest text-text-secondary hover:text-white transition-colors uppercase">Support</a>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-6">
+        <!-- Search -->
+        <div class="relative group hidden md:block">
+            <form action="/search" method="GET">
+                <input type="text" name="q" placeholder="Search..."
+                    class="bg-white/5 border border-white/10 rounded-sm px-4 py-2 text-xs text-white focus:outline-none focus:border-accent/50 w-48 transition-all focus:w-64">
+            </form>
+        </div>
+
+        <!-- Guest Actions -->
+        <div class="flex items-center gap-4">
+            <a href="/auth/login"
+                class="text-[11px] font-bold tracking-[0.2em] text-white/60 hover:text-white transition-colors uppercase">Login</a>
+            <a href="/auth/register"
+                class="bg-white text-black text-[10px] font-bold tracking-[0.2em] px-6 py-2.5 uppercase hover:bg-accent transition-all btn-press">
+                Register
+            </a>
+        </div>
+
+        <!-- Mobile Toggle -->
+        <button class="lg:hidden text-white">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+            </svg>
+        </button>
+    </div>
+</nav>

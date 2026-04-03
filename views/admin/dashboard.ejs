@@ -1,0 +1,114 @@
+<!-- views/admin/dashboard.ejs -->
+<%- contentFor('body') %>
+
+<div class="space-y-10">
+    <!-- Header -->
+    <div class="flex justify-between items-end">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">OPERATIONS OVERVIEW.</h1>
+            <p class="text-white/40 text-xs tracking-widest uppercase font-semibold">Real-time performance metrics</p>
+        </div>
+        <div class="flex gap-2">
+            <button class="px-4 py-2 bg-white/5 border border-white/10 text-white text-[11px] font-bold tracking-widest uppercase hover:bg-white/10 transition-colors">7D</button>
+            <button class="px-4 py-2 bg-white/5 border border-white/10 text-white text-[11px] font-bold tracking-widest uppercase hover:bg-white/10 transition-colors">30D</button>
+            <button class="px-4 py-2 bg-white border-white text-black text-[11px] font-bold tracking-widest uppercase">ALL TIME</button>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
+            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Total Revenue</h4>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-mono font-bold text-white">₹<%= stats.revenue.total.toLocaleString() %></span>
+            </div>
+            <p class="text-status-success text-[10px] mt-2 font-bold uppercase tracking-widest">↑ 12.5% from last month</p>
+        </div>
+
+        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
+            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Total Orders</h4>
+            <span class="text-3xl font-mono font-bold text-white"><%= stats.orders.total %></span>
+            <p class="text-white/20 text-[10px] mt-2 font-bold uppercase tracking-widest">Across all categories</p>
+        </div>
+
+        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
+            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Active Customers</h4>
+            <span class="text-3xl font-mono font-bold text-white"><%= stats.customers.total %></span>
+            <p class="text-accent text-[10px] mt-2 font-bold uppercase tracking-widest">84 new this week</p>
+        </div>
+
+        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
+            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Conversion Rate</h4>
+            <span class="text-3xl font-mono font-bold text-white">4.2%</span>
+            <p class="text-status-danger text-[10px] mt-2 font-bold uppercase tracking-widest">↓ 0.8% drop</p>
+        </div>
+    </div>
+
+    <!-- Charts / Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Sales Chart -->
+        <div class="lg:col-span-2 bg-black-surface border border-white/5 p-10">
+            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-10 pb-4 border-b border-white/5">Sales Performance</h3>
+            <div class="h-[400px]">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-black-surface border border-white/5 overflow-hidden">
+            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase px-10 py-8 border-b border-white/5">Recent Activity</h3>
+            <div class="divide-y divide-white/5">
+                <% stats.recentActivity.forEach(activity => { %>
+                    <div class="px-10 py-6 hover:bg-white/[0.02] transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-white text-xs font-bold truncate uppercase"><%= activity.title %></span>
+                            <span class="text-[9px] font-mono text-white/20 whitespace-nowrap ml-4"><%= activity.time %></span>
+                        </div>
+                        <p class="text-white/40 text-[10px] tracking-wide"><%= activity.desc %></p>
+                    </div>
+                <% }) %>
+            </div>
+            <a href="#" class="block text-center py-4 bg-white/5 text-white/40 text-[10px] font-bold tracking-widest uppercase hover:text-white transition-colors">View All Events</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [350000, 480000, 290000, 620000, 550000, 840000],
+                    borderColor: '#FF6A00',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    pointBackgroundColor: '#FF6A00',
+                    fill: true,
+                    backgroundColor: 'rgba(255, 106, 0, 0.05)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10, family: 'JetBrains Mono' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10, family: 'Inter' } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    });
+</script>

@@ -1,277 +1,197 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
-    <link rel="stylesheet" href="/user/css/style.css">
-    <!-- Material Icons font -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-   
+<!-- views/user/home.ejs -->
+<%- contentFor('body') %>
 
-
-<%- include('./partials/navbar-after',{user}) %>
-
-
-  <!-- HERO -->
-  <div class="hero" id="hero">
-    <div class="hero-inner">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <div class="hero-badge-dot"></div>
-          <span class="hero-badge-text">New Arrival: Series X Pro</span>
+    <!-- 1. Hero Banner -->
+    <section class="h-screen w-full bg-black relative group overflow-hidden">
+        <!-- Placeholder for large product image (Insta360 style) -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=2000&auto=format&fit=crop"
+                class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-[2000ms] ease-out"
+                alt="Featured Phone">
         </div>
-        <h1 class="hero-h1">Innovation in<br><span>Your Hand</span></h1>
-        <p class="hero-desc">Experience the next generation of speed and performance. Designed with precision, crafted for perfection. The future is here.</p>
-        <div class="hero-cta">
-          <button class="btn-primary" onclick="showPage('products')">Shop Now</button>
-          <button class="btn-secondary" onclick="showPage('products')">Explore Deals</button>
-        </div>
-        <div class="hero-social-proof">
-          <div class="avatar-stack">
-            <img src="https://i.pravatar.cc/40?img=1" alt="user" />
-            <img src="https://i.pravatar.cc/40?img=5" alt="user" />
-            <img src="https://i.pravatar.cc/40?img=8" alt="user" />
-          </div>
-          <p class="social-proof-text">Trusted by <strong>10k+</strong> premium customers</p>
-        </div>
-      </div>
-      <div class="hero-image-wrap">
-        <div class="hero-phone-frame">
-          <img class="hero-phone-img" src="https://www.figma.com/api/mcp/asset/cfd39061-6ea6-4219-9d4c-302dcf3b84ed" alt="Featured Phone" />
-          <div class="hero-float-card bottom">
-            <div class="float-icon green"><span class="material-icons">bolt</span></div>
-            <div>
-              <div class="float-label">Battery Life</div>
-              <div class="float-value">48 Hours</div>
+
+        <!-- Content -->
+        <div class="absolute inset-0 z-10 flex flex-col justify-center px-6 lg:px-24">
+            <div class="max-w-3xl fade-up">
+                <span class="text-accent text-label font-bold mb-6 block">THE NEW STANDARD</span>
+                <h1 class="text-white text-display lg:text-hero font-bold leading-tight mb-8 font-display">
+                    MOBI 15 <br> <span class="text-text-secondary">ULTRA PRO.</span>
+                </h1>
+                <p class="text-text-secondary text-lg lg:text-xl font-medium mb-10 max-w-lg leading-relaxed">
+                    Experience the world's most powerful imaging system on a mobile device. Engineered for those who
+                    demand perfection.
+                </p>
+
+                <div class="flex flex-wrap gap-4">
+                    <a href="/phones"
+                        class="bg-accent text-black font-bold px-10 py-5 text-xs tracking-[0.2em] uppercase hover:bg-white transition-all btn-press">
+                        ORDER NOW
+                    </a>
+                    <a href="/phones/flagship"
+                        class="border border-white/20 text-white font-bold px-10 py-5 text-xs tracking-[0.2em] uppercase hover:bg-white/5 transition-all">
+                        LEARN MORE
+                    </a>
+                </div>
             </div>
-          </div>
-          <div class="hero-float-card top">
-            <div class="float-icon blue"><span class="material-icons">photo_camera</span></div>
-            <div>
-              <div class="float-label">Camera</div>
-              <div class="float-value">200 MP</div>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- CATEGORIES -->
-  <div class="section section-white" id="categories">
-    <div class="section-inner">
-      <div class="section-header">
-        <h2>Shop by Category</h2>
-        <p>Find the perfect device for your needs.</p>
-      </div>
-      <div class="categories-grid">
-        <div class="category-card" onclick="showPage('products')">
-          <div class="category-img"><img src="https://www.figma.com/api/mcp/asset/fe5ad4b6-1433-424d-b3ee-db92e44ae384" alt="Flagships" /></div>
-          <div><div class="category-name">Flagships</div><div class="category-sub">Top Tier Performance</div></div>
-        </div>
-        <div class="category-card" onclick="showPage('products')">
-          <div class="category-img"><img src="https://www.figma.com/api/mcp/asset/f41191d8-1dde-4c11-a513-80f0b449ce2f" alt="Foldables" /></div>
-          <div><div class="category-name">Foldables</div><div class="category-sub">Future Form Factor</div></div>
-        </div>
-        <div class="category-card" onclick="showPage('products')">
-          <div class="category-img"><img src="https://www.figma.com/api/mcp/asset/cfd39061-6ea6-4219-9d4c-302dcf3b84ed" alt="Gaming" /></div>
-          <div><div class="category-name">Gaming Phones</div><div class="category-sub">Ultimate Power</div></div>
-        </div>
-        <div class="category-card" onclick="showPage('products')">
-          <div class="category-img"><img src="https://www.figma.com/api/mcp/asset/eaf20245-2963-414b-b197-115bfa933889" alt="Budget" /></div>
-          <div><div class="category-name">Budget Friendly</div><div class="category-sub">Value Picks</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- BEST SELLING -->
-  <div class="section" id="best-selling">
-    <div class="section-inner">
-      <div class="section-header-row">
-        <div class="left">
-          <h2>Best Selling</h2>
-          <p>Top picks from our premium collection.</p>
-        </div>
-        <a class="link-arrow" onclick="showPage('products'); return false;">View all phones <span class="material-icons">arrow_forward</span></a>
-      </div>
-      <div class="products-grid">
-        <!-- Product 1 -->
-        <div class="product-card" onclick="showPage('product-detail')">
-          <div class="product-img-wrap">
-            <img src="https://www.figma.com/api/mcp/asset/f41191d8-1dde-4c11-a513-80f0b449ce2f" alt="Galaxy Ultra S24" />
-            <span class="product-badge badge-sale">-10%</span>
-          </div>
-          <div class="product-info">
-            <div class="product-meta">
-              <div><div class="product-name">Galaxy Ultra S24</div><div class="product-variant">512GB, Titanium Grey</div></div>
-              <div><div class="product-price">$1,199</div><div class="product-price-old">$1,299</div></div>
+        <!-- Banner Navigation / Progress (Simulated) -->
+        <div class="absolute bottom-12 left-6 lg:left-24 right-6 lg:right-24 z-20 flex items-center justify-between">
+            <div class="flex gap-2">
+                <div class="w-12 h-1 bg-accent"></div>
+                <div class="w-12 h-1 bg-white/20"></div>
+                <div class="w-12 h-1 bg-white/20"></div>
             </div>
-            <div class="product-footer">
-              <div class="stars">
-                <span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star_half</span>
-                <span class="stars-count">(128)</span>
-              </div>
-              <button class="btn-cart" onclick="showPage('cart'); event.stopPropagation()">Add to Cart <span class="material-icons">arrow_forward</span></button>
-            </div>
-          </div>
+            <div class="text-white/20 font-mono text-xs tracking-widest uppercase">01 / 03</div>
         </div>
-        <!-- Product 2 -->
-        <div class="product-card" onclick="showPage('product-detail')">
-          <div class="product-img-wrap">
-            <img src="https://www.figma.com/api/mcp/asset/3350585d-3f36-4ead-b957-a47307d529fc" alt="iPhone 15 Pro Max" />
-            <span class="product-badge badge-new">New</span>
-          </div>
-          <div class="product-info">
-            <div class="product-meta">
-              <div><div class="product-name">iPhone 15 Pro Max</div><div class="product-variant">256GB, Natural Titanium</div></div>
-              <div><div class="product-price">$1,099</div></div>
-            </div>
-            <div class="product-footer">
-              <div class="stars">
-                <span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span>
-                <span class="stars-count">(342)</span>
-              </div>
-              <button class="btn-cart" onclick="showPage('cart'); event.stopPropagation()">Add to Cart <span class="material-icons">arrow_forward</span></button>
-            </div>
-          </div>
-        </div>
-        <!-- Product 3 -->
-        <div class="product-card" onclick="showPage('product-detail')">
-          <div class="product-img-wrap">
-            <img src="https://www.figma.com/api/mcp/asset/eaf20245-2963-414b-b197-115bfa933889" alt="Pixel 8 Pro" />
-          </div>
-          <div class="product-info">
-            <div class="product-meta">
-              <div><div class="product-name">Pixel 8 Pro</div><div class="product-variant">128GB, Porcelain</div></div>
-              <div><div class="product-price">$999</div></div>
-            </div>
-            <div class="product-footer">
-              <div class="stars">
-                <span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons empty">star</span>
-                <span class="stars-count">(89)</span>
-              </div>
-              <button class="btn-cart" onclick="showPage('cart'); event.stopPropagation()">Add to Cart <span class="material-icons">arrow_forward</span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- FLASH SALE -->
-  <div class="flash-section" id="flash-sale">
-    <div class="flash-inner">
-      <div class="flash-content">
-        <div class="flash-tag"><span>Limited Time Offer</span></div>
-        <div class="flash-title">Flash Sale:<br><span>20% Off Foldables</span></div>
-        <p class="flash-desc">Upgrade to the latest foldable technology. Experience multitasking like never before with premium flexible displays.</p>
-        <div class="countdown">
-          <div class="countdown-box"><span class="countdown-num" id="cd-h">05</span><span class="countdown-label">Hrs</span></div>
-          <div class="countdown-box"><span class="countdown-num" id="cd-m">23</span><span class="countdown-label">Min</span></div>
-          <div class="countdown-box"><span class="countdown-num" id="cd-s">12</span><span class="countdown-label">Sec</span></div>
+    <!-- 2. Brand Marquee -->
+    <section class="py-12 bg-black-surface border-y border-black-border overflow-hidden">
+        <div
+            class="flex items-center gap-16 animate-marquee whitespace-nowrap opacity-30 hover:opacity-100 transition-opacity">
+            <% ['APPLE', 'SAMSUNG' , 'GOOGLE' , 'ONEPLUS' , 'XIAOMI' , 'VIVO' , 'OPPO' , 'REALME' , 'ASUS' , 'NOTHING'
+                ].forEach(brand=> { %>
+                <span
+                    class="text-white text-xl font-black tracking-tighter uppercase grayscale hover:grayscale-0 transition-all cursor-default">
+                    <%= brand %>
+                </span>
+                <% }) %>
+                    <!-- Duplicate for loop -->
+                    <% ['APPLE', 'SAMSUNG' , 'GOOGLE' , 'ONEPLUS' , 'XIAOMI' , 'VIVO' , 'OPPO' , 'REALME' , 'ASUS'
+                        , 'NOTHING' ].forEach(brand=> { %>
+                        <span
+                            class="text-white text-xl font-black tracking-tighter uppercase grayscale hover:grayscale-0 transition-all cursor-default">
+                            <%= brand %>
+                        </span>
+                        <% }) %>
         </div>
-      </div>
-      <div class="flash-image">
-        <img src="https://www.figma.com/api/mcp/asset/f41191d8-1dde-4c11-a513-80f0b449ce2f" alt="Foldable Phone" />
-      </div>
-      <button class="btn-flash" onclick="showPage('products')">Shop The Deal</button>
-    </div>
-  </div>
+    </section>
 
-  <!-- WHY CHOOSE US -->
-  <div class="section section-white" id="why-choose">
-    <div class="section-inner">
-      <div class="section-header"><h2>Why Choose Us</h2></div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon"><span class="material-icons">local_shipping</span></div>
-          <div class="feature-title">Free Delivery</div>
-          <p class="feature-desc">On all orders over $500. Fast and secure shipping worldwide.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><span class="material-icons">support_agent</span></div>
-          <div class="feature-title">24/7 Support</div>
-          <p class="feature-desc">Our expert team is always ready to help you with any questions.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><span class="material-icons">verified</span></div>
-          <div class="feature-title">Official Warranty</div>
-          <p class="feature-desc">Guaranteed original products with manufacturer warranty.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon"><span class="material-icons">lock</span></div>
-          <div class="feature-title">Secure Payment</div>
-          <p class="feature-desc">Your transactions are safe with our encrypted payment systems.</p>
-        </div>
-      </div>
-    </div>
-  </div>
+    <!-- 3. Flash Sale -->
+    <section class="py-24 bg-black">
+        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div class="fade-up">
+                    <span class="text-accent text-[10px] font-bold tracking-[0.3em] uppercase mb-4 block">Limited
+                        Time</span>
+                    <h2 class="text-white text-3xl lg:text-4xl font-bold tracking-tight uppercase">FLASH SALE.</h2>
+                </div>
 
-  <!-- TESTIMONIALS -->
-  <div class="section" id="testimonials">
-    <div class="section-inner">
-      <div class="section-header"><h2>What Our Customers Say</h2><p>Real reviews from real buyers.</p></div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <div class="testimonial-stars"><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span></div>
-          <p class="testimonial-text">"Absolutely love my new iPhone 15 Pro Max. The camera quality is incredible and the delivery was super fast. Highly recommend MobileStore!"</p>
-          <div class="testimonial-author"><img class="testimonial-avatar" src="https://i.pravatar.cc/40?img=1" alt="" /><div><div class="testimonial-name">Sarah Johnson</div><div class="testimonial-role">Verified Buyer</div></div></div>
-        </div>
-        <div class="testimonial-card">
-          <div class="testimonial-stars"><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span></div>
-          <p class="testimonial-text">"Great prices and authentic products. Got my Galaxy S24 Ultra at a 10% discount and it came with full manufacturer warranty. Will shop again!"</p>
-          <div class="testimonial-author"><img class="testimonial-avatar" src="https://i.pravatar.cc/40?img=5" alt="" /><div><div class="testimonial-name">Michael Chen</div><div class="testimonial-role">Verified Buyer</div></div></div>
-        </div>
-        <div class="testimonial-card">
-          <div class="testimonial-stars"><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star</span><span class="material-icons">star_half</span></div>
-          <p class="testimonial-text">"The customer support team was incredibly helpful when I had questions about my order. The packaging was perfect and phone arrived in pristine condition."</p>
-          <div class="testimonial-author"><img class="testimonial-avatar" src="https://i.pravatar.cc/40?img=8" alt="" /><div><div class="testimonial-name">Priya Sharma</div><div class="testimonial-role">Verified Buyer</div></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
+                <div class="flex gap-4 items-center mb-1">
+                    <p class="text-white/30 text-[10px] font-bold tracking-widest uppercase">Ends In:</p>
+                    <div class="flex gap-2 font-mono text-xl font-bold text-white">
+                        <span class="bg-black-card border border-white/5 px-2 py-1">04</span>
+                        <span class="text-accent">:</span>
+                        <span class="bg-black-card border border-white/5 px-2 py-1">22</span>
+                        <span class="text-accent">:</span>
+                        <span class="bg-black-card border border-white/5 px-2 py-1">59</span>
+                    </div>
+                </div>
+            </div>
 
-  <!-- NEWSLETTER -->
-  <div class="section newsletter" id="newsletter">
-    <div class="newsletter-inner">
-      <h2>Stay Ahead of the Curve</h2>
-      <p>Subscribe to our newsletter for the latest tech news, exclusive launches, and member-only deals.</p>
-      <div class="newsletter-form">
-        <input class="newsletter-input" type="email" placeholder="Enter your email" />
-        <button class="newsletter-btn">Subscribe</button>
-      </div>
-      <p class="newsletter-legal">We care about the protection of your data. Read our <a href="#">Privacy Policy</a>.</p>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-inner">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <div class="footer-logo"><div class="footer-logo-icon">M</div><span class="footer-logo-text">MobileStore</span></div>
-          <p class="footer-tagline">Premium mobile devices for the modern lifestyle. Quality you can trust.</p>
-          <div class="footer-social">
-            <a href="#"><span class="material-icons">facebook</span></a>
-            <a href="#"><span class="material-icons">share</span></a>
-            <a href="#"><span class="material-icons">photo_camera</span></a>
-          </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-black-border border border-black-border">
+                <% if (typeof newArrivals !=='undefined' ) { %>
+                    <% newArrivals.forEach(product=> { %>
+                        <%- include('../partials/product-card', { product }) %>
+                            <% }) %>
+                                <% } else { %>
+                                    <!-- Dummy cards if no data -->
+                                    <div
+                                        class="p-12 text-white/20 text-xs uppercase tracking-widest text-center bg-black">
+                                        No Active Flash Sales</div>
+                                    <% } %>
+            </div>
         </div>
-        <div class="footer-col"><h4>Shop</h4><ul><li><a href="#">iPhone</a></li><li><a href="#">Android</a></li><li><a href="#">Foldables</a></li><li><a href="#">Gaming</a></li><li><a href="#">New Arrivals</a></li></ul></div>
-        <div class="footer-col"><h4>Support</h4><ul><li><a href="#" onclick="showPage('contact'); return false;">Contact Us</a></li><li><a href="#">FAQs</a></li><li><a href="#">Shipping &amp; Returns</a></li><li><a href="#">Warranty Info</a></li><li><a href="#">Order Status</a></li></ul></div>
-        <div class="footer-col"><h4>Company</h4><ul><li><a href="#" onclick="showPage('about'); return false;">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Blog</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li></ul></div>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-copy">&copy; 2024 MobileStore Inc. All rights reserved.</p>
-        <div class="footer-bottom-links"><a href="#">English (US)</a><a href="#">USD</a></div>
-      </div>
-    </div>
-  </footer>
- <script src="/user/js/script.js"></script>
-</body>
-</html>
+    </section>
+
+    <!-- 4. Categories Grid -->
+    <section class="py-24 bg-black-surface">
+        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <span class="text-accent text-[10px] font-bold tracking-[0.3em] uppercase mb-4 block">Browse
+                    Collection</span>
+                <h2 class="text-white text-3xl font-bold tracking-tight uppercase">SHOP BY TECH.</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <% const cats=[ { name: 'Flagship Systems' ,
+                    img: 'https://images.unsplash.com/photo-1592890288564-76628a30a657?q=80&w=1000&auto=format&fit=crop'
+                    , link: '/phones/category/flagship' }, { name: 'Imaging Pro' ,
+                    img: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1000&auto=format&fit=crop'
+                    , link: '/phones/category/pro-camera' }, { name: 'Gaming Rig' ,
+                    img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop' ,
+                    link: '/phones/category/gaming' } ] %>
+                    <% cats.forEach(cat=> { %>
+                        <a href="<%= cat.link %>"
+                            class="group relative aspect-[4/5] bg-black overflow-hidden ring-1 ring-white/10 hover:ring-accent transition-all">
+                            <img src="<%= cat.img %>" alt="<%= cat.name %>"
+                                class="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700">
+                            <div
+                                class="absolute inset-0 flex flex-col justify-end p-8 bg-gradient-to-t from-black/80 to-transparent">
+                                <h3 class="text-white text-2xl font-bold mb-2">
+                                    <%= cat.name %>
+                                </h3>
+                                <span
+                                    class="text-accent text-[10px] font-bold tracking-widest uppercase flex items-center gap-2">
+                                    Explore <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                        </a>
+                        <% }) %>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Featured Section -->
+    <section class="py-24 bg-black">
+        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-end mb-12">
+                <h2 class="text-white text-3xl font-bold tracking-tight uppercase">TRENDING PHONES.</h2>
+                <a href="/phones"
+                    class="text-accent text-[11px] font-bold tracking-widest uppercase hover:underline">View All</a>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px bg-white/5 border border-white/5">
+                <% if (typeof featuredProducts !=='undefined' ) { %>
+                    <% featuredProducts.forEach(product=> { %>
+                        <%- include('../partials/product-card', { product }) %>
+                            <% }) %>
+                                <% } else { %>
+                                    <div class="col-span-full py-20 text-center text-white/20 italic">Loading trending
+                                        products...</div>
+                                    <% } %>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Trust Strip -->
+    <section class="py-16 bg-black border-t border-black-border">
+        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-12">
+                <div class="text-center">
+                    <div class="text-accent text-2xl mb-4">🚚</div>
+                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">Free Delivery</h4>
+                    <p class="text-white/40 text-[10px] uppercase tracking-wide">On orders above ₹15,000</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-accent text-2xl mb-4">🛡️</div>
+                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">Genuine Stock</h4>
+                    <p class="text-white/40 text-[10px] uppercase tracking-wide">100% authentic products</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-accent text-2xl mb-4">🔄</div>
+                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">Easy Returns</h4>
+                    <p class="text-white/40 text-[10px] uppercase tracking-wide">7-day replacement policy</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-accent text-2xl mb-4">💬</div>
+                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">24/7 Support</h4>
+                    <p class="text-white/40 text-[10px] uppercase tracking-wide">Expert tech assistance</p>
+                </div>
+            </div>
+        </div>
+    </section>

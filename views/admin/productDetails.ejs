@@ -1,0 +1,165 @@
+<%- contentFor('body') %>
+
+<div class="space-y-10" x-data="variantManager()">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <a href="/admin/productManagement" class="text-white/20 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </a>
+                <h1 class="text-3xl font-bold tracking-tight uppercase text-white">PRODUCT DETAILS.</h1>
+            </div>
+            <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Specifications and Variant Management</p>
+        </div>
+        <div class="flex gap-4">
+            <a href="/admin/products/add-variant/<%= product._id %>" 
+               class="px-8 py-4 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all btn-press shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                Add Variant
+            </a>
+        </div>
+    </div>
+
+    <!-- Product Info Overview -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-1 bg-black-surface border border-white/5 p-8 space-y-8">
+            <div class="aspect-square bg-black border border-white/5 p-4 flex items-center justify-center">
+                <% if (product.images && product.images.length > 0) { %>
+                    <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="max-w-full max-h-full object-contain">
+                <% } else { %>
+                    <div class="text-[10px] text-white/20 uppercase font-bold tracking-widest">No Primary Image</div>
+                <% } %>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-2">Identity</label>
+                    <h2 class="text-xl font-bold text-white uppercase"><%= product.name %></h2>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-1">Brand</label>
+                        <p class="text-xs text-white uppercase font-bold"><%= product.brand %></p>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-1">Category</label>
+                        <p class="text-xs text-white uppercase font-bold"><%= product.category.name %></p>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-bold uppercase tracking-[0.2em] text-white/30 block mb-1">Base Price</label>
+                    <p class="text-lg font-mono text-accent font-bold">₹<%= product.variants?.[0]?.price ? product.variants[0].price.toLocaleString():"N/A" %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variants Table -->
+        <div class="lg:col-span-2 bg-black-surface border border-white/5 overflow-hidden">
+            <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center">
+                <h3 class="text-xs font-bold text-white uppercase tracking-widest">Active Variants</h3>
+                <span class="px-3 py-1 bg-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest">
+                    <%= (product.variants && product.variants.length) || 0 %> Total
+                </span>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-white/[0.02] border-b border-white/5">
+                            <th class="px-8 py-4 text-[9px] font-bold tracking-widest uppercase text-white/30">Variant Info</th>
+                            <th class="px-8 py-4 text-[9px] font-bold tracking-widest uppercase text-white/30">Specs</th>
+                            <th class="px-8 py-4 text-[9px] font-bold tracking-widest uppercase text-white/30">Price</th>
+                            <th class="px-8 py-4 text-[9px] font-bold tracking-widest uppercase text-white/30">Stock</th>
+                            <th class="px-8 py-4 text-[9px] font-bold tracking-widest uppercase text-white/30 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        <% if (product.variants && product.variants.length > 0) { %>
+                            <% product.variants.forEach((variant, index) => { %>
+                                <tr class="hover:bg-white/[0.01] transition-colors group">
+                                    <td class="px-8 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-black border border-white/5 p-1">
+                                                <% if (variant.images && variant.images.length > 0) { %>
+                                                    <img src="<%= variant.images[0] %>" class="w-full h-full object-contain">
+                                                <% } else { %>
+                                                    <div class="w-full h-full flex items-center justify-center text-[8px] text-white/10 uppercase">NO IMG</div>
+                                                <% } %>
+                                            </div>
+                                            <span class="text-[11px] font-bold text-white uppercase"><%= variant.color %></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-4">
+                                        <span class="text-[10px] text-white/40 uppercase font-mono"><%= variant.ram %> / <%= variant.storage %></span>
+                                    </td>
+                                    <td class="px-8 py-4">
+                                        <span class="text-[11px] font-mono text-accent">₹<%= variant.price.toLocaleString() %></span>
+                                    </td>
+                                    <td class="px-8 py-4">
+                                        <span class="text-[11px] font-bold <%= variant.stock < 10 ? 'text-status-danger' : 'text-white/60' %>">
+                                            <%= variant.stock %> Units
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-4 text-right">
+                                        <div class="flex justify-end gap-3 transition-opacity">
+                                            <a href="/admin/products/variant/edit/<%= product._id %>/<%= index %>" 
+                                               class="text-[10px] text-white/20 hover:text-white uppercase font-bold tracking-widest transition-colors">Edit</a>
+                                            <button @click="deleteVariant('<%= product._id %>', '<%= index %>')" 
+                                                    class="text-[10px] text-white/20 hover:text-status-danger uppercase font-bold tracking-widest transition-colors">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="px-8 py-12 text-center">
+                                    <p class="text-[10px] text-white/10 uppercase font-bold tracking-[0.2em]">No variants configured for this product</p>
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <script>
+    function variantManager() {
+        return {
+            async deleteVariant(productId, index) {
+                const confirmed = await window.confirmAction({
+                    title: 'REMOVE VARIANT.',
+                    message: 'This configuration will be permanently purged from the catalog.',
+                    type: 'danger'
+                });
+
+                if (confirmed) {
+                    try {
+                        const res = await fetch(`/admin/products/variant/delete/${productId}/${index}`, {
+                            method: 'DELETE'
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { 
+                                detail: { message: data.message || 'Purge Complete', type: 'success' } 
+                            }));
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    } catch (error) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { 
+                            detail: { message: error.message || 'Error deleting variant', type: 'error' } 
+                        }));
+                    }
+                }
+            }
+        };
+    }
+</script>

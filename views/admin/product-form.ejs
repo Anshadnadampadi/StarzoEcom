@@ -1,0 +1,80 @@
+<!-- views/admin/products/form.ejs -->
+<%- contentFor('body') %>
+
+<div class="max-w-4xl mx-auto space-y-12">
+    <div>
+        <a href="/admin/products" class="text-accent text-[9px] font-bold tracking-widest uppercase hover:underline mb-8 inline-block">← Back to inventory</a>
+        <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">
+            <%= typeof product !== 'undefined' ? 'EDIT PRODUCT.' : 'NEW PRODUCT.' %>
+        </h1>
+        <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Specify technical details and assets</p>
+    </div>
+
+    <form action="<%= typeof product !== 'undefined' ? '/admin/products/edit/' + product._id : '/admin/products/new' %>" 
+          method="POST" class="space-y-10">
+        
+        <!-- Basic Info Box -->
+        <div class="bg-black-surface border border-white/5 p-10 space-y-8">
+            <div class="space-y-2">
+                <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Product Title</label>
+                <input type="text" name="title" required value="<%= typeof product !== 'undefined' ? product.title : '' %>"
+                       class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all">
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Brand</label>
+                    <select name="brand" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all uppercase tracking-widest font-bold">
+                        <% brands.forEach(brand => { %>
+                            <option value="<%= brand._id %>" <%= typeof product !== 'undefined' && product.brand.toString() === brand._id.toString() ? 'selected' : '' %>><%= brand.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Category</label>
+                    <select name="category" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all uppercase tracking-widest font-bold">
+                        <% categories.forEach(cat => { %>
+                            <option value="<%= cat._id %>" <%= typeof product !== 'undefined' && product.category.toString() === cat._id.toString() ? 'selected' : '' %>><%= cat.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Description</label>
+                <textarea name="description" rows="5" required
+                          class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all resize-none shadow-inner"><%= typeof product !== 'undefined' ? product.description : '' %></textarea>
+            </div>
+        </div>
+
+        <!-- Pricing & Inventory -->
+        <div class="bg-black-surface border border-white/5 p-10 space-y-8">
+            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Commerce Data</h3>
+            <div class="grid grid-cols-3 gap-8">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Base Price (₹)</label>
+                    <input type="number" name="price" required value="<%= typeof product !== 'undefined' ? product.price : '' %>"
+                           class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">MRP (₹)</label>
+                    <input type="number" name="mrp" required value="<%= typeof product !== 'undefined' ? product.mrp : '' %>"
+                           class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-all">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Stock Units</label>
+                    <input type="number" name="stock" required value="<%= typeof product !== 'undefined' ? product.stock : '' %>"
+                           class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-all">
+                </div>
+            </div>
+        </div>
+
+
+        <div class="flex justify-end gap-4 pt-6">
+            <a href="/admin/products" class="px-10 py-5 border border-white/20 text-white font-bold text-xs tracking-[0.2em] uppercase hover:bg-white/5 transition-all">Cancel</a>
+            <button type="submit" class="px-12 py-5 bg-accent text-black font-bold text-xs tracking-[0.2em] uppercase hover:bg-white transition-all btn-press shadow-[0_0_20px_rgba(255,106,0,0.2)]">
+                <%= typeof product !== 'undefined' ? 'UPDATE SYSTEM' : 'CORE RELEASE' %>
+            </button>
+        </div>
+    </form>
+</div>

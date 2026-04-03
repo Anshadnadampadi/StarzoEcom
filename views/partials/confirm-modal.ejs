@@ -1,0 +1,115 @@
+<!-- views/partials/confirm-modal.ejs -->
+<div x-data="confirmModalComponent()" 
+     x-show="show" 
+     class="fixed inset-0 z-[100] flex items-center justify-center p-6" 
+     x-cloak
+     @show-confirm.window="open($event.detail)">
+    
+    <!-- Backdrop with heavy blur -->
+    <div class="absolute inset-0 bg-black/90 backdrop-blur-xl" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         @click="cancel()"></div>
+
+    <!-- Modal Content -->
+    <div class="bg-black-surface border border-white/10 w-full max-w-md relative shadow-[0_50px_100px_rgba(0,0,0,0.9)] overflow-hidden"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+        
+        <!-- Premium Accent Bar -->
+        <div class="h-1 bg-gradient-to-r from-transparent via-accent to-transparent opacity-50"></div>
+
+        <div class="p-10">
+            <!-- Header -->
+            <div class="mb-8">
+                <h3 class="text-white text-xl font-bold uppercase tracking-tight mb-2" x-text="title">Confirm Action</h3>
+                <p class="text-[9px] font-bold tracking-[0.2em] text-white/30 uppercase">Enterprise Security Protocol Required</p>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-10">
+                <p class="text-sm text-white/60 leading-relaxed font-medium" x-text="message">Are you sure you want to proceed with this operation?</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-4">
+                <button @click="cancel()" 
+                        class="flex-1 border border-white/10 text-white/40 font-bold py-5 text-[10px] tracking-widest uppercase hover:text-white hover:border-white transition-all btn-press">
+                    Dismiss
+                </button>
+                <button @click="confirm()" 
+                        class="flex-1 bg-white text-black font-bold py-5 text-[10px] tracking-widest uppercase hover:bg-accent transition-all btn-press shadow-[0_10px_20px_rgba(255,255,255,0.1)]"
+                        :class="type === 'danger' ? 'hover:bg-status-danger' : 'hover:bg-accent'">
+                    Authorize
+                </button>
+            </div>
+        </div>
+        
+        <!-- Decorative subtle element -->
+        <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-accent/5 rounded-full blur-3xl pointer-events-none"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('confirmModalComponent', () => ({
+        show: false,
+        title: '',
+        message: '',
+        type: 'info',
+        resolve: null,
+
+        open(detail) {
+            this.title = detail.title || 'Are you sure?';
+            this.message = detail.message || 'This action might have permanent consequences.';
+            this.type = detail.type || 'info';
+            this.show = true;
+            
+            return new Promise((res) => {
+                this.resolve = res;
+                // If a callback is provided directly in the event detail (though not standard for events)
+                if(detail.callback) this.onConfirm = detail.callback;
+            });
+        },
+
+        confirm() {
+            if (this.onConfirm) this.onConfirm();
+            this.dispatchAndClose(true);
+        },
+
+        cancel() {
+            this.dispatchAndClose(false);
+        },
+
+        dispatchAndClose(result) {
+            window.dispatchEvent(new CustomEvent('confirm-result', { detail: result }));
+            this.show = false;
+            this.onConfirm = null;
+        }
+    }));
+});
+
+/**
+ * Global helper to trigger the confirm modal
+ * Returns a promise that resolves to true (Confirm) or false (Cancel)
+ */
+window.confirmAction = (options = {}) => {
+    return new Promise((resolve) => {
+        window.dispatchEvent(new CustomEvent('show-confirm', { 
+            detail: {
+                title: options.title,
+                message: options.message,
+                type: options.type || 'info'
+            }
+        }));
+
+        const handleResult = (e) => {
+            window.removeEventListener('confirm-result', handleResult);
+            resolve(e.detail);
+        };
+        window.addEventListener('confirm-result', handleResult);
+    });
+};
+</script>

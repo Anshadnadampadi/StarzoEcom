@@ -1,0 +1,57 @@
+<!-- views/admin/support/index.ejs -->
+<%- contentFor('body') %>
+
+<div class="space-y-10">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">SUPPORT COMMAND.</h1>
+        <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Resolve customer inquiries and technical issues</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Open Tickets</h4>
+            <p class="text-status-warning text-3xl font-mono font-bold">07</p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Avg. Response Time</h4>
+            <p class="text-white text-3xl font-mono font-bold">2.4h</p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Resolved (24h)</h4>
+            <p class="text-status-success text-3xl font-mono font-bold">18</p>
+        </div>
+    </div>
+
+    <!-- Active Tickets -->
+    <div class="space-y-4">
+        <% if (typeof tickets !== 'undefined' && tickets.length > 0) { %>
+            <% tickets.forEach(ticket => { %>
+                <div class="bg-black-surface border border-white/5 p-8 flex flex-wrap justify-between items-center gap-8 group hover:border-white/10 transition-all">
+                    <div class="flex items-center gap-8">
+                        <div class="w-1.5 h-12 <%= ticket.priority === 'high' ? 'bg-status-danger' : 'bg-status-info' %>"></div>
+                        <div>
+                            <div class="flex items-center gap-4 mb-2">
+                                <span class="text-white text-xs font-bold uppercase tracking-wider">#<%= ticket.ticketId %></span>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-white/20"><%= ticket.category %></span>
+                            </div>
+                            <h3 class="text-white text-sm font-medium mb-1"><%= ticket.subject %></h3>
+                            <p class="text-white/30 text-[10px] uppercase tracking-wider">Customer: <%= (ticket.user.firstName || ticket.user.name || ticket.user.email.split('@')[0]) %> · Last update <%= ticket.lastUpdate %></p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-8">
+                         <div class="text-right hidden md:block">
+                            <%- include('../../partials/status-badge', { status: ticket.status }) %>
+                         </div>
+                         <button class="px-6 py-3 bg-white/5 border border-white/10 text-white text-[9px] font-bold tracking-widest uppercase hover:bg-white/10 transition-all rounded-sm">Handle Ticket</button>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="py-24 text-center bg-black-surface border border-white/5 border-dashed">
+                <p class="text-white/20 text-[10px] font-bold tracking-widest uppercase">No pending support tickets in queue</p>
+            </div>
+        <% } %>
+    </div>
+</div>

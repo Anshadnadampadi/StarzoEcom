@@ -1,0 +1,414 @@
+<%- contentFor('body') %>
+<!-- views/admin/categories.ejs -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+
+<div class="space-y-10" x-data="{ 
+    showModal: false, 
+    isEdit: false,
+    previewUrl: null,
+    form: { id: '', name: '', slug: '', displayOrder: 0, metaDescription: '' },
+    errors: {},
+    cropper: null,
+    croppedBlob: null,
+    isCropping: false,
+    openAdd() {
+        this.isEdit = false;
+        this.form = { id: '', name: '', slug: '', displayOrder: 0, metaDescription: '' };
+        this.errors = {};
+        this.previewUrl = null;
+        this.croppedBlob = null;
+        this.showModal = true;
+        this.isCropping = false;
+        this.$refs.iconInput.value = '';
+    },
+    async openEdit(id) {
+        this.isEdit = true;
+        this.errors = {};
+        try {
+            const res = await fetch(`/admin/categories/api/${id}`);
+            const data = await res.json();
+            this.form = { 
+                id: data._id, 
+                name: data.name, 
+                slug: data.slug, 
+                displayOrder: data.displayOrder || 0,
+                metaDescription: data.metaDescription || ''
+            };
+            this.previewUrl = data.icon;
+            this.showModal = true;
+            this.isCropping = false;
+            this.$refs.iconInput.value = '';
+        } catch (error) {
+            window.dispatchEvent(new CustomEvent('show-toast', { 
+                detail: { message: 'Failed to fetch category details.', type: 'error' } 
+            }));
+        }
+    },
+    handleFileChange(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            this.isCropping = true;
+            this.$nextTick(() => {
+                const img = this.$refs.cropperImage;
+                img.onload = () => {
+                    if (this.cropper) this.cropper.destroy();
+                    this.cropper = new Cropper(img, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        background: false,
+                        autoCropArea: 1
+                    });
+                };
+                img.src = event.target.result;
+            });
+        };
+        reader.readAsDataURL(file);
+    },
+    async commitCrop() {
+        if (!this.cropper) return;
+        
+        try {
+            const canvas = this.cropper.getCroppedCanvas();
+            if (!canvas) throw new Error('Canvas generation failed');
+
+            canvas.toBlob((blob) => {
+                this.croppedBlob = blob;
+                this.previewUrl = URL.createObjectURL(blob);
+                this.closeCropper();
+            }, 'image/jpeg', 0.9);
+        } catch (err) {
+            console.error('Crop Error:', err);
+            this.closeCropper();
+        }
+    },
+    cancelCrop() {
+        this.closeCropper();
+        this.$refs.iconInput.value = '';
+    },
+    closeCropper() {
+        if (this.cropper) {
+            this.cropper.destroy();
+            this.cropper = null;
+        }
+        this.isCropping = false;
+        this.$nextTick(() => { window.dispatchEvent(new Event('resize')); });
+    },
+    validate() {
+        this.errors = {};
+        let isValid = true;
+
+        if (!this.form.name || this.form.name.trim().length < 3) {
+            this.errors.name = 'Name must be at least 3 characters.';
+            isValid = false;
+        } else if (this.form.name.length > 50) {
+            this.errors.name = 'Name cannot exceed 50 characters.';
+            isValid = false;
+        }
+
+        const slugRegex = /^[a-z0-9-]+$/;
+        if (!this.form.slug || !slugRegex.test(this.form.slug)) {
+            this.errors.slug = 'Slug must be lowercase alphanumeric and hyphens only.';
+            isValid = false;
+        }
+
+        if (this.form.displayOrder < 0) {
+            this.errors.displayOrder = 'Order must be non-negative.';
+            isValid = false;
+        }
+
+        if (this.form.metaDescription && this.form.metaDescription.length > 200) {
+            this.errors.metaDescription = 'Description cannot exceed 200 characters.';
+            isValid = false;
+        }
+
+        return isValid;
+    },
+    async submitForm() {
+        if (!this.validate()) return;
+
+        const url = this.isEdit ? `/admin/categories/edit/${this.form.id}` : '/admin/categories/add';
+        const method = this.isEdit ? 'PUT' : 'POST';
+        
+        const formData = new FormData();
+        formData.append('name', this.form.name);
+        formData.append('slug', this.form.slug);
+        formData.append('displayOrder', this.form.displayOrder);
+        formData.append('metaDescription', this.form.metaDescription);
+        
+        if (this.croppedBlob) {
+            formData.append('icon', this.croppedBlob, 'category-icon.jpg');
+        } else if (this.$refs.iconInput.files[0]) {
+            formData.append('icon', this.$refs.iconInput.files[0]);
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                body: formData
+            });
+            
+            const result = await res.json();
+            if (result.success) {
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: result.message || (this.isEdit ? 'Category updated successfully!' : 'Category created successfully!'), type: 'success' } 
+                }));
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: result.message || 'Operation failed.', type: 'error' } 
+                }));
+            }
+        } catch (error) {
+            window.dispatchEvent(new CustomEvent('show-toast', { 
+                detail: { message: 'An unexpected system error occurred.', type: 'error' } 
+            }));
+        }
+    },
+    async toggleStatus(id, currentStatus) {
+        const action = currentStatus ? 'Show' : 'Hide';
+        const confirmed = await window.confirmAction({
+            title: `${action.toUpperCase()} CATEGORY?`,
+            message: `This will change the visibility of the category in the shop.`,
+            type: 'warning'
+        });
+
+        if (confirmed) {
+            const res = await fetch(`/admin/categories/delete/${id}`, { method: 'PATCH' });
+            const result = await res.json();
+            if (result.success) {
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: `Category ${action.toLowerCase()} successfully!`, type: 'success' } 
+                }));
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        }
+    }
+}">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">CATEGORY</h1>
+            <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Structure your product hierarchy</p>
+        </div>
+        <button @click="openAdd()" class="px-8 py-4 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]">Add Category</button>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Total Categories</h4>
+            <p class="text-white text-3xl font-mono font-bold"><%= totalCategories %></p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Visible Sections</h4>
+            <p class="text-status-success text-3xl font-mono font-bold"><%= categories.filter(c => !c.isUnlisted).length %></p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Hidden/Draft</h4>
+            <p class="text-status-danger text-3xl font-mono font-bold"><%= categories.filter(c => c.isUnlisted).length %></p>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <form action="/admin/categories" method="GET" class="bg-black-surface border border-white/5 p-6 flex flex-wrap items-center justify-between gap-6">
+        <div class="flex items-center gap-6">
+            <div class="relative">
+                <input type="text" name="search" value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" placeholder="Search categories..." class="bg-black border border-white/10 px-6 py-3 text-xs text-white focus:outline-none focus:border-accent w-80 placeholder:text-white/10">
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="/admin/categories" class="text-[10px] text-white/20 hover:text-white font-bold uppercase transition-all">Clear</a>
+            <button type="submit" class="px-6 py-3 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all">Filter</button>
+        </div>
+    </form>
+
+    <!-- Table -->
+    <div class="bg-black-surface border border-white/5 overflow-hidden">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-white/[0.02] border-b border-white/5">
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30 w-24 text-center">Order</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Category Details</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">URL Path</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Status</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 text-xs font-medium">
+                <% if (categories && categories.length > 0) { %>
+                    <% categories.forEach(cat => { %>
+                        <tr class="hover:bg-white/[0.01] transition-colors group">
+                            <td class="px-8 py-6 text-white/20 font-mono text-center text-sm"><%= cat.displayOrder %></td>
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 bg-white/5 rounded-sm border border-white/5 flex items-center justify-center overflow-hidden">
+                                        <% if (cat.icon && cat.icon.startsWith('/uploads/')) { %>
+                                            <img src="<%= cat.icon %>" alt="<%= cat.name %>" class="w-full h-full object-cover">
+                                        <% } else { %>
+                                            <span class="text-xl"><%= cat.icon || '📁' %></span>
+                                        <% } %>
+                                    </div>
+                                    <span class="text-white font-bold uppercase tracking-tight text-xs"><%= cat.name %></span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6 text-white/40 font-mono tracking-tighter">/<%= cat.slug %></td>
+                            <td class="px-8 py-6">
+                                <span class="flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full <%= cat.isUnlisted ? 'bg-status-danger' : 'bg-status-success' %>"></span>
+                                    <span class="text-[9px] font-bold uppercase tracking-widest text-white/60"><%= cat.isUnlisted ? 'Hidden' : 'Visible' %></span>
+                                </span>
+                            </td>
+                            <td class="px-8 py-6 text-right">
+                                <div class="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button @click="openEdit('<%= cat._id %>')" class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-white hover:border-white transition-all">✎</button>
+                                    <button @click="toggleStatus('<%= cat._id %>', <%= cat.isUnlisted %>)" class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-accent hover:border-accent transition-all">
+                                        <%- cat.isUnlisted ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.04m2.944-2.346A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-4.223-4.223L3 3m7.243 7.243a3 3 0 014.242 4.242M9.88 9.88l4.242 4.242"/></svg>' %>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5" class="px-8 py-20 text-center">
+                            <p class="text-white/20 text-xs font-bold uppercase tracking-widest font-mono">No categories found matching your criteria.</p>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <% let query = typeof searchQuery !== 'undefined' && searchQuery ? `search=${searchQuery}` : '' %>
+    <%- include('../partials/pagination', { currentPage, totalPages, query }) %>
+
+    <!-- Modal -->
+    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-6" x-cloak>
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             @click="showModal = false"></div>
+        <div class="bg-black-surface border border-white/10 w-full max-w-lg relative shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+            
+            <!-- Standard Form Layout -->
+            <div x-show="!isCropping" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                <div class="p-10">
+                    <div class="flex justify-between items-center mb-10">
+                        <div>
+                            <h2 class="text-white text-xl font-bold uppercase tracking-tight mb-1" x-text="isEdit ? 'Update Category' : 'New Category'"></h2>
+                            <p class="text-[9px] font-bold tracking-widest text-white/30 uppercase">Enterprise Taxonomy Manager</p>
+                        </div>
+                        <button @click="showModal = false" class="w-8 h-8 flex items-center justify-center text-white/20 hover:text-white transition-colors">✕</button>
+                    </div>
+                    
+                    <form @submit.prevent="submitForm()" class="space-y-8">
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Name</label>
+                                <input type="text" x-model="form.name" @input="errors.name = ''" class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors" :class="errors.name ? 'border-status-danger/50' : ''">
+                                <template x-if="errors.name">
+                                    <p class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1" x-text="errors.name"></p>
+                                </template>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">URL Path (Slug)</label>
+                                <input type="text" x-model="form.slug" @input="errors.slug = ''" class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors" :class="errors.slug ? 'border-status-danger/50' : ''">
+                                <template x-if="errors.slug">
+                                    <p class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1" x-text="errors.slug"></p>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Icon Graphic</label>
+                                <div class="flex items-center gap-6">
+                                    <div class="w-16 h-16 bg-black border border-white/5 flex items-center justify-center overflow-hidden">
+                                        <template x-if="previewUrl">
+                                            <template x-if="previewUrl.startsWith('/') || previewUrl.startsWith('blob:')">
+                                                <img :src="previewUrl" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!previewUrl.startsWith('/') && !previewUrl.startsWith('blob:')">
+                                                <span class="text-2xl" x-text="previewUrl || '📁'"></span>
+                                            </template>
+                                        </template>
+                                        <template x-if="!previewUrl">
+                                            <span class="text-2xl text-white/10">📁</span>
+                                        </template>
+                                    </div>
+                                    <div class="flex-1">
+                                        <input type="file" x-ref="iconInput" @change="handleFileChange" accept="image/*" class="hidden">
+                                        <button type="button" @click="$refs.iconInput.click()" class="text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors border-b border-white/10 pb-1">Upload New Icon</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Sequence Order</label>
+                                <input type="number" x-model="form.displayOrder" @input="errors.displayOrder = ''" class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors" :class="errors.displayOrder ? 'border-status-danger/50' : ''">
+                                <template x-if="errors.displayOrder">
+                                    <p class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1" x-text="errors.displayOrder"></p>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Index Description</label>
+                            <textarea x-model="form.metaDescription" @input="errors.metaDescription = ''" rows="3" class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors resize-none" :class="errors.metaDescription ? 'border-status-danger/50' : ''"></textarea>
+                            <template x-if="errors.metaDescription">
+                                <p class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1" x-text="errors.metaDescription"></p>
+                            </template>
+                        </div>
+
+                        <div class="pt-6 flex gap-4">
+                            <button type="submit" class="flex-1 bg-white text-black font-bold py-5 text-[10px] tracking-widest uppercase hover:bg-accent transition-all btn-press" x-text="isEdit ? 'Commit Changes' : 'Initialize Category'"></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Integrated Cropper Layout -->
+            <div x-show="isCropping" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+                <div class="p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-white text-lg font-bold uppercase tracking-tight">Focus & Align Icon</h2>
+                            <p class="text-[8px] font-bold tracking-[0.2em] text-white/30 uppercase">Protocol: 1:1 Aspect Ratio Optimization</p>
+                        </div>
+                    </div>
+
+                    <div class="aspect-square bg-black border border-white/5 overflow-hidden mb-6">
+                        <img x-ref="cropperImage" src="" class="max-w-full">
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" @click="cancelCrop()"
+                            class="flex-1 px-6 py-4 border border-white/10 text-white/40 text-[10px] font-bold tracking-widest uppercase hover:text-white hover:bg-white/5 transition-all">Abort</button>
+                        <button type="button" @click.prevent.stop="commitCrop()"
+                            class="flex-2 px-8 py-4 bg-accent text-black text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-all">Optimize Asset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Cropper Customization */
+    .cropper-view-box, .cropper-face { border-radius: 0; }
+    .cropper-line, .cropper-point { background-color: #ffffff; }
+    .cropper-bg { background-image: none; background-color: #000; }
+</style>
+
+
+
+        

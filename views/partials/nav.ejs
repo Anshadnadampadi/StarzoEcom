@@ -1,0 +1,7 @@
+<!-- views/partials/nav.ejs -->
+<% if (locals.user) { %>
+    <%- include('./nav-user') %>
+<% } else { %>
+    <%- include('./nav-guest') %>
+<% } %>
+

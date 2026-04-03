@@ -1,0 +1,77 @@
+<!-- views/admin/auth/login.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | MOBIVERSE</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        body {
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+        .login-card {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 antialiased">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-10">
+            <h1 class="text-white text-3xl font-black tracking-tight uppercase mb-2">ADMIN ACCESS.</h1>
+            <p class="text-white/40 text-[10px] font-bold tracking-[0.2em] uppercase">Secure Management Portal</p>
+        </div>
+
+        <div class="login-card p-10 md:p-12 shadow-2xl">
+            <% if (error) { %>
+                <div class="mb-8 border-l-2 border-status-danger bg-status-danger/5 p-4">
+                    <p class="text-status-danger text-xs font-bold uppercase tracking-widest mb-1">Error</p>
+                    <p class="text-white/60 text-xs italic"><%= error %></p>
+                </div>
+            <% } %>
+
+            <form action="/admin/login" method="POST" class="space-y-8">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Email Address</label>
+                    <input type="email" name="email" required 
+                           class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/5" 
+                           placeholder="admin@mobiverse.com">
+                </div>
+
+                <div class="space-y-2" x-data="{ show: false }">
+                    <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Password</label>
+                    <div class="relative">
+                        <input :type="show ? 'text' : 'password'" name="password" required 
+                               class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/5 pr-14"
+                               placeholder="••••••••">
+                        <button type="button" @click="show = !show" 
+                                class="absolute right-0 top-0 h-full w-14 flex items-center justify-center text-white/20 hover:text-accent transition-colors focus:outline-none">
+                            <template x-if="!show">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </template>
+                            <template x-if="show">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.024 10.024 0 014.504-4.825m10.922 8.582A10.012 10.012 0 0021.542 12c-1.274-4.057-5.064-7-9.542-7-1.274 0-2.48.209-3.602.597m4.886 4.886A3 3 0 1111 11.34"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M1 1l22 22"></path></svg>
+                            </template>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-white text-black font-bold py-5 text-xs tracking-[0.2em] uppercase hover:bg-accent transition-all">
+                    LOGIN TO DASHBOARD
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="/" class="text-[10px] text-white/20 hover:text-white font-bold tracking-widest uppercase transition-colors">← Back to Storefront</a>
+        </div>
+    </div>
+    <%- include('../../partials/toast') %>
+</body>
+</html>

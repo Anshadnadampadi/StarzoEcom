@@ -1,0 +1,75 @@
+<!-- views/admin/orders/index.ejs -->
+<%- contentFor('body') %>
+
+<div class="space-y-10">
+    <div>
+        <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">ORDER LOGISTICS.</h1>
+        <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Monitor and process customer transactions</p>
+    </div>
+
+    <!-- Stats summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-black-surface border border-white/5 p-8 border-l-4 border-l-status-warning">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Pending Fulfillment</h4>
+            <p class="text-white text-3xl font-mono font-bold"><%= stats.pending %></p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8 border-l-4 border-l-status-info">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Processing Orders</h4>
+            <p class="text-white text-3xl font-mono font-bold"><%= stats.processing %></p>
+        </div>
+        <div class="bg-black-surface border border-white/5 p-8 border-l-4 border-l-accent">
+            <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Ready For Dispatch</h4>
+            <p class="text-white text-3xl font-mono font-bold"><%= stats.shipped %></p>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-black-surface border border-white/5 overflow-hidden">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-white/[0.02] border-b border-white/5">
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Order ID</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Customer</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Total Amount</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Payment</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Status</th>
+                    <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                <% orders.forEach(order => { %>
+                    <tr class="hover:bg-white/[0.01] transition-colors">
+                        <td class="px-8 py-6">
+                            <span class="text-white font-mono text-xs font-bold tracking-wider">#<%= order.orderId %></span>
+                            <p class="text-white/20 text-[8px] uppercase mt-1"><%= new Date(order.createdAt).toLocaleString() %></p>
+                        </td>
+                        <td class="px-8 py-6">
+                            <p class="text-white text-xs font-bold uppercase">
+                                <%= (order.user.firstName || order.user.name || order.user.email.split('@')[0]) %> 
+                                <%= (order.user.lastName || '') %>
+                            </p>
+                            <p class="text-white/30 text-[9px] tracking-wider truncate w-40"><%= order.user.email %></p>
+                        </td>
+                        <td class="px-8 py-6 text-white font-mono text-sm font-bold">
+                            ₹<%= order.totalAmount.toLocaleString() %>
+                        </td>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-bold uppercase tracking-widest <%= order.paymentStatus === 'paid' ? 'text-status-success' : 'text-status-warning' %>"><%= order.paymentStatus %></span>
+                                <span class="text-[8px] text-white/20 uppercase">(<%= order.paymentMethod %>)</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6">
+                            <%- include('../../partials/status-badge', { status: order.status }) %>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <a href="/admin/orders/<%= order._id %>" class="bg-white/5 border border-white/10 text-white text-[9px] font-bold tracking-widest uppercase px-6 py-2.5 hover:bg-white/10 transition-all rounded-sm inline-block">Review</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+
+    <%- include('../../partials/pagination') %>
+</div>
