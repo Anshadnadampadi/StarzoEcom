@@ -18,14 +18,20 @@ export const getProductListing = async ({ searchQuery, categoryFilter, brandFilt
     }
 
 
-    if (
-        categoryFilter &&
-        categoryFilter.trim() !== '' &&
-        categoryFilter !== 'undefined' &&
-        categoryFilter !== 'all'
-    ) {
-        filter.category = new mongoose.Types.ObjectId(categoryFilter);
+    if (categoryFilter && categoryFilter !== 'undefined' && categoryFilter !== 'all') {
+
+    let categories = categoryFilter;
+
+    // convert to array if it's a string
+    if (typeof categories === "string") {
+        categories = [categories];
     }
+
+    // convert all to ObjectId
+    categories = categories.map(id => new mongoose.Types.ObjectId(id));
+
+    filter.category = { $in: categories }; // ✅ supports multiple
+}
 
     if (brandFilter) {
         const brands = brandFilter.split(',').filter(b => b.trim() !== '');

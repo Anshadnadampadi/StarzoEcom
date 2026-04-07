@@ -81,3 +81,29 @@ export const productValidation = [
         .isInt({ min: 0 }).withMessage('Stock must be a non-negative integer')
 ];
 
+export const variantValidation=[
+    body('color')
+        .notEmpty().withMessage('color is required')
+        .trim()
+        .matches(/^[A-Za-z&-]+(?: [A-Za-z0-9&-]+)*$/).withMessage('Invalid color')
+        .isLength({ min: 3 }).withMessage('color must be at least 3 characters')
+        .isLength({ max: 100 }).withMessage('color cannot exceed 10 characters'),
+    
+    body('ram')
+        .notEmpty().withMessage('ram is required')
+        .matches(/^[A-Za-z&-]+(?: [A-Za-z0-9&-]+)*$/).withMessage('Invalid Ram')
+        .trim(),
+    
+    body('storage')
+        .notEmpty().withMessage('Storage is required')
+        .trim(),
+    
+    body('price')
+        .notEmpty().withMessage('Price is required')
+        .isFloat({ min: 0.01 }).withMessage('Price must be a positive number'),
+    
+    body('stock')
+        .notEmpty().withMessage('Stock is required')
+        .isInt({ min: 0 }).withMessage('Stock must be a non-negative integer')
+
+]

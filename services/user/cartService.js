@@ -159,6 +159,16 @@ export const updateItemQty = async (userId, { itemId, change }) => {
     }
 
     let stock = item.product.stock;
+
+if (item.variant && item.product.variants?.length > 0) {
+    const matchedVariant = item.product.variants.find(
+        v => canonicalize(getVariantString(v)) === canonicalize(item.variant)
+    );
+
+    if (matchedVariant) {
+        stock = matchedVariant.stock;
+    }
+}
     if (newQty > stock) {
          throw new Error("Cannot exceed available stock");
     }

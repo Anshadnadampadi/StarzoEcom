@@ -8,6 +8,7 @@ import userRoutes from "./routes/user/userRoutes.js"
 import adminRoutes from "./routes/admin/adminRoutes.js"
 import productRoutes from "./routes/products/productRoutes.js";
 import Cart from "./models/cart/Cart.js";
+import wishlistRoutes from "./routes/user/wishlistRoutes.js"
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import connectDB from "./config/db.js"
@@ -19,9 +20,9 @@ import nocache from "nocache"
 import { checkBlocked } from "./middlewares/authMiddleware.js";
 import expressEjsLayouts from 'express-ejs-layouts';
 
-const PORT=process.env.PORT||7000
+const PORT = process.env.PORT || 7000
 
-const app=express();
+const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -30,8 +31,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 //middleware
 app.use(express.json())
-app.use(express.urlencoded({extended:true}))
-app.set("view engine","ejs")
+app.use(express.urlencoded({ extended: true }))
+app.set("view engine", "ejs")
 app.set("views", path.join(__dirname, "views"));
 app.set("layout", "layouts/main");
 
@@ -53,7 +54,7 @@ app.use(
     })
 );
 
-app.use(nocache())
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(checkBlocked);
@@ -77,17 +78,24 @@ app.use(async (req, res, next) => {
 
 console.log(process.env.MONGO_URI)
 app.use(morgan('dev'))
+app.use(nocache())
 app.use("/", userRoutes);
 app.use("/", productRoutes);
-app.use("/admin", (req, res, next) => {
-    res.locals.layout = "layouts/admin";
-    next();
-}, adminRoutes);
+app.use("/wishlist",wishlistRoutes)
+
+app.use("/admin", 
+    nocache(),  
+    (req, res, next) => {
+        res.locals.layout = "layouts/admin";
+        next();
+    },
+    adminRoutes
+);
 
 
 
 connectDB();
 
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
     console.log(`server is running on http://localhost:${PORT}`)
 })

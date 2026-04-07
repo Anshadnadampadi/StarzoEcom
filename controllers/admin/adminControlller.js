@@ -13,9 +13,22 @@ import {
 
 
 export const getAdminLogin = (req, res) => {
+
+    
+    if (req.session && req.session.admin) {
+        return res.redirect('/admin/dashboard');
+    }
+
     const { msg, icon } = req.query;
-    res.render('admin/auth/login', { title: 'Admin Login', error: null, layout: false, msg: msg || null, icon: icon || null });
-}
+
+    res.render('admin/auth/login', {
+        title: 'Admin Login',
+        error: null,
+        layout: false,
+        msg: msg || null,
+        icon: icon || null
+    });
+};
 
 export const postAdminLogin = async (req, res) => {
   try {
@@ -231,3 +244,10 @@ export const adminLogout = (req, res) => {
         res.redirect("/admin/login");
     });
 };
+
+
+
+
+
+
+

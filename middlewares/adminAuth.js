@@ -1,12 +1,12 @@
-
-
 export const adminAuth = (req, res, next) => {
-   if(req.session && req.session.admin){
-      
-      return next();
+    
 
-   }
-   return res.redirect('/admin/login');
-   }
+    if (req.session && req.session.admin) {
+   
+        return next();
+    }
 
-export default adminAuth
+    return res.redirect('/admin/login');
+};
+
+export default adminAuth;

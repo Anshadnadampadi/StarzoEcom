@@ -20,7 +20,7 @@
     </div>
 
     <div class="max-w-4xl">
-        <form @submit.prevent="submitForm()" class="bg-black-surface border border-white/5 p-10 space-y-12">
+        <form @submit.prevent="submitForm()" novalidate class="bg-black-surface border border-white/5 p-10 space-y-12">
             <!-- Specifications -->
             <div class="space-y-8">
                 <div class="border-l-2 border-accent pl-6">
@@ -31,31 +31,37 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div class="space-y-2">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Color / Finish</label>
-                        <input type="text" x-model="form.color" required placeholder="e.g., Titanium Gray"
+                        <input type="text" x-model="form.color"  placeholder="e.g., Titanium Gray"
                             class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                            <p x-show="errors.color" x-text="errors.color" class="text-red-500 text-xs mt-1" style="color:#ef4444; font-size:12px; margin-top:4px; font-weight:500;"></p>
                     </div>
                     <div class="space-y-2">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">RAM Capacity</label>
-                        <input type="text" x-model="form.ram" required placeholder="e.g., 12GB"
-                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                        <input type="text" x-model="form.ram"  placeholder="e.g., 12GB"
+                        class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                         <p x-show="errors.ram" x-text="errors.ram" class="text-red-500 text-xs mt-1" style="color:#ef4444; font-size:12px; margin-top:4px; font-weight:500;"></p> 
                     </div>
                     <div class="space-y-2">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Storage Volume</label>
-                        <input type="text" x-model="form.storage" required placeholder="e.g., 256GB"
-                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                        <input type="text" x-model="form.storage" placeholder="e.g., 256GB"
+                        class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold">
+                            <p x-show="errors.storage" x-text="errors.storage" class="text-red-500 text-xs mt-1" style="color:#ef4444; font-size:12px; margin-top:4px; font-weight:500;"></p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-2">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Pricing (INR)</label>
-                        <input type="number" x-model="form.price" required
-                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
+                        <input type="number" x-model="form.price" 
+                        class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
+                        <p x-show="errors.price" x-text="errors.price" class="text-red-500 text-xs mt-1" style="color:#ef4444; font-size:12px; margin-top:4px; font-weight:500;"></p>   
+                         
                     </div>
                     <div class="space-y-2">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Inventory Level</label>
-                        <input type="number" x-model="form.stock" required
-                            class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
+                        <input type="number" x-model="form.stock" 
+                        class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
+                        <p x-show="errors.stock" x-text="errors.stock" class="text-red-500 text-xs mt-1" style="color:#ef4444; font-size:12px; margin-top:4px; font-weight:500;"></p>
                     </div>
                 </div>
             </div>
@@ -65,6 +71,7 @@
                 <div class="border-l-2 border-accent pl-6">
                     <h3 class="text-xs font-bold text-white uppercase tracking-widest">Asset Deployment</h3>
                     <p class="text-[9px] text-white/30 uppercase mt-1">Upload 3 to 5 images. Each image must be optimized.</p>
+                    <p x-show="errors.images" x-text="errors.images" class="text-red-500 text-xs mt-1"></p>
                 </div>
 
                 <div class="space-y-6">
@@ -137,6 +144,7 @@
             cropper: null,
             previews: [],
             fileQueue: [],
+            error:{},
             form: { color: '', ram: '', storage: '', price: '', stock: '' },
 
             handleFileChange(e) {
@@ -209,15 +217,46 @@
                 URL.revokeObjectURL(this.previews[index].url);
                 this.previews.splice(index, 1);
             },
+            validate() {
+                    this.errors = {};
+                    let isValid = true;
+
+                    if (!this.form.color || this.form.color.trim().length < 3) {
+                        this.errors.color = 'color must be at least 3 characters.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.ram || this.form.ram.trim() === '') {
+                        this.errors.ram = 'Ram is required.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.storage) {
+                        this.errors.storage = 'Storage is required.';
+                        isValid = false;
+                    }
+
+                    if (!this.form.price || parseFloat(this.form.price) <= 0) {
+                        this.errors.price = 'Price must be a positive number.';
+                        isValid = false;
+                    }
+
+                    if (this.form.stock === '' || parseInt(this.form.stock) < 0) {
+                        this.errors.stock = 'Stock must be non-negative.';
+                        isValid = false;
+                    }
+
+                    return isValid;
+                },
 
             async submitForm() {
                 if (this.isSubmitting) return;
                 
-                if (this.previews.length < 3) {
-                    window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'A minimum of 3 assets is required for deployment.', type: 'warning' } 
-                    }));
-                    return;
+                  if (!this.validate()) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: Object.values(this.errors)[0] || 'Validation failed.', type: 'warning' }
+                        }));
+                        return;
                 }
 
                 this.isSubmitting = true;
@@ -256,6 +295,7 @@
             }
         };
     }
+
 </script>
 
 

@@ -26,13 +26,20 @@ export const getProductsService = async (queryData) => {
         query.name = { $regex: search, $options: "i" }
     }
 
-    if (category) {
-        query.category = category
-    }
+   if (category) {
+    const categories = Array.isArray(category)
+        ? category
+        : [category];
 
-    if (brand) {
-        query.brand = brand
-    }
+    query.category = { $in: categories };
+}
+if (brand) {
+    const brands = Array.isArray(brand)
+        ? brand
+        : [brand];
+
+    query.brand = { $in: brands };
+}
 
     if (minPrice || maxPrice) {
 

@@ -6,6 +6,7 @@
         <div class="mb-16 fade-up">
             <span class="text-accent text-label font-bold uppercase mb-4 block">Saved Collection</span>
             <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">MY WISHLIST.</h1>
+            
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
@@ -30,3 +31,21 @@
         </div>
     </div>
 </div>
+<button onclick="addToWishlist()"> </button>
+
+<script>
+function addToWishlist() {
+    fetch('/wishlist/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            productId: "PRODUCT_ID",
+            color: "Black",
+            storage: "128GB",
+            ram: "8GB"
+        })
+    })
+    .then(res => res.json())
+    .then(data => alert(data.message));
+}
+</script>

@@ -439,28 +439,34 @@
         <div class="sidebar-section">
           <div class="sidebar-title">Categories</div>
           <div>
-            <label class="filter-lbl category-item" data-category="">
-              <input type="radio" name="cat" <%=!selectedCategory ? 'checked' : '' %> onchange="applyFilters()">
+
+            <!-- All -->
+            <label class="filter-lbl category-item">
+              <input type="checkbox" class="category-filter" value="all" id="allCategory">
               <div class="filter-box"></div>
               All Collections
             </label>
+
             <% categories.forEach(c=> { %>
-              <label class="filter-lbl category-item" data-category="<%= c._id %>">
-                <input type="radio" name="cat" <%= (selectedCategory && selectedCategory.toString() == c._id.toString()) ? 'checked' : '' %> onchange="applyFilters()">
+              <label class="filter-lbl category-item">
+                <input type="checkbox" class="category-filter" value="<%= c._id %>"
+                  <%=selectedCategories?.includes(c._id.toString()) ? 'checked' : '' %>
+                >
                 <div class="filter-box"></div>
                 <%= c.name %>
               </label>
               <% }) %>
+
           </div>
         </div>
-
         <!-- Brands -->
         <div class="sidebar-section">
           <div class="sidebar-title">Brands</div>
           <div>
             <% brands.forEach(b=> { %>
               <label class="filter-lbl brand-item" data-brand="<%= b %>">
-                <input type="checkbox" <%=selectedBrand && selectedBrand.includes(b) ? 'checked' : '' %> onchange="applyFilters()">
+                <input type="checkbox" <%=selectedBrand && selectedBrand.includes(b) ? 'checked' : '' %>
+                onchange="applyFilters()">
                 <div class="filter-box"></div>
                 <%= b %>
               </label>
@@ -478,22 +484,26 @@
               Any Price
             </label>
             <label class="filter-lbl price-item" data-price="0-10000">
-              <input type="radio" name="price" <%=selectedPrice==='0-10000' ? 'checked' : '' %> onchange="applyFilters()">
+              <input type="radio" name="price" <%=selectedPrice==='0-10000' ? 'checked' : '' %>
+              onchange="applyFilters()">
               <div class="filter-box"></div>
               Under ₹10,000
             </label>
             <label class="filter-lbl price-item" data-price="10000-50000">
-              <input type="radio" name="price" <%=selectedPrice==='10000-50000' ? 'checked' : '' %> onchange="applyFilters()">
+              <input type="radio" name="price" <%=selectedPrice==='10000-50000' ? 'checked' : '' %>
+              onchange="applyFilters()">
               <div class="filter-box"></div>
               ₹10,000 - ₹50,000
             </label>
             <label class="filter-lbl price-item" data-price="50000-100000">
-              <input type="radio" name="price" <%=selectedPrice==='50000-100000' ? 'checked' : '' %> onchange="applyFilters()">
+              <input type="radio" name="price" <%=selectedPrice==='50000-100000' ? 'checked' : '' %>
+              onchange="applyFilters()">
               <div class="filter-box"></div>
               ₹50,000 - ₹1,00,000
             </label>
             <label class="filter-lbl price-item" data-price="100000-">
-              <input type="radio" name="price" <%=selectedPrice==='100000-' ? 'checked' : '' %> onchange="applyFilters()">
+              <input type="radio" name="price" <%=selectedPrice==='100000-' ? 'checked' : '' %>
+              onchange="applyFilters()">
               <div class="filter-box"></div>
               Over ₹1,00,000
             </label>
@@ -546,7 +556,7 @@
             : '/images/placeholder.jpg';
 
             const price = variant ? variant.price : (product.price || 0);
-            const original = product.regularPrice || (price ? (price + Math.floor(price * 0.15)) : 0); // Mock original if missing
+            const original = product.regularPrice || (price ? (price + Math.floor(price * 0.15)) : 0); // Mock original
             const discount = (original && price) ? Math.round(((original - price) / original) * 100) : 0;
             const isNew = true; // Replace with logic checking createdAt within last 30 days
             %>
@@ -708,6 +718,23 @@
   </style>
 
   <script>
+    const allCheckbox = document.getElementById("allCategory");
+    const categoryCheckboxes = document.querySelectorAll(".category-filter");
+
+    categoryCheckboxes.forEach(cb => {
+      cb.addEventListener("change", () => {
+
+        if (cb.value === "all" && cb.checked) {
+          categoryCheckboxes.forEach(c => {
+            if (c.value !== "all") c.checked = false;
+          });
+        } else {
+          allCheckbox.checked = false;
+        }
+
+        applyFilters(); // ✅ NO reload
+      });
+    });
     async function quickAdd(productId, name) {
       try {
         const response = await fetch('/cart/add', {
@@ -733,7 +760,7 @@
         }
       } catch (err) {
         console.error(err);
-        showToast('error', 'Error', 'Failed to communicate with server');
+        showToast('error', 'Error', 'Please Login');
       }
     }
 
@@ -755,8 +782,15 @@
     let currentPage = 1;
 
     function getSelectedCategory() {
-      const el = document.querySelector('.category-item input:checked');
-      return el ? el.closest('label').dataset.category : '';
+      const selected = [];
+
+      document.querySelectorAll('.category-filter:checked').forEach(cb => {
+        if (cb.value !== "all") {
+          selected.push(cb.value);
+        }
+      });
+
+      return selected;
     }
 
     function getSelectedBrands() {
@@ -792,16 +826,20 @@
     `;
 
       const search = document.getElementById("searchInput").value;
-      const category = getSelectedCategory();
       const brand = getSelectedBrands().join(",");
       const price = getSelectedPrice();
       const sort = document.getElementById("sortSelect").value;
 
-      const params = new URLSearchParams({ page, search, category, brand, price, sort });
+      const params = new URLSearchParams({ page, search, brand, price, sort });
       
+      const categoriesList = getSelectedCategory();
+      if (categoriesList.length > 0) {
+        categoriesList.forEach(c => params.append("category", c));
+      }
+
       // Update browser URL silently
       if (!window.isPopState) {
-        window.history.pushState({ page, search, category, brand, price, sort }, '', `/products?${params}`);
+        window.history.pushState({ page, search, category: categoriesList, brand, price, sort }, '', `/products?${params}`);
       }
       window.isPopState = false;
 
@@ -921,29 +959,26 @@
         document.getElementById("searchIcon").style.display = 'none';
       }
 
-
       // Handle back/forward buttons
       window.addEventListener('popstate', (e) => {
         if (e.state) {
-          // Restore form values from state and trigger load
-          if (e.state.search !== undefined) document.getElementById("searchInput").value = e.state.search;
-          if (e.state.sort !== undefined) document.getElementById("sortSelect").value = e.state.sort;
-          
-          // Note: Since we are using radio/checkboxes without global state vars here, 
-          // we just reload based on what's in the URL or let loadProducts handle it.
           window.isPopState = true;
           loadProducts(e.state.page || 1);
         }
       });
 
-      // We already have SSR loaded products, let's just create initial pagination properly
-      const paginationContainer = document.getElementById("pagination");
-      // Just trigger a loadProducts if we are clicking links since the server didn't output full pagination HTML properly in EJS
-      // A quick fetch will sync the visual pagination and standard limits
-      loadProducts(1);
+      /* CHANGE THIS: 
+         Only trigger loadProducts(1) if the product container is empty 
+         or if you specifically need to sync the client-side state.
+      */
+      const productContainer = document.getElementById("productContainer");
+      if (!productContainer || productContainer.children.length === 0) {
+        loadProducts(1);
+      }
     });
 
   </script>
+
 </body>
 
 </html>

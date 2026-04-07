@@ -1,6 +1,5 @@
 import express from "express";
 import {
-
     getProductManagement,
     getAddProduct,
     addProduct,
@@ -41,5 +40,6 @@ router.delete("/products/variant/delete-asset/:id/:index/:imgIndex", deleteVaria
 
 router.get("/products", loadProductListing);
 router.get("/products/:id", getProductDetailsPage)
+
 
 export default router;

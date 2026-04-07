@@ -281,24 +281,36 @@
                         <div class="grid grid-cols-2 gap-8">
                             <div class="space-y-3">
                                 <label class="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Protocol Identifier (First)</label>
-                                <input type="text" name="firstName" value="<%= user.firstName %>"
+                                <input type="text" name="firstName" x-model="profileForm.firstName"
+                                    @input="validateProfileField('firstName')"
+                                    :class="profileErrors.firstName ? 'border-status-danger' : 'border-white/10'"
                                     class="w-full bg-white/5 border-white/10 text-white px-8 py-5 border focus:border-accent focus:bg-white/[0.08] outline-none transition-all placeholder:text-white/10 font-bold uppercase text-sm">
+                                <span x-show="profileErrors.firstName" x-text="profileErrors.firstName" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                             </div>
                             <div class="space-y-3">
                                 <label class="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Legacy Name (Last)</label>
-                                <input type="text" name="lastName" value="<%= user.lastName %>"
+                                <input type="text" name="lastName" x-model="profileForm.lastName"
+                                    @input="validateProfileField('lastName')"
+                                    :class="profileErrors.lastName ? 'border-status-danger' : 'border-white/10'"
                                     class="w-full bg-white/5 border-white/10 text-white px-8 py-5 border focus:border-accent focus:bg-white/[0.08] outline-none transition-all placeholder:text-white/10 font-bold uppercase text-sm">
+                                <span x-show="profileErrors.lastName" x-text="profileErrors.lastName" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                             </div>
                         </div>
                         <div class="space-y-3">
                             <label class="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Communication Channel (Phone)</label>
-                            <input type="text" name="phone" value="<%= user.phone %>"
+                            <input type="text" name="phone" x-model="profileForm.phone"
+                                @input="validateProfileField('phone')"
+                                :class="profileErrors.phone ? 'border-status-danger' : 'border-white/10'"
                                 class="w-full bg-white/5 border-white/10 text-white px-8 py-5 border focus:border-accent focus:bg-white/[0.08] outline-none transition-all placeholder:text-white/10 font-mono text-lg font-bold">
+                            <span x-show="profileErrors.phone" x-text="profileErrors.phone" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                         </div>
                         <div class="space-y-3">
                             <label class="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Identity Abstract (Bio)</label>
-                            <textarea name="bio"
-                                class="w-full bg-white/5 border-white/10 text-white px-8 py-5 border focus:border-accent focus:bg-white/[0.08] outline-none transition-all placeholder:text-white/10 font-medium min-h-[140px] resize-none text-sm leading-relaxed"><%= user.bio %></textarea>
+                            <textarea name="bio" x-model="profileForm.bio"
+                                @input="validateProfileField('bio')"
+                                :class="profileErrors.bio ? 'border-status-danger' : 'border-white/10'"
+                                class="w-full bg-white/5 border-white/10 text-white px-8 py-5 border focus:border-accent focus:bg-white/[0.08] outline-none transition-all placeholder:text-white/10 font-medium min-h-[140px] resize-none text-sm leading-relaxed"></textarea>
+                            <span x-show="profileErrors.bio" x-text="profileErrors.bio" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                         </div>
 
                         <button type="submit"
@@ -338,7 +350,7 @@
                     <form x-show="emailStep === 1" @submit.prevent="requestEmailOtp" class="space-y-6">
                         <div class="space-y-2">
                             <label class="text-[9px] font-black uppercase tracking-widest text-white/30">New Identity Endpoint</label>
-                            <input type="email" x-model="newEmail" required
+                            <input type="email" x-model="newEmail"
                                 class="w-full bg-black border border-white/10 text-white px-4 py-3 focus:border-accent outline-none transition-all placeholder:text-white/10 text-sm"
                                 placeholder="target@mobiverse.com">
                         </div>
@@ -396,19 +408,28 @@
                     <form @submit.prevent="submitPasswordChange" class="space-y-6">
                         <div class="space-y-2">
                             <label class="text-[9px] font-black uppercase tracking-widest text-white/30">Current Code</label>
-                            <input type="password" name="currentPw" required
-                                class="w-full bg-black border border-white/10 text-white px-4 py-3 focus:border-accent outline-none transition-all font-mono text-sm">
+                            <input type="password" name="currentPw" x-model="passwordForm.current"
+                                @input="validatePassword('current')"
+                                :class="passwordErrors.current ? 'border-status-danger' : 'border-white/10'"
+                                class="w-full bg-black border text-white px-4 py-3 focus:border-accent outline-none transition-all font-mono text-sm">
+                            <span x-show="passwordErrors.current" x-text="passwordErrors.current" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                         </div>
                         <div class="space-y-4">
-                            <div class="space-y-2">
+                             <div class="space-y-2">
                                 <label class="text-[9px] font-black uppercase tracking-widest text-white/30">New Code</label>
-                                <input type="password" name="newPw" required
-                                    class="w-full bg-black border border-white/10 text-white px-4 py-3 focus:border-accent outline-none transition-all font-mono text-sm">
+                                <input type="password" name="newPw" x-model="passwordForm.new"
+                                    @input="validatePassword('new')"
+                                    :class="passwordErrors.new ? 'border-status-danger' : 'border-white/10'"
+                                    class="w-full bg-black border text-white px-4 py-3 focus:border-accent outline-none transition-all font-mono text-sm">
+                                <span x-show="passwordErrors.new" x-text="passwordErrors.new" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[9px] font-black uppercase tracking-widest text-white/30">Verify Code</label>
-                                <input type="password" name="confirmPw" required
-                                    class="w-full bg-black border border-white/10 text-white px-4 py-3 focus:border-accent outline-none transition-all font-mono text-sm">
+                                <input type="password" name="confirmPw" x-model="passwordForm.confirm"
+                                    @input="validatePassword('confirm')"
+                                    :class="passwordErrors.confirm ? 'border-status-danger' : 'border-white/10'"
+                                    class="w-full bg-black border text-white px-4 py-3 focus:border-accent outline-none transition-all font-mono text-sm">
+                                <span x-show="passwordErrors.confirm" x-text="passwordErrors.confirm" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                             </div>
                         </div>
                         <button type="submit"
@@ -435,6 +456,15 @@
                 otpValue: ['', '', '', '', '', ''],
                 isSubmitting: false,
                 isUploading: false,
+                passwordForm: { current: '', new: '', confirm: '' },
+                passwordErrors: { current: '', new: '', confirm: '' },
+                profileForm: { 
+                    firstName: <%- JSON.stringify(user.firstName || '') %>, 
+                    lastName: <%- JSON.stringify(user.lastName || '') %>, 
+                    phone: <%- JSON.stringify(user.phone || '') %>, 
+                    bio: <%- JSON.stringify(user.bio || '') %> 
+                },
+                profileErrors: { firstName: '', lastName: '', phone: '', bio: '' },
 
                 openModal(name) {
                     this.modals[name] = true;
@@ -442,12 +472,28 @@
                 },
 
                 closeModal(name) {
+                    if (!name) return;
                     this.modals[name] = false;
                     document.body.style.overflow = 'auto';
+                    this.isSubmitting = false;
+
                     if (name === 'editEmail') {
                         this.emailStep = 1;
                         this.newEmail = '';
                         this.otpValue = ['', '', '', '', '', ''];
+                    }
+                    if (name === 'changePassword') {
+                        this.passwordForm = { current: '', new: '', confirm: '' };
+                        this.passwordErrors = { current: '', new: '', confirm: '' };
+                    }
+                    if (name === 'editProfile') {
+                        this.profileForm = { 
+                            firstName: <%- JSON.stringify(user.firstName || '') %>, 
+                            lastName: <%- JSON.stringify(user.lastName || '') %>, 
+                            phone: <%- JSON.stringify(user.phone || '') %>, 
+                            bio: <%- JSON.stringify(user.bio || '') %> 
+                        };
+                        this.profileErrors = { firstName: '', lastName: '', phone: '', bio: '' };
                     }
                 },
 
@@ -484,9 +530,14 @@
                 },
 
                 async submitProfileUpdate(e) {
+                    if (!this.validateProfileForm()) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: 'Metadata invalidated. Check your profile entries.', type: 'error' }
+                        }));
+                        return;
+                    }
                     this.isSubmitting = true;
-                    const formData = new FormData(e.target);
-                    const body = Object.fromEntries(formData);
+                    const body = { ...this.profileForm };
 
                     try {
                         const res = await fetch('/profile', {
@@ -582,10 +633,73 @@
                     }
                 },
 
+                validatePassword(field) {
+                    if (field === 'current') {
+                        this.passwordErrors.current = this.passwordForm.current.length < 1 ? 'Current password is required' : '';
+                    }
+                    if (field === 'new') {
+                        const pw = this.passwordForm.new;
+                        if (pw.length < 8) {
+                            this.passwordErrors.new = 'Pin must be at least 8 segments';
+                        } else if (!/[A-Z]/.test(pw)) {
+                            this.passwordErrors.new = 'Requires at least one uppercase node';
+                        } else if (!/[0-9]/.test(pw)) {
+                            this.passwordErrors.new = 'Requires at least one numeric node';
+                        } else {
+                            this.passwordErrors.new = '';
+                        }
+                        // Re-validate confirm if new changes
+                        if (this.passwordForm.confirm) this.validatePassword('confirm');
+                    }
+                    if (field === 'confirm') {
+                        this.passwordErrors.confirm = this.passwordForm.confirm !== this.passwordForm.new ? 'Protocols do not match' : '';
+                    }
+                },
+
+                validatePasswordForm() {
+                    this.validatePassword('current');
+                    this.validatePassword('new');
+                    this.validatePassword('confirm');
+                    return !this.passwordErrors.current && !this.passwordErrors.new && !this.passwordErrors.confirm;
+                },
+
+                validateProfileField(field) {
+                    if (field === 'firstName') {
+                        this.profileErrors.firstName = this.profileForm.firstName.trim().length < 2 ? 'Required (Min 2)' : '';
+                    }
+                    if (field === 'lastName') {
+                        this.profileErrors.lastName = this.profileForm.lastName.trim().length < 1 ? 'Legacy identifier required' : '';
+                    }
+                    if (field === 'phone') {
+                        const regex = /^[0-9]{10}$/;
+                        this.profileErrors.phone = !regex.test(this.profileForm.phone) ? '10-digit communication code required' : '';
+                    }
+                    if (field === 'bio') {
+                        this.profileErrors.bio = this.profileForm.bio.length > 200 ? 'Limit exceeds 200 segments' : '';
+                    }
+                },
+
+                validateProfileForm() {
+                    this.validateProfileField('firstName');
+                    this.validateProfileField('lastName');
+                    this.validateProfileField('phone');
+                    this.validateProfileField('bio');
+                    return !this.profileErrors.firstName && !this.profileErrors.lastName && !this.profileErrors.phone && !this.profileErrors.bio;
+                },
+
                 async submitPasswordChange(e) {
+                    if (!this.validatePasswordForm()) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: 'Security protocols invalidated. Check entries.', type: 'error' }
+                        }));
+                        return;
+                    }
                     this.isSubmitting = true;
-                    const formData = new FormData(e.target);
-                    const body = Object.fromEntries(formData);
+                    const body = {
+                        currentPw: this.passwordForm.current,
+                        newPw: this.passwordForm.new,
+                        confirmPw: this.passwordForm.confirm
+                    };
 
                     try {
                         const res = await fetch('/profile/password', {

@@ -1,9 +1,10 @@
 import * as userProductService from "../../../services/user/userProductService.js";
 
 export const loadProductListing = async (req, res) => {
+    console.log("ok")
     try {
         const { search, category, brand, sort, price, page } = req.query;
-        
+
         const data = await userProductService.getProductListing({
             searchQuery: search,
             categoryFilter: category,
@@ -19,15 +20,19 @@ export const loadProductListing = async (req, res) => {
                 pagination: data.pagination,
                 currentCount: data.total
             });
-        } 
+        }
 
         const { msg, icon } = req.query;
-        res.render("user/products", { 
-            products: data.products, 
+        res.render("user/products", {
+            products: data.products,
             categories: data.categories,
             brands: data.brands,
             searchQuery: search || "",
-            selectedCategory: category || null,
+            selectedCategories: category
+                ? Array.isArray(category)
+                    ? category
+                    : [category]
+                : [],
             selectedBrand: brand ? brand.split(',') : [],
             selectedSort: sort || "newest",
             selectedPrice: price || null,
