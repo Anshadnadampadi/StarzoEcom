@@ -47,9 +47,12 @@ export const addToWishlist = async (req, res) => {
             { color, storage, ram }
         );
 
+        const updatedWishlist = await wishlistService.getWishlist(req.session.user);
+
         return res.json({
             success: true,
-            message: "Added to wishlist"
+            message: "Added to wishlist",
+            wishlistCount: updatedWishlist.length
         });
 
     } catch (err) {
@@ -74,9 +77,12 @@ export const removeFromWishlist = async (req, res) => {
             { color, storage, ram }
         );
 
+        const updatedWishlist = await wishlistService.getWishlist(req.session.user);
+
         return res.json({
             success: true,
-            message: "Removed from wishlist "
+            message: "Removed from wishlist",
+            wishlistCount: updatedWishlist.length
         });
 
     } catch (err) {
@@ -136,9 +142,17 @@ export const moveToCart = async (req, res) => {
             { color, storage, ram }
         );
 
+        // Fetch updated counts for both tools to keep UI in sync
+        const [updatedWishlist, cart] = await Promise.all([
+            wishlistService.getWishlist(req.session.user),
+            Cart.findOne({ userId: req.session.user }).select("items").lean()
+        ]);
+
         return res.json({
             success: true,
-            message: "Moved to cart 🛒"
+            message: "Moved to cart 🛒",
+            wishlistCount: updatedWishlist.length,
+            cartCount: cart?.items?.length || 0
         });
 
     } catch (err) {

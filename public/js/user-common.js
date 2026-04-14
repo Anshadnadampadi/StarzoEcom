@@ -51,10 +51,10 @@ async function toggleWishlist(productId, options = {}) {
             dispatchGlobalToast(isAdded ? 'success' : 'info', isAdded ? 'Added to wishlist' : 'Removed from wishlist', data.message);
 
             // Update Navbar Badges
+            // Update Navbar Badges
             const badge = document.getElementById('wishlist-badge');
             if (badge && data.wishlistCount !== undefined) {
                 badge.textContent = data.wishlistCount;
-                badge.classList.toggle('hidden', data.wishlistCount === 0);
             }
             
             return { success: true, added: isAdded };
@@ -83,7 +83,6 @@ async function addToCartFromCard(productId, name) {
             const badge = document.getElementById('cart-badge');
             if (badge && data.cartCount !== undefined) {
                 badge.textContent = data.cartCount;
-                badge.classList.remove('hidden');
             }
         } else {
             if (data.message && data.message.toLowerCase().includes('login')) {
@@ -118,6 +117,13 @@ async function removeFromWishlistUI(productId, color = "", storage = "", ram = "
         const data = await response.json();
         if (data.success) {
             dispatchGlobalToast('success', 'Removed from wishlist', '');
+
+            // Update Navbar Badges
+            const badge = document.getElementById('wishlist-badge');
+            if (badge && data.wishlistCount !== undefined) {
+                badge.textContent = data.wishlistCount;
+            }
+
             if(buttonSrc) {
                 const card = buttonSrc.closest('.bg-black-card');
                 if(card) {
@@ -157,7 +163,6 @@ async function moveToCart(productId, color = "", storage = "", ram = "", btnElem
             const badge = document.getElementById('cart-badge');
             if(badge && data.cartCount !== undefined) {
                  badge.textContent = data.cartCount;
-                 badge.classList.remove('hidden');
             }
             if(btnElement) {
                 const card = btnElement.closest('.bg-black-card');

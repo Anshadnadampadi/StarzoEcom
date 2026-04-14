@@ -20,8 +20,9 @@ export const getWishlist = async (userId) => {
         const product = item.productId;
         if (!product) return null;
 
-        // Skip products that are completely blocked or unlisted by admin (at product level)
-        if (product.isBlocked || !product.isListed) return null;
+        // Only skip if the product is explicitly blocked by admin.
+        // Unlisted products remain visible but flagged as unavailable.
+        if (product.isBlocked) return null;
 
         const currentVariant = item.variant;
         
@@ -126,7 +127,11 @@ export const toggleWishlist = async (userId, productId, variant = {}) => {
     }
 
     await wishlist.save();
-    return { count: wishlist.items.length, added, message };
+    
+    // Get the deduplicated unique count for consistent UI reporting
+    const updatedWishlist = await getWishlist(userId);
+    
+    return { count: updatedWishlist.length, added, message };
 };
 
 export const addToWishlist = async (userId, productId, variant = {}) => {

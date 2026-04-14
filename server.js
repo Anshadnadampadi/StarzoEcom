@@ -19,6 +19,7 @@ import googleStrategy from "passport-google-oauth20"
 import nocache from "nocache"
 import { checkBlocked } from "./middlewares/authMiddleware.js";
 import expressEjsLayouts from 'express-ejs-layouts';
+import { setViewLocals } from "./middlewares/viewMiddleware.js";
 
 const PORT = process.env.PORT || 7000
 
@@ -59,22 +60,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(checkBlocked);
 
-app.use(async (req, res, next) => {
-    res.locals.user = req.session.user;
-    res.locals.cartCount = 0;
-    res.locals.breadcrumbs = [];
-    if (req.session.user) {
-        try {
-            const cart = await Cart.findOne({ userId: req.session.user });
-            if (cart) {
-                res.locals.cartCount = cart.items.length;
-            }
-        } catch (error) {
-            console.error("Error fetching cart count:", error);
-        }
-    }
-    next();
-});
+app.use(setViewLocals);
 
 console.log(process.env.MONGO_URI)
 app.use(morgan('dev'))

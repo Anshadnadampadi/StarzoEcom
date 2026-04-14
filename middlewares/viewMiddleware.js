@@ -1,8 +1,5 @@
-/**
- * Middleware to set common variables for views
- */
 import Cart from "../models/cart/Cart.js";
-import Wishlist from "../models/wishlist/wishlist.js";
+import * as wishlistService from "../services/user/wishlistService.js";
 
 export const setViewLocals = async (req, res, next) => {
     // 1. Handle Toast Messages
@@ -32,15 +29,15 @@ export const setViewLocals = async (req, res, next) => {
         try {
             const [cart, wishlist] = await Promise.all([
                 Cart.findOne({ userId: req.session.user }).lean(),
-                Wishlist.findOne({ userId: req.session.user }).select("items").lean()
+                wishlistService.getWishlist(req.session.user)
             ]);
 
             if (cart?.items?.length) {
                 res.locals.cartCount = cart.items.length;
             }
 
-            if (wishlist?.items?.length) {
-                res.locals.wishlistCount = wishlist.items.length;
+            if (wishlist?.length) {
+                res.locals.wishlistCount = wishlist.length;
             }
         } catch (error) {
             console.error("Error fetching cart/wishlist counts:", error);

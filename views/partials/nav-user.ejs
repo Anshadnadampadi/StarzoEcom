@@ -36,7 +36,7 @@
                 </path>
             </svg>
             <span id="wishlist-badge"
-                class="absolute -top-2 -right-2 bg-accent text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center <%= (typeof wishlistCount === 'undefined' || wishlistCount === 0) ? 'hidden' : '' %>">
+                class="absolute -top-2 -right-2 bg-accent text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                 <%= typeof wishlistCount !== 'undefined' ? wishlistCount : 0 %>
             </span>
         </a>
@@ -47,7 +47,7 @@
                     d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
             </svg>
             <span id="cart-badge"
-                class="absolute -top-2 -right-2 bg-accent text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center <%= (typeof cartCount === 'undefined' || cartCount === 0) ? 'hidden' : '' %>">
+                class="absolute -top-2 -right-2 bg-accent text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                 <%= typeof cartCount !== 'undefined' ? cartCount : 0 %>
             </span>
         </a>
