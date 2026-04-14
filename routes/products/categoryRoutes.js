@@ -8,7 +8,7 @@ import {
     updateCategory, 
     toggleCategoryStatus
 } from "../../controllers/admin/category/categoryController.js";
-import { categoryValidation, handleValidationErrors } from "../../middlewares/admin/validation.js";
+
 
 const router = express.Router();
 
@@ -19,8 +19,8 @@ router.get("/categories", adminAuth, getCategories);
 router.get("/categories/api/:id", adminAuth, getCategoryById);
 
 // 3. Action Routes
-router.post("/categories/add", adminAuth, uploadCategoryIcon.single('icon'), categoryValidation, handleValidationErrors, addCategory);           // Create
-router.put("/categories/edit/:id", adminAuth, uploadCategoryIcon.single('icon'), categoryValidation, handleValidationErrors, updateCategory);    // Update
+router.post("/categories/add", adminAuth, uploadCategoryIcon.single('icon'), addCategory);           // Create
+router.put("/categories/edit/:id", adminAuth, uploadCategoryIcon.single('icon'), updateCategory);    // Update
 router.patch("/categories/delete/:id", adminAuth, toggleCategoryStatus);// Toggle Visibility
 
 export default router;
