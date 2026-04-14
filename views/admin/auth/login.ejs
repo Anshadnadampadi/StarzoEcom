@@ -36,20 +36,23 @@
                 </div>
             <% } %>
 
-            <form action="/admin/login" method="POST" class="space-y-8">
+            <form id="loginForm" action="/admin/login" method="POST" class="space-y-8">
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Email Address</label>
-                    <input type="email" name="email" required 
+                    <input type="text" name="email" id="email"
                            class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/5" 
                            placeholder="admin@mobiverse.com">
+                           <p id="emailError" style="color: rgb(194, 57, 57);" class="text-red-500 text-xs mt-1 hidden"></p>
+
                 </div>
 
                 <div class="space-y-2" x-data="{ show: false }">
                     <label class="text-[10px] font-bold uppercase tracking-widest text-white/30">Password</label>
                     <div class="relative">
-                        <input :type="show ? 'text' : 'password'" name="password" required 
+                        <input :type="show ? 'text' : 'password'" name="password" id="password"
                                class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/5 pr-14"
                                placeholder="••••••••">
+                               <p id="passwordError" style="color: rgb(214, 54, 54);" class="text-red-500 text-xs mt-1 hidden"></p>
                         <button type="button" @click="show = !show" 
                                 class="absolute right-0 top-0 h-full w-14 flex items-center justify-center text-white/20 hover:text-accent transition-colors focus:outline-none">
                             <template x-if="!show">
@@ -73,5 +76,50 @@
         </div>
     </div>
     <%- include('../../partials/toast') %>
+  <script>
+
+    document.getElementById("loginForm").addEventListener("submit",function(e){
+        let isValid = true
+      const email= document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      const emailError = document.getElementById("emailError");
+      const passwordError = document.getElementById("passwordError")
+
+      emailError.classList.add("hidden");
+      passwordError.classList.add("hidden");
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email) {
+        emailError.textContent = "Email is required";
+        emailError.classList.remove("hidden");
+        isValid = false;
+    } else if (!emailRegex.test(email)) {
+        emailError.textContent = "Enter a valid email";
+        emailError.classList.remove("hidden");
+        isValid = false;
+    }
+
+    // Password validation
+    if (!password) {
+        passwordError.textContent = "Password is required";
+        passwordError.classList.remove("hidden");
+        isValid = false;
+    } else if (password.length < 6) {
+        passwordError.textContent = "Password must be at least 6 characters";
+        passwordError.classList.remove("hidden");
+        isValid = false;
+    }
+
+    // Stop form if invalid
+    if (!isValid) {
+        e.preventDefault();
+    }
+});
+  
+  </script>
+
 </body>
 </html>

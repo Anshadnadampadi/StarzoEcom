@@ -1492,7 +1492,17 @@
     const serverVariants = product.variants || [];
 
     let qty = 1;
-    let wishlisted = false;
+    let wishlisted = <%= locals.isWishlisted ? 'true' : 'false' %>;
+
+    // Set initial wishlist state
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('wishlistBtn');
+        if (btn && wishlisted) {
+            btn.classList.add('active');
+            btn.style.color = 'var(--danger)';
+            btn.querySelector('svg').setAttribute('fill', 'currentColor');
+        }
+    });
 
     // ── GALLERY ───────────────────────────────────────────────────────────────
     function changeImg(el, url) {
@@ -1807,11 +1817,53 @@
       }
     }
 
-    function toggleWishlist() {
-      wishlisted = !wishlisted;
-      const btn = document.getElementById('wishlistBtn');
-      if (btn) btn.classList.toggle('active', wishlisted);
-      showToast(wishlisted ? 'success' : 'info', wishlisted ? 'Added to wishlist' : 'Removed from wishlist', product.name);
+    async function toggleWishlist() {
+      const storageBase = document.getElementById('selectedStorage')?.textContent?.trim() || '';
+      const colorBase = document.getElementById('selectedColor')?.textContent?.trim() || '';
+      const ramBase = document.getElementById('selectedRam')?.textContent?.trim() || '';
+      const productId = product._id;
+
+      try {
+        const response = await fetch('/wishlist/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              productId, 
+              color: colorBase, 
+              storage: storageBase, 
+              ram: ramBase 
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            wishlisted = data.added;
+            const btn = document.getElementById('wishlistBtn');
+            if (btn) {
+                btn.classList.toggle('active', wishlisted);
+                btn.style.color = wishlisted ? 'var(--danger)' : 'var(--t2)';
+                btn.querySelector('svg').setAttribute('fill', wishlisted ? 'currentColor' : 'none');
+            }
+            
+            showToast(wishlisted ? 'success' : 'info', data.message, product.name);
+            
+            // Update Navigation Badge
+            const badge = document.getElementById('wishlist-badge');
+            if (badge && data.wishlistCount !== undefined) {
+                badge.textContent = data.wishlistCount;
+                badge.classList.toggle('hidden', data.wishlistCount === 0);
+            }
+        } else {
+            showToast('error', 'Operation Failed', data.message);
+            if (data.message && data.message.toLowerCase().includes('login')) {
+                setTimeout(() => window.location.href = '/auth/login', 1500);
+            }
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('error', 'Sync Error', 'Unable to reach the vault servers');
+      }
     }
 
     // ── DELIVERY CHECK ────────────────────────────────────────────────────────

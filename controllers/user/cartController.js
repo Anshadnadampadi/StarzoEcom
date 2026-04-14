@@ -89,21 +89,21 @@ export const removeCartItem = async (req, res) => {
     }
 };
 
-export const clearCart= async(req,res)=>{
- try{
-    const userId=req.user._id;
+export const clearCart = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
 
-    const cart = await cart.findOne ({userId})
+        await cartService.clearCart(req.session.user);
 
-    if(!cart){
-        return res.status(404).json({message:"cart not found"})
+        return res.status(200).json({ 
+            success: true, 
+            message: "Cart cleared successfully" 
+        });
+
+    } catch (error) {
+        console.error("Clear Cart Error:", error);
+        return res.status(500).json({ success: false, message: error.message || "Something went wrong" });
     }
-   cart.items=[] //clear all products from cart
-   await cart.save();
-   
-   res.status(200).json({message:"Cart Cleared Succesfully"})
- }  catch(error){
-    res.status(500).json({message:"Server Error"})
-
- }
-}
+};

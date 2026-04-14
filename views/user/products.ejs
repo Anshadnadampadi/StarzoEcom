@@ -548,72 +548,11 @@
         <!-- Grid -->
         <div class="grid-container" id="productContainer">
           <!-- Initial SSR Render -->
-          <% products.forEach(product=> {
-            const variant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
-            // Use variant images only — product-level images have been removed
-            const image = (variant && variant.images && variant.images.length > 0)
-            ? variant.images[0]
-            : '/images/placeholder.jpg';
-
-            const price = variant ? variant.price : (product.price || 0);
-            const original = product.regularPrice || (price ? (price + Math.floor(price * 0.15)) : 0); // Mock original
-            const discount = (original && price) ? Math.round(((original - price) / original) * 100) : 0;
-            const isNew = true; // Replace with logic checking createdAt within last 30 days
-            %>
-            <div class="product-card">
-
-              <div class="card-img" onclick="window.location.href='/products/<%= product._id %>'">
-                <img src="<%= image %>" alt="<%= product.name %>">
-                <div class="quick-add"
-                  onclick="event.stopPropagation(); quickAdd('<%= product._id %>', '<%= product.name %>');">Add to Cart
-                </div>
-
-                <button class="btn-fav" onclick="event.stopPropagation();">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                </button>
-
-                <% if (discount> 10) { %>
-                  <span class="badge badge-sale">Sale <%= discount %>%</span>
-                  <% } else if (isNew) { %>
-                    <span class="badge badge-new" style="background:#fff;color:#000;">New</span>
-                    <% } %>
-              </div>
-
-              <div style="padding:24px;">
-                <p
-                  style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:6px;">
-                  <%= product.brand %>
-                </p>
-                <h3 class="font-syne"
-                  style="font-size:16px;font-weight:700;margin-bottom:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                  title="<%= product.name %>">
-                  <%= product.name %>
-                </h3>
-
-                <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;">
-                  <span style="font-size:11px;color:var(--accent);">★</span>
-                  <span style="font-size:11px;color:var(--accent);">★</span>
-                  <span style="font-size:11px;color:var(--accent);">★</span>
-                  <span style="font-size:11px;color:var(--accent);">★</span>
-                  <span style="font-size:11px;color:var(--t3);">★</span>
-                  <span style="font-size:11px;color:var(--t2);margin-left:4px;">(24)</span>
-                </div>
-
-                <div style="display:flex;align-items:baseline;gap:8px;">
-                  <span class="font-mono" style="font-size:18px;font-weight:700;color:var(--t1);">₹<%=
-                      price.toLocaleString('en-IN') %></span>
-                  <% if(original> price) { %>
-                    <span class="font-mono" style="font-size:13px;color:var(--t3);text-decoration:line-through;">₹<%=
-                        original.toLocaleString('en-IN') %></span>
-                    <% } %>
-                </div>
-              </div>
-
-            </div>
-            <% }) %>
+          <% products.forEach(product=> { %>
+             <%- include('../partials/product-card', { 
+                 product: product
+             }) %>
+          <% }) %>
 
               <% if (products.length===0) { %>
                 <div style="grid-column:1/-1;padding:80px 20px;text-align:center;">
@@ -846,9 +785,9 @@
       try {
         const res = await fetch(`/products?${params}`, { headers: { "Accept": "application/json" } });
         const data = await res.json();
-
+        
         document.getElementById("currentCount").innerText = data.currentCount;
-        renderProducts(data.products);
+        renderProducts(data.products, data.wishlistedIds);
 
         const paginationContainer = document.getElementById("pagination");
         // Create DOM-based pagination to bind events correctly
@@ -875,7 +814,7 @@
       }
     }
 
-    function renderProducts(products) {
+    function renderProducts(products, wishlistedIds = []) {
       const container = document.getElementById("productContainer");
       container.innerHTML = "";
 
@@ -897,38 +836,35 @@
         const card = node.querySelector('.product-card');
 
         const variant = p.variants && p.variants.length > 0 ? p.variants[0] : null;
-        // Use variant images only — product-level images have been removed
         const imageUrl = (variant && variant.images && variant.images.length > 0) ? variant.images[0] : '/images/placeholder.jpg';
         const price = variant ? variant.price : (p.price || 0);
-        const original = p.regularPrice || (price ? (price + Math.floor(price * 0.15)) : 0);
-        const discount = (original && price) ? Math.round(((original - price) / original) * 100) : 0;
+        
+        const isWishlisted = wishlistedIds.includes(p._id.toString());
 
-        const imgWrapper = node.querySelector('.card-img');
-        imgWrapper.onclick = () => window.location.href = `/products/${p._id}`;
+        const imgBlock = node.querySelector('.card-img');
+        imgBlock.onclick = () => window.location.href = `/products/${p._id}`;
 
         node.querySelector("img").src = imageUrl;
         node.querySelector("img").alt = p.name;
         node.querySelector(".brand-name").textContent = p.brand;
         node.querySelector(".prod-name").textContent = p.name;
-        node.querySelector(".prod-name").title = p.name;
+        node.querySelector(".prod-name").href = `/products/${p._id}`;
         node.querySelector(".price-val").textContent = "₹" + price.toLocaleString('en-IN');
-
-        if (original > price) {
-          node.querySelector(".orig-val").textContent = "₹" + original.toLocaleString('en-IN');
-        }
-
-        const badge = node.querySelector(".badge-sale");
-        if (discount > 10) {
-          badge.style.display = 'block';
-          badge.textContent = `SALE ${discount}%`;
-        }
 
         // Action buttons
         const quickAddBtn = node.querySelector('.quick-add');
-        quickAddBtn.onclick = (e) => { e.stopPropagation(); quickAdd(p._id, p.name); };
+        quickAddBtn.onclick = (e) => { e.stopPropagation(); addToCartFromCard(p._id, p.name); };
 
         const fav = node.querySelector('.btn-fav');
-        fav.onclick = (e) => { e.stopPropagation(); showToast('info', 'Wishlist', p.name + ' added to wishlist!'); };
+        if (isWishlisted) {
+            fav.classList.add('active');
+            fav.style.color = 'var(--danger)';
+            fav.querySelector('svg').setAttribute('fill', 'currentColor');
+        }
+        fav.onclick = (e) => { 
+            e.stopPropagation(); 
+            toggleWishlist(p._id, { button: fav }); 
+        };
 
         container.appendChild(node);
       });

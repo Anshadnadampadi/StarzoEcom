@@ -1,4 +1,5 @@
 import * as userProductService from "../../../services/user/userProductService.js";
+import Wishlist from "../../../models/wishlist/wishlist.js";
 
 export const loadProductListing = async (req, res) => {
     console.log("ok")
@@ -14,11 +15,21 @@ export const loadProductListing = async (req, res) => {
             page: parseInt(page) || 1
         });
 
+        // ── Wishlist State ──
+        let wishlistedIds = [];
+        if (req.session.user) {
+            const wishlist = await Wishlist.findOne({ userId: req.session.user }).select("items.productId").lean();
+            if (wishlist) {
+                wishlistedIds = wishlist.items.map(item => item.productId.toString());
+            }
+        }
+
         if (req.xhr || req.headers.accept === "application/json") {
             return res.json({
                 products: data.products,
                 pagination: data.pagination,
-                currentCount: data.total
+                currentCount: data.total,
+                wishlistedIds // Send this to the AJAX caller
             });
         }
 
@@ -37,6 +48,7 @@ export const loadProductListing = async (req, res) => {
             selectedSort: sort || "newest",
             selectedPrice: price || null,
             title: "Browse All Phones",
+            wishlistedIds,
             breadcrumbs: [
                 { label: 'Shop', url: '/products' }
             ],
@@ -69,18 +81,26 @@ export const getProductDetailsPage = async (req, res) => {
             req.session.recentlyViewed = [];
         }
 
-        // Fetch recently viewed products BEFORE adding the current one
         const recentlyViewedProducts = await userProductService.getRecentlyViewedProducts(
             req.session.recentlyViewed,
             req.params.id
         );
 
-        // Add current product to the front of the list
         const currentId = req.params.id.toString();
         req.session.recentlyViewed = [
             currentId,
             ...req.session.recentlyViewed.filter(id => id !== currentId)
-        ].slice(0, 10); // Keep only last 10
+        ].slice(0, 10);
+
+        // ── Wishlist state ──
+        let isWishlisted = false;
+        if (req.session.user) {
+            const wishlist = await Wishlist.findOne({ 
+                userId: req.session.user,
+                "items.productId": req.params.id 
+            });
+            if (wishlist) isWishlisted = true;
+        }
 
         const { msg, icon } = req.query;
 
@@ -88,6 +108,7 @@ export const getProductDetailsPage = async (req, res) => {
             product,
             recommendedProducts,
             recentlyViewedProducts,
+            isWishlisted,
 
             // NEW DATA 
             defaultVariant,

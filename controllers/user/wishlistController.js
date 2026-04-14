@@ -1,10 +1,39 @@
 // controllers/wishlistController.js
 
 import * as wishlistService from "../../services/user/wishlistService.js";
+import User from "../../models/user/User.js";
 
+
+// TOGGLE WISHLIST
+export const toggleWishlist = async (req, res) => {
+    try {
+        const { productId, color, storage, ram } = req.body;
+
+        const { count, added } = await wishlistService.toggleWishlist(
+            req.session.user,
+            productId,
+            { color, storage, ram }
+        );
+
+        return res.json({
+            success: true,
+            added,
+            wishlistCount: count,
+            message: added ? "Added to wishlist " : "Removed from wishlist "
+        });
+
+    } catch (err) {
+        console.error("Toggle Wishlist Error:", err.message);
+        return res.status(400).json({
+            success: false,
+            message: err.message
+        });
+    }
+};
 
 //  ADD TO WISHLIST
 export const addToWishlist = async (req, res) => {
+
     try {
         const { productId, color, storage, ram } = req.body;
 
@@ -13,14 +42,14 @@ export const addToWishlist = async (req, res) => {
         }
 
         await wishlistService.addToWishlist(
-            req.user.id,
+            req.session.user,
             productId,
             { color, storage, ram }
         );
 
         return res.json({
             success: true,
-            message: "Added to wishlist ❤️"
+            message: "Added to wishlist"
         });
 
     } catch (err) {
@@ -40,14 +69,14 @@ export const removeFromWishlist = async (req, res) => {
         const { productId, color, storage, ram } = req.body;
 
         await wishlistService.removeFromWishlist(
-            req.user.id,
+            req.session.user,
             productId,
             { color, storage, ram }
         );
 
         return res.json({
             success: true,
-            message: "Removed from wishlist ❌"
+            message: "Removed from wishlist "
         });
 
     } catch (err) {
@@ -62,7 +91,7 @@ export const removeFromWishlist = async (req, res) => {
 
 export const getWishlist = async (req, res) => {
     try {
-        const wishlist = await wishlistService.getWishlist(req.user.id);
+        const wishlist = await wishlistService.getWishlist(req.session.user);
 
         return res.json({
             success: true,
@@ -78,14 +107,14 @@ export const getWishlist = async (req, res) => {
         });
     }
 };
-// 🎨 RENDER WISHLIST PAGE (EJS)
+//    RENDER WISHLIST PAGE (EJS)
 export const renderWishlistPage = async (req, res) => {
     try {
-        const wishlist = await wishlistService.getWishlist(req.user.id);
+        const wishlist = await wishlistService.getWishlist(req.session.user);
 
         res.render("user/account/wishlist", {
             wishlist,
-            user: req.user
+            user: await User.findById(req.session.user).lean()
         });
 
     } catch (err) {
@@ -95,13 +124,14 @@ export const renderWishlistPage = async (req, res) => {
     }
 };
 
-// 🔁 MOVE TO CART
+//  MOVE TO CART
 export const moveToCart = async (req, res) => {
+    console.log(req.body)
     try {
         const { productId, color, storage, ram } = req.body;
 
         await wishlistService.moveToCart(
-            req.user.id,
+            req.session.user,
             productId,
             { color, storage, ram }
         );
@@ -117,6 +147,26 @@ export const moveToCart = async (req, res) => {
         return res.status(400).json({
             success: false,
             error: err.message
+        });
+    }
+};
+
+// MOVE ALL TO CART
+export const moveAllToCart = async (req, res) => {
+    try {
+        const result = await wishlistService.moveAllToCart(req.session.user);
+        
+        if (result.success) {
+            return res.json(result);
+        } else {
+            return res.status(400).json({ success: false, error: result.message });
+        }
+
+    } catch (err) {
+        console.error("Move All To Cart Error:", err.message);
+        return res.status(500).json({
+            success: false,
+            error: "Failed to move all items to cart"
         });
     }
 };

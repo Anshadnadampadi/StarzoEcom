@@ -45,7 +45,7 @@
                                                     </div>
                                                     <div>
                                                         <p class="text-white text-[11px] font-bold uppercase"><%= item.product.title %></p>
-                                                        <p class="text-white/30 text-[9px] tracking-wider uppercase mt-1">QTY: <%= item.qty %> · <%= item.variant %></p>
+                                                        <p class="text-white/30 text-[9px] tracking-wider uppercase mt-1">QTY: <%= item.qty %> · <%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' ') : item.variant %></p>
                                                     </div>
                                                 </div>
                                                 <% if (order.status === 'delivered') { %>

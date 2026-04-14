@@ -62,7 +62,7 @@ export const loginUser = async (email, password) => {
         console.log(error);
     }
 };
-    
+
 
 /* Generate 6 digit OTP */
 const generateOTP = () => {
@@ -87,11 +87,11 @@ export const generateReferralCode = async () => {
 
 export const sendOtpService = async ({ firstName, lastName, email, password }) => {
     try {
-        
+
         if (!firstName || !email || !password) {
             return { success: false, message: "All fields required" };
         }
-       
+
         const existingUser = await User.findOne({ email });
 
         if (existingUser && existingUser.isVerified) {
@@ -99,11 +99,11 @@ export const sendOtpService = async ({ firstName, lastName, email, password }) =
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-     
+
         const otp = generateOTP();
 
         const otpExpiry = Date.now() + 1 * 60 * 1000; // 1 minutes
-        
+
 
         let user;
 
@@ -128,36 +128,36 @@ export const sendOtpService = async ({ firstName, lastName, email, password }) =
                 referralCode: await generateReferralCode()
             });
         }
-     console.log("Before sending email...", {
-         user: process.env.EMAIL_USER,
-         to: email
-     });
+        console.log("Before sending email...", {
+            user: process.env.EMAIL_USER,
+            to: email
+        });
 
-     // Send Email
-     try {
-         const info = await transporter.sendMail({
-             from: process.env.EMAIL_USER,
-             to: email,
-             subject: "Starzo OTP Verification",
-             html: `
+        // Send Email
+        try {
+            const info = await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: "Starzo OTP Verification",
+                html: `
                  <h3>Your OTP Code</h3>
                  <p>Your verification OTP is:</p>
                  <h2>${otp}</h2>
                  <p>This OTP will expire in 1 minutes.</p>
              `
 
-         });
-         console.log("the otp is ",otp);
-         console.log('Mail sent successfully:', info.response);
-     } catch (mailErr) {
-         console.error('Error sending mail:', mailErr);
-         // return failure early so caller can respond accordingly
-         return { success: false, message: 'Unable to deliver OTP email', error: mailErr.message };
-     }
+            });
+            console.log("the otp is ", otp);
+            console.log('Mail sent successfully:', info.response);
+        } catch (mailErr) {
+            console.error('Error sending mail:', mailErr);
+            // return failure early so caller can respond accordingly
+            return { success: false, message: 'Unable to deliver OTP email', error: mailErr.message };
+        }
 
-     console.log("the otp is ",otp);
+        console.log("the otp is ", otp);
 
-     return { success: true, email };
+        return { success: true, email };
 
     } catch (error) {
         console.log("Send OTP Error:", error);
@@ -207,31 +207,31 @@ export const verifyOtpService = async ({ email, otp, context }) => {
 };
 
 
-export const forgotPasswordService= async(email)=>{
-    try{
-        const user=await User.findOne({email:email})
-        if(!user){
-            return {success:false,message:"user not found"}
+export const forgotPasswordService = async (email) => {
+    try {
+        const user = await User.findOne({ email: email })
+        if (!user) {
+            return { success: false, message: "user not found" }
         }
-    const otp=generateOTP();
-    user.otp=otp;
-    user.otpExpiry=Date.now()+1*60*1000;
-    await user.save();
-    await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Starzo Password Recovery OTP",
-        html: `
+        const otp = generateOTP();
+        user.otp = otp;
+        user.otpExpiry = Date.now() + 1 * 60 * 1000;
+        await user.save();
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Starzo Password Recovery OTP",
+            html: `
             <h3>Password Recovery OTP</h3>
             <p>Your password recovery OTP is:</p>           
             <h2>${otp}</h2>
             <p>This OTP will expire in 1 minutes.</p>
         `
-     });    
-            return {success:true,message:"OTP sent to your email",email:user.email}
-    }catch(error){
-        console.log("Forgot Password Error:",error);
-        return {success:false,message:"Failed to process forgot password"}
+        });
+        return { success: true, message: "OTP sent to your email", email: user.email }
+    } catch (error) {
+        console.log("Forgot Password Error:", error);
+        return { success: false, message: "Failed to process forgot password" }
 
     }
 }
@@ -243,25 +243,25 @@ export const updateUserProfile = async (userId, fields = {}) => {
         if (!user) return { success: false, message: 'User not found' };
 
         // whitelist we care about
-        const allowed = ['fullName','email','phone','dob','displayName','gender','bio','location','website'];
+        const allowed = ['fullName', 'email', 'phone', 'dob', 'displayName', 'gender', 'bio', 'location', 'website'];
         allowed.forEach(k => {
             if (fields[k] !== undefined && fields[k] !== null) {
-                switch(k) {
+                switch (k) {
                     case 'fullName': user.name = fields[k]; break;
                     case 'dob': user.dob = fields[k]; break;
                     default: user[k] = fields[k];
                 }
             }
         });
-        
-         if (fields.profileImage) {
+
+        if (fields.profileImage) {
             user.profileImage = fields.profileImage;
         }
 
         await user.save();
 
 
-        return { success: true, message:'profile updated successfuly',user };
+        return { success: true, message: 'profile updated successfuly', user };
     } catch (error) {
         console.log('Update profile error:', error);
         return { success: false, message: 'Failed to update profile' };
@@ -419,7 +419,7 @@ export const updateUserAddress = async (userId, addrId, addr) => {
     try {
         const user = await User.findById(userId);
         if (!user) return { success: false, message: 'User not found' };
-        
+
         const existing = await Address.findById(addrId);
         if (!existing) return { success: false, message: 'Address not found' };
 
@@ -434,10 +434,10 @@ export const updateUserAddress = async (userId, addrId, addr) => {
                 { $set: { default: false } }
             );
         }
-        
+
         Object.assign(existing, validatedAddress);
         await existing.save();
-        
+
         return {
             success: true,
             address: existing
@@ -454,7 +454,7 @@ export const deleteUserAddress = async (userId, addrId) => {
         if (!user) return { success: false, message: 'User not found' };
 
         await Address.findByIdAndDelete(addrId);
-        
+
         user.addresses = user.addresses.filter(id => id.toString() !== addrId);
         await user.save();
 

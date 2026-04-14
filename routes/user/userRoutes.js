@@ -12,7 +12,7 @@ import {
     removeProfileImage,
     requestEmailChangeOtp,
     verifyAndActivateEmailChange,
-  
+
 
 } from "../../controllers/user/userController.js";
 import { ensureLoggedIn, checkBlocked } from "../../middlewares/authMiddleware.js";
@@ -21,7 +21,7 @@ import authRoutes from "../../routes/user/authRoutes.js";
 import passport from "passport"
 import addressRoutes from "./addressRoutes.js"
 import cartRoutes from "./cartRoutes.js"
-
+import checkoutRoutes from "./checkoutRoutes.js"
 const router = express.Router();
 
 // Mount auth sub-router
@@ -30,6 +30,7 @@ router.use("/auth", authRoutes);
 // Protected User Routes (Require checkBlocked + ensureLoggedIn for private data)
 router.use("/account", ensureLoggedIn, addressRoutes);
 router.use("/cart", ensureLoggedIn, cartRoutes);
+router.use("/checkout", ensureLoggedIn, checkoutRoutes);
 
 // Google OAuth (Root level to match Console config)
 router.get(

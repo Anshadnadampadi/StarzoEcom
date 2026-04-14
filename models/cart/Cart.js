@@ -6,22 +6,23 @@ const cartItemSchema = new mongoose.Schema({
         ref: "Product",
         required: true
     },
+
     variant: {
-        type: String, // Or ObjectId if variants are stored in a separate collection. The current codebase seems to have them as embedded objects or strings.
-        required: false
+        color: { type: String, default: "" },
+        storage: { type: String, default: "" },
+        ram: { type: String, default: "" }
     },
+
     qty: {
         type: Number,
-        required: true,
-        min: 1,
         default: 1
     },
+
     price: {
         type: Number,
         required: true
     }
 });
-
 const cartSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,

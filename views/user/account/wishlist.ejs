@@ -1,51 +1,60 @@
 <!-- views/user/account/wishlist.ejs -->
 <%- contentFor('body') %>
 
-<div class="min-h-screen bg-black py-24">
-    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-        <div class="mb-16 fade-up">
-            <span class="text-accent text-label font-bold uppercase mb-4 block">Saved Collection</span>
-            <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">MY WISHLIST.</h1>
-            
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
-            <!-- Sidebar Nav -->
-            <%- include('../../partials/account-sidebar', { activeTab: 'wishlist' }) %>
-
-            <!-- Main Panel -->
-            <div class="lg:col-span-3">
-                <% if (typeof wishlist !== 'undefined' && wishlist.length > 0) { %>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-black-border border border-black-border">
-                        <% wishlist.forEach(product => { %>
-                            <%- include('../../partials/product-card', { product }) %>
-                        <% }) %>
-                    </div>
-                <% } else { %>
-                    <div class="py-32 text-center bg-black-card border border-black-border">
-                        <p class="text-text-muted text-label font-bold uppercase mb-8 italic">No products in your wishlist.</p>
-                        <a href="/phones" class="bg-accent text-black font-bold px-10 py-5 text-sm tracking-[0.2em] uppercase hover:bg-accent-hover transition-all btn-press">VIEW COLLECTION</a>
-                    </div>
+    <div class="min-h-screen bg-black py-24">
+        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+            <div class="mb-16 fade-up flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                    <span class="text-accent text-label font-bold uppercase mb-4 block">Saved Collection</span>
+                    <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">MY WISHLIST.</h1>
+                </div>
+                <% if (typeof wishlist !=='undefined' && wishlist.length> 0) { %>
+                <button onclick="moveAllToCart()" class="mt-6 md:mt-0 bg-white text-black px-6 py-3 font-bold text-[10px] tracking-widest uppercase hover:bg-accent transition-colors flex items-center gap-2 group">
+                    <svg class="w-4 h-4 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Move All To Cart
+                </button>
                 <% } %>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+                <!-- Sidebar Nav -->
+                <%- include('../../partials/account-sidebar', { activeTab: 'wishlist' }) %>
+
+                    <!-- Main Panel -->
+                    <div class="lg:col-span-3">
+                        <% if (typeof wishlist !=='undefined' && wishlist.length> 0) { %>
+                            <div
+                                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-black-border border border-black-border">
+                                <% wishlist.forEach(product=> { %>
+                                    <%- include('../../partials/product-card', { product, isWishlist: true }) %>
+                                        <% }) %>
+                            </div>
+                            <% } else { %>
+                                <div class="py-32 text-center bg-black-card border border-black-border">
+                                    <p class="text-text-muted text-label font-bold uppercase mb-8 italic">No products in
+                                        your wishlist.</p>
+                                    <a href="/phones"
+                                        class="bg-accent text-black font-bold px-10 py-5 text-sm tracking-[0.2em] uppercase hover:bg-accent-hover transition-all btn-press">VIEW
+                                        COLLECTION</a>
+                                </div>
+                                <% } %>
+                    </div>
             </div>
         </div>
     </div>
-</div>
-<button onclick="addToWishlist()"> </button>
-
-<script>
-function addToWishlist() {
-    fetch('/wishlist/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            productId: "PRODUCT_ID",
-            color: "Black",
-            storage: "128GB",
-            ram: "8GB"
-        })
-    })
-    .then(res => res.json())
-    .then(data => alert(data.message));
-}
-</script>
+    <script>
+        function addToWishlist() {
+            fetch('/wishlist/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productId: "PRODUCT_ID",
+                    color: "Black",
+                    storage: "128GB",
+                    ram: "8GB"
+                })
+            })
+                .then(res => res.json())
+                .then(data => alert(data.message));
+        }
+    </script>

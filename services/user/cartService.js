@@ -1,50 +1,47 @@
 import Cart from "../../models/cart/Cart.js";
-import Product from "../../models/product/product.js";
-
-const normalizeUnit = (s) => {
-    if (!s) return "";
-    let v = s.toString().trim();
-    if (/^\d+$/.test(v)) return v + " GB";
-    if (v.toLowerCase().endsWith("gb")) return v.slice(0, -2).trim() + " GB";
-    return v;
-};
-
-const getVariantString = (v) => {
-    return `${normalizeUnit(v.storage)} ${(v.color || "").trim()} ${normalizeUnit(v.ram)}`.trim();
-};
-
-const canonicalize = (s) => (s || "").replace(/\s+/g, ' ').trim().toLowerCase();
+import Product from "../../models/product/Product.js";
+import { isSameVariant, findMatchingVariant, getVariantDisplayString } from "../../utils/productHelpers.js";
 
 /**
  * Service to handle cart operations
  */
 export const getCartData = async (userId) => {
     let cart = await Cart.findOne({ userId }).populate("items.product").lean();
-    
+
     if (cart && cart.items.length > 0) {
+        // Filter out items with unavailable products
         cart.items = cart.items.filter(item => {
             if (!item.product) return false;
-            const isBlocked = item.product.isBlocked === true;
-            const isListed = item.product.isListed !== false; 
-            return !isBlocked && isListed;
+            return item.product.isBlocked !== true && item.product.isListed !== false;
         });
 
-        // Add variant image logic
+        // Add dynamic fields like display image and formatted variant string for UI
         cart.items = cart.items.map(item => {
             let displayImage = '/images/placeholder.jpg';
-            
-            // Use first variant image as default if available
-            if (item.product.variants && item.product.variants.length > 0 && item.product.variants[0].images && item.product.variants[0].images.length > 0) {
-                displayImage = item.product.variants[0].images[0];
+            const product = item.product;
+            const currentVariant = item.variant;
+
+            // Use first variant image as default
+            if (product.variants?.length > 0) {
+                const defaultVariant = product.variants[0];
+                if (defaultVariant.images?.length > 0) {
+                    displayImage = defaultVariant.images[0];
+                }
             }
-            
-            if (item.variant && item.product.variants && item.product.variants.length > 0) {
-                const matchedVariant = item.product.variants.find(v => canonicalize(getVariantString(v)) === canonicalize(item.variant));
-                if (matchedVariant && matchedVariant.images && matchedVariant.images.length > 0) {
+
+            // If item has a specific variant, try to match it for the correct image
+            if (currentVariant && product.variants?.length > 0) {
+                const matchedVariant = findMatchingVariant(product.variants, currentVariant);
+                if (matchedVariant?.images?.length > 0) {
                     displayImage = matchedVariant.images[0];
                 }
             }
-            return { ...item, displayImage };
+
+            return { 
+                ...item, 
+                variantDisplay: getVariantDisplayString(currentVariant),
+                displayImage 
+            };
         });
     } else if (!cart) {
         cart = { items: [], subtotal: 0 };
@@ -55,76 +52,88 @@ export const getCartData = async (userId) => {
 
 export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => {
     const product = await Product.findById(productId);
-    
-    
+
     if (!product || product.isBlocked || !product.isListed) {
         throw new Error("Product is unavailable");
     }
 
-    let stock = product.stock || 0;
+    // Standardize input variant to object format
+    // Handle potential legacy string input or missing fields
+    let targetVariant = typeof variant === 'string' ? null : variant; 
+    // If it's a string, we might need a way to parse it, but the goal is to stop using strings.
+    // For now, if it's not an object, we'll try to use the first variant as default.
+    
     let price = product.price;
-    let finalVariant = variant;
+    let stock = product.stock || 0;
 
-    // Default to first variant if none specified but variants exist
-    if (!finalVariant && product.variants && product.variants.length > 0) {
-        const def = product.variants[0];
-        finalVariant = getVariantString(def);
-        price = def.price;
-        stock = def.stock;
-    }
-
-    if (finalVariant && product.variants && product.variants.length > 0) {
-        const matchedVariant = product.variants.find(
-            v => canonicalize(getVariantString(v)) === canonicalize(finalVariant)
-        );
-
-        if (!matchedVariant) {
-            throw new Error("Selected variant is not available");
-        }
-
+    // Find matching variant from product data to get correct price and stock
+    const matchedVariant = findMatchingVariant(product.variants, targetVariant);
+    
+    if (matchedVariant) {
+        // If we found a match, use its specific data
+        targetVariant = {
+            color: matchedVariant.color || "",
+            storage: matchedVariant.storage || "",
+            ram: matchedVariant.ram || ""
+        };
         price = matchedVariant.price;
         stock = matchedVariant.stock;
+    } else if (product.variants?.length > 0) {
+        // If no variant provided or matched, but product has variants, use the first one
+        const fallback = product.variants[0];
+        targetVariant = {
+            color: fallback.color || "",
+            storage: fallback.storage || "",
+            ram: fallback.ram || ""
+        };
+        price = fallback.price;
+        stock = fallback.stock;
+    } else {
+        // For products without variants, use empty variant object
+        targetVariant = { color: "", storage: "", ram: "" };
     }
 
-    if (stock < 1 || stock < qty) {
-        throw new Error("Insufficient stock");
-    }
+    if (stock < 1) throw new Error("Item is out of stock");
+    if (stock < qty) throw new Error(`Only ${stock} units available`);
 
     const MAX_PER_USER_LIMIT = 5;
-
     let cart = await Cart.findOne({ userId });
-    
+
     if (!cart) {
         if (qty > MAX_PER_USER_LIMIT) {
-            throw new Error(`You can only add up to ${MAX_PER_USER_LIMIT} units of this item`);
+            throw new Error(`Limit reached: Maximum ${MAX_PER_USER_LIMIT} units allowed`);
         }
         cart = new Cart({
             userId,
-            items: [{ product: productId, variant: finalVariant, qty, price }]
+            items: [{ product: productId, variant: targetVariant, qty, price }]
         });
     } else {
+        // Check if item with SAME product AND SAME variant already exists
         const itemIndex = cart.items.findIndex(item => 
-            item.product.toString() === productId && item.variant === finalVariant
+            item.product.toString() === productId && 
+            isSameVariant(item.variant, targetVariant)
         );
 
         if (itemIndex > -1) {
+            // Increase quantity if match found
             let newQty = cart.items[itemIndex].qty + Number(qty);
-            
-            if (newQty > MAX_PER_USER_LIMIT) {   
-                throw new Error(`Limit reached, you can only order up to ${MAX_PER_USER_LIMIT} units of this item`);
+
+            if (newQty > MAX_PER_USER_LIMIT) {
+                throw new Error(`Limit reached: Maximum ${MAX_PER_USER_LIMIT} units allowed`);
             }
-            
+
             if (newQty > stock) {
                 throw new Error("Cannot add more than available stock");
             }
 
             cart.items[itemIndex].qty = newQty;
-            cart.items[itemIndex].price = price;
+            cart.items[itemIndex].price = price; // Update price in case it's changed
         } else {
+            // Add new item if no match found
             if (qty > MAX_PER_USER_LIMIT) {
-                throw new Error(`You can only add up to ${MAX_PER_USER_LIMIT} units of this item`);
+                throw new Error(`Limit reached: Maximum ${MAX_PER_USER_LIMIT} units allowed`);
             }
-            cart.items.push({ product: productId, variant: finalVariant, qty, price });
+            cart.items.push({ product: productId, variant: targetVariant, qty, price });
         }
     }
 
@@ -135,7 +144,7 @@ export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => 
 export const updateItemQty = async (userId, { itemId, change }) => {
     const changeNum = Number(change);
     if (![1, -1].includes(changeNum)) {
-         throw new Error("Invalid quantity change");
+        throw new Error("Invalid quantity change");
     }
 
     const cart = await Cart.findOne({ userId }).populate("items.product");
@@ -155,22 +164,22 @@ export const updateItemQty = async (userId, { itemId, change }) => {
 
     const MAX_PER_USER_LIMIT = 5;
     if (newQty > MAX_PER_USER_LIMIT) {
-         throw new Error(`Cannot exceed maximum limit of ${MAX_PER_USER_LIMIT}`);
+        throw new Error(`Cannot exceed maximum limit of ${MAX_PER_USER_LIMIT}`);
     }
 
-    let stock = item.product.stock;
+    // Stock check for specific variant
+    let stock = item.product.stock || 0;
+    const productVariants = item.product.variants;
 
-if (item.variant && item.product.variants?.length > 0) {
-    const matchedVariant = item.product.variants.find(
-        v => canonicalize(getVariantString(v)) === canonicalize(item.variant)
-    );
-
-    if (matchedVariant) {
-        stock = matchedVariant.stock;
+    if (productVariants?.length > 0) {
+        const matched = findMatchingVariant(productVariants, item.variant);
+        if (matched) {
+            stock = matched.stock;
+        }
     }
-}
+    
     if (newQty > stock) {
-         throw new Error("Cannot exceed available stock");
+        throw new Error("Cannot exceed available stock");
     }
 
     item.qty = newQty;
@@ -196,4 +205,14 @@ export const removeItem = async (userId, itemId) => {
         cartSubtotal: cart.subtotal,
         isEmpty: cart.items.length === 0
     };
+};
+
+export const clearCart = async (userId) => {
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+        throw new Error("Cart not found");
+    }
+    cart.items = [];
+    await cart.save();
+    return true;
 };
