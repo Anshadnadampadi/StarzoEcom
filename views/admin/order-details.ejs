@@ -2,66 +2,112 @@
 <%- contentFor('body') %>
 
 <div class="max-w-6xl mx-auto space-y-10">
+
+    <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-12">
         <div>
-            <a href="/admin/orders" class="text-accent text-[9px] font-bold tracking-widest uppercase hover:underline mb-8 inline-block">← Back to logistics</a>
+            <a href="/admin/orders" class="text-accent text-[9px] font-bold tracking-widest uppercase hover:underline mb-8 inline-block">← Back to Orders</a>
             <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">ORDER #<%= order.orderId %>.</h1>
             <div class="flex gap-4 items-center">
                 <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Placed on <%= new Date(order.createdAt).toLocaleString() %></p>
                 <span class="w-1.5 h-1.5 rounded-full bg-white/10"></span>
-                <%- include('../../partials/status-badge', { status: order.status }) %>
+                <%- include('../partials/status-badge.ejs', { status: order.orderStatus }) %>
             </div>
         </div>
-        
-        <div class="flex gap-4">
-            <select name="status" class="bg-black border border-white/10 px-6 py-4 text-[10px] font-bold tracking-widest uppercase text-white focus:outline-none focus:border-accent transition-all">
-                <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Update: Pending</option>
-                <option value="confirmed" <%= order.status === 'confirmed' ? 'selected' : '' %>>Update: Confirmed</option>
-                <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Update: Processing</option>
-                <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Update: Shipped</option>
-                <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Update: Delivered</option>
-                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Update: Cancelled</option>
-            </select>
-            <button class="bg-accent text-black font-bold px-8 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all btn-press">UPDATE STATUS</button>
+
+        <!-- Status Update & Return Management -->
+        <div class="flex gap-4 items-center">
+            <% if (order.orderStatus === 'Return Requested') { %>
+                <button onclick="updateStatus('Return Approved')" class="bg-status-success text-black font-bold px-8 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all">APPROVE RETURN</button>
+                <button onclick="updateStatus('Delivered')" class="bg-status-danger text-white font-bold px-8 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-status-danger/80 transition-all">REJECT RETURN</button>
+            <% } else if (order.orderStatus === 'Return Approved') { %>
+                <button onclick="updateStatus('Return Picked')" class="bg-accent text-black font-bold px-10 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all">MARK AS PICKED</button>
+            <% } else if (order.orderStatus === 'Return Picked') { %>
+                <button onclick="updateStatus('Returned')" class="bg-status-success text-black font-bold px-10 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)]">PROCESS REFUND & CLOSE</button>
+            <% } else { %>
+                <select id="statusSelect" class="bg-black border border-white/10 px-6 py-4 text-[10px] font-bold tracking-widest uppercase text-white focus:outline-none focus:border-accent transition-all">
+                    <option value="Pending"          <%= order.orderStatus === 'Pending'          ? 'selected' : '' %>>Update: Pending</option>
+                    <option value="Confirmed"        <%= order.orderStatus === 'Confirmed'        ? 'selected' : '' %>>Update: Confirmed</option>
+                    <option value="Processing"       <%= order.orderStatus === 'Processing'       ? 'selected' : '' %>>Update: Processing</option>
+                    <option value="Shipped"          <%= order.orderStatus === 'Shipped'          ? 'selected' : '' %>>Update: Shipped</option>
+                    <option value="Delivered"        <%= order.orderStatus === 'Delivered'        ? 'selected' : '' %>>Update: Delivered</option>
+                    <option value="Cancelled"        <%= order.orderStatus === 'Cancelled'        ? 'selected' : '' %>>Update: Cancelled</option>
+                </select>
+                <button id="update-status-btn" class="bg-accent text-black font-bold px-8 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all font-display tracking-widest">UPDATE STATUS</button>
+            <% } %>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <!-- Order Items -->
+
+        <!-- Left: Order Items/Alerts -->
         <div class="lg:col-span-2 space-y-10">
+            <% if (order.orderStatus === 'Cancelled' || order.orderStatus === 'Return Requested' || order.orderStatus === 'Returned') { %>
+                <div class="bg-black-surface border border-l-4 <%= order.orderStatus === 'Cancelled' ? 'border-status-danger' : 'border-status-warning' %> p-8">
+                    <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-4">
+                        <%= order.orderStatus %> Details
+                    </h4>
+                    <p class="text-white/60 text-xs italic leading-relaxed">
+                        "<%= order.returnReason || order.cancellationReason || 'No reason provided.' %>"
+                    </p>
+                </div>
+            <% } %>
+
             <div class="bg-black-surface border border-white/5 overflow-hidden">
                 <h3 class="text-white text-[11px] font-bold tracking-widest uppercase px-10 py-6 border-b border-white/5">Purchased Items</h3>
                 <div class="divide-y divide-white/5">
                     <% order.items.forEach(item => { %>
+                        <%
+                            const pName = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
+                            let pImg = '/images/placeholder.png';
+                            if (item.product && item.product.variants && item.product.variants.length > 0) {
+                                const tv = item.variant || {};
+                                const mv = item.product.variants.find(v =>
+                                    (!tv.color   || v.color   === tv.color) &&
+                                    (!tv.storage || v.storage === tv.storage) &&
+                                    (!tv.ram     || v.ram     === tv.ram)
+                                ) || item.product.variants[0];
+                                if (mv && mv.images && mv.images.length > 0) pImg = mv.images[0];
+                            }
+                            const variantStr = (typeof item.variant === 'object' && item.variant !== null)
+                                ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' · ')
+                                : (item.variant || 'Standard');
+                            const itemPrice = item.price || (item.product ? item.product.price : 0) || 0;
+                        %>
                         <div class="px-10 py-8 flex justify-between items-center gap-8">
                             <div class="flex items-center gap-8">
-                                <div class="w-20 h-20 bg-black p-4 border border-white/5 flex-shrink-0">
-                                    <img src="<%= item.product.images[0].url %>" class="w-full h-full object-contain">
+                                <div class="w-20 h-20 bg-black p-3 border border-white/5 flex-shrink-0">
+                                    <img src="<%= pImg %>" class="w-full h-full object-contain" alt="<%= pName %>">
                                 </div>
                                 <div>
-                                    <p class="text-white text-sm font-bold uppercase"><%= item.product.title %></p>
-                                    <p class="text-white/30 text-[10px] tracking-widest uppercase mt-2"><%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' ') : item.variant %> · SKU: <%= item._id %></p>
+                                    <p class="text-white text-sm font-bold uppercase mb-1"><%= pName %></p>
+                                    <p class="text-white/30 text-[10px] tracking-widest uppercase"><%= variantStr %></p>
+                                    <p class="text-white/20 text-[9px] mt-1">Qty: <%= item.qty %></p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-white font-mono text-sm font-bold">₹<%= item.product.price.toLocaleString() %> × <%= item.qty %></p>
-                                <p class="text-accent font-mono text-base font-bold mt-2">₹<%= (item.product.price * item.qty).toLocaleString() %></p>
+                                <p class="text-white/50 font-mono text-xs mb-1">₹<%= itemPrice.toLocaleString() %> × <%= item.qty %></p>
+                                <p class="text-accent font-mono text-base font-bold">₹<%= (itemPrice * item.qty).toLocaleString() %></p>
                             </div>
                         </div>
                     <% }) %>
                 </div>
-                <div class="px-10 py-8 bg-white/[0.02] border-t border-white/5 text-right">
-                    <div class="space-y-2 mb-6">
-                        <div class="flex justify-end gap-12 text-white/40 text-[10px] font-bold tracking-widest uppercase">
-                            <span>Subtotal</span>
-                            <span class="text-white font-mono min-w-[100px]">₹<%= order.totalAmount.toLocaleString() %></span>
+
+                <!-- Totals -->
+                <div class="px-10 py-8 bg-white/[0.02] border-t border-white/5">
+                    <div class="space-y-3 mb-6">
+                        <% if (order.discount && order.discount > 0) { %>
+                        <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest text-status-success">
+                            <span>Discount</span>
+                            <span class="font-mono">− ₹<%= order.discount.toLocaleString() %></span>
                         </div>
-                        <div class="flex justify-end gap-12 text-white/40 text-[10px] font-bold tracking-widest uppercase text-status-success">
+                        <% } %>
+                        <div class="flex justify-between text-[10px] font-bold uppercase tracking-widest text-white/40">
                             <span>Shipping</span>
-                            <span class="font-mono min-w-[100px]">₹0.00</span>
+                            <span class="font-mono text-status-success"><%= (!order.shippingFee || order.shippingFee === 0) ? 'FREE' : '₹' + order.shippingFee.toLocaleString() %></span>
                         </div>
                     </div>
-                    <div class="flex justify-end gap-12 items-baseline">
+                    <div class="flex justify-between items-baseline border-t border-white/5 pt-4">
                         <span class="text-white text-[11px] font-bold tracking-widest uppercase">Grand Total</span>
                         <span class="text-white text-3xl font-mono font-bold">₹<%= order.totalAmount.toLocaleString() %></span>
                     </div>
@@ -69,40 +115,42 @@
             </div>
         </div>
 
-        <!-- Sidebar Info -->
-        <div class="space-y-10">
-            <!-- Customer Info -->
+        <!-- Right: Sidebar -->
+        <div class="space-y-8">
+
+            <!-- Customer -->
             <div class="bg-black-surface border border-white/5 p-8">
-                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-8 border-b border-white/5 pb-4">Customer Base</h3>
-                <div class="space-y-6">
+                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6 border-b border-white/5 pb-4">Customer</h3>
+                <div class="space-y-4">
+                    <p class="text-white font-bold uppercase text-sm">
+                        <%= (order.user.firstName || order.user.name || order.user.email.split('@')[0]) %>
+                        <%= (order.user.lastName || '') %>
+                    </p>
                     <div>
-                        <p class="text-white text-sm font-bold uppercase">
-                            <%= (order.user.firstName || order.user.name || order.user.email.split('@')[0]) %> 
-                            <%= (order.user.lastName || '') %>
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-white/30 text-[9px] font-bold tracking-widest uppercase mb-1">Email</p>
-                        <p class="text-white text-sm"><%= order.user.email %></p>
+                        <p class="text-white/30 text-[9px] uppercase tracking-widest mb-1">Email</p>
+                        <p class="text-white text-sm break-all"><%= order.user.email %></p>
                     </div>
                 </div>
             </div>
 
-            <!-- Shipping Info -->
+            <!-- Shipping Address -->
             <div class="bg-black-surface border border-white/5 p-8">
-                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-8 border-b border-white/5 pb-4">Dispatch Logic</h3>
-                <div class="text-white/60 text-sm leading-relaxed space-y-1 mb-8">
-                    <p class="font-bold text-white mb-2"><%= order.address.name %></p>
-                    <p><%= order.address.street %></p>
-                    <p><%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %></p>
-                    <p class="text-[10px] font-mono mt-4 text-white/40">+91 <%= order.address.phone %></p>
+                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6 border-b border-white/5 pb-4">Shipping Address</h3>
+                <% if (order.shippingAddress) { %>
+                <div class="text-white/60 text-sm leading-relaxed space-y-1">
+                    <p class="font-bold text-white mb-2"><%= order.shippingAddress.fullName %></p>
+                    <p><%= order.shippingAddress.streetAddress %></p>
+                    <p><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> − <%= order.shippingAddress.pinCode %></p>
+                    <p class="text-[10px] font-mono mt-3 text-white/40">+91 <%= order.shippingAddress.phone %></p>
                 </div>
-                <button class="w-full py-4 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-white/5 transition-all">Print Packing Slip</button>
+                <% } else { %>
+                <p class="text-white/30 text-xs">No address on record.</p>
+                <% } %>
             </div>
 
-            <!-- Payment Info -->
+            <!-- Payment -->
             <div class="bg-black-surface border border-white/5 p-8">
-                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-8 border-b border-white/5 pb-4">Financial Status</h3>
+                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6 border-b border-white/5 pb-4">Payment</h3>
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
                         <span class="text-white/40 text-[10px] uppercase font-bold">Method</span>
@@ -110,10 +158,71 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-white/40 text-[10px] uppercase font-bold">Status</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest <%= order.paymentStatus === 'paid' ? 'text-status-success' : 'text-status-warning' %>"><%= order.paymentStatus %></span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest <%= order.paymentStatus === 'Paid' ? 'text-status-success' : 'text-status-warning' %>">
+                            <%= order.paymentStatus %>
+                        </span>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    async function updateStatus(status) {
+        const orderId = '<%= order._id %>';
+        const { isConfirmed } = await Swal.fire({
+            title: `Update to ${status}?`,
+            text: `Are you sure you want to change status to: ${status}`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff6a00',
+            cancelButtonColor: '#1a1a1a',
+            confirmButtonText: 'Confirm',
+            background: '#0a0a0a',
+            color: '#fff'
+        });
+
+        if (isConfirmed) {
+            try {
+                const response = await fetch('/admin/orders/status', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, status })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        title: 'Success!',
+                        text: `Order status changed to ${status}`,
+                        icon: 'success',
+                        background: '#0a0a0a',
+                        color: '#fff'
+                    });
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'Failed to update status.',
+                    icon: 'error',
+                    background: '#0a0a0a',
+                    color: '#fff'
+                });
+            }
+        }
+    }
+
+    const updateBtn = document.getElementById('update-status-btn');
+    if (updateBtn) {
+        updateBtn.addEventListener('click', () => {
+            const status = document.getElementById('statusSelect').value;
+            updateStatus(status);
+        });
+    }
+</script>

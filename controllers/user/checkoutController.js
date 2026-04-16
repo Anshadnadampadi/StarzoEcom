@@ -1,5 +1,7 @@
 import * as cartService from "../../services/user/cartService.js";
 import User from "../../models/user/User.js";
+import Order from "../../models/order/order.js";
+import Product from "../../models/product/Product.js";
 
 export const getCheckout = async (req, res) => {
     try {
@@ -39,7 +41,6 @@ export const getCheckout = async (req, res) => {
     }
 };
 
-import Product from "../../models/product/Product.js";
 import crypto from 'crypto';
 
 export const placeOrder = async (req, res) => {
@@ -69,11 +70,15 @@ export const placeOrder = async (req, res) => {
         }
 
         let subtotal = cart.subtotal || 0;
-        let discount = 0;
-        let tax = 0; 
+        let tax = Math.floor(subtotal * 0.18); 
         let shippingFee = subtotal > 500 ? 0 : 50; 
         
-        let totalAmount = subtotal - discount + tax + shippingFee;
+        let discount = 0;
+        if (couponCode && couponCode.trim().toUpperCase() === 'SYNC10') {
+            discount = Math.floor((subtotal + tax) * 0.10);
+        }
+        
+        let totalAmount = Math.max(0, subtotal + tax + shippingFee - discount);
 
         const orderId = `ORD-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
@@ -122,7 +127,7 @@ export const placeOrder = async (req, res) => {
             totalAmount,
             couponCode,
             paymentMethod,
-            paymentStatus: paymentMethod === 'CASH ON DELIVERY' ? 'Pending' : 'Completed', 
+            paymentStatus: paymentMethod === 'CASH ON DELIVERY' ? 'Pending' : 'Paid', 
             orderStatus: 'Processing'
         });
 

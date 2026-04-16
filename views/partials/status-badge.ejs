@@ -1,5 +1,6 @@
 <!-- views/partials/status-badge.ejs -->
 <%
+const s = (status || '').toLowerCase();
 const statusColors = {
   pending:      'bg-status-warning/10 text-status-warning',
   confirmed:    'bg-status-info/10 text-status-info',
@@ -7,10 +8,12 @@ const statusColors = {
   shipped:      'bg-accent/10 text-accent',
   delivered:    'bg-status-success/10 text-status-success',
   cancelled:    'bg-status-danger/10 text-status-danger',
+  'return requested': 'bg-status-warning/10 text-status-warning',
+  returned:     'bg-status-danger/10 text-status-danger',
   refunded:     'bg-text-muted/10 text-text-muted',
 };
 %>
 <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-sm inline-block
-             <%= statusColors[status] || 'bg-white/5 text-white/40' %>">
+             <%= statusColors[s] || 'bg-white/5 text-white/40' %>">
   <%= status %>
 </span>

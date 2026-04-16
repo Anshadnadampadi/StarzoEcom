@@ -1757,7 +1757,13 @@
       const storageBase = document.getElementById('selectedStorage')?.textContent?.trim() || '';
       const colorBase = document.getElementById('selectedColor')?.textContent?.trim() || '';
       const ramBase = document.getElementById('selectedRam')?.textContent?.trim() || '';
-      const variant = storageBase && colorBase ? `${storageBase} ${colorBase} ${ramBase}`.trim() : '';
+      
+      const variant = {
+        storage: storageBase,
+        color: colorBase,
+        ram: ramBase
+      };
+      
       const productId = product._id;
 
       const btn = (typeof event !== 'undefined' && event ? event.currentTarget : null) || document.querySelector('.btn-primary[onclick="addToCart()"]');

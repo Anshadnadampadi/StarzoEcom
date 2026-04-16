@@ -14,12 +14,69 @@
     <link rel="stylesheet" href="/css/output.css">
     <style>
         [x-cloak] { display: none !important; }
+
+        /* ── PAGE LOADER ── */
+        #page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 28px;
+            transition: opacity 0.45s ease, visibility 0.45s ease;
+        }
+        #page-loader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-brand {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 22px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #fff;
+        }
+        .loader-brand span {
+            color: #ff6a00;
+        }
+        .loader-bar-track {
+            width: 160px;
+            height: 2px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .loader-bar-fill {
+            position: absolute;
+            left: -60%;
+            top: 0;
+            bottom: 0;
+            width: 60%;
+            background: linear-gradient(90deg, transparent, #ff6a00, transparent);
+            border-radius: 4px;
+            animation: loader-slide 1.1s ease-in-out infinite;
+        }
+        @keyframes loader-slide {
+            0%   { left: -60%; }
+            100% { left: 110%; }
+        }
     </style>
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-black text-white overflow-x-hidden">
+
+    <!-- Page Loader -->
+    <div id="page-loader" aria-hidden="true">
+        <div class="loader-brand">STAR<span>ZO</span></div>
+        <div class="loader-bar-track"><div class="loader-bar-fill"></div></div>
+    </div>
     <%- include('../partials/announcement-bar') %>
     <%- include('../partials/nav') %>
     <%- include('../partials/breadcrumbs', { isAdmin: false }) %>
@@ -34,5 +91,26 @@
 
     <!-- Global Scripts -->
     <script src="/js/user-common.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.classList.add('fade-out');
+                setTimeout(() => loader.remove(), 500);
+            }
+        });
+        // Also trigger on navigation clicks for instant feel
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a');
+            if (a && a.href && !a.href.includes('#') && a.target !== '_blank' && !a.href.startsWith('javascript')) {
+                const loader = document.getElementById('page-loader');
+                if (loader) {
+                    loader.style.opacity = '1';
+                    loader.style.visibility = 'visible';
+                    loader.classList.remove('fade-out');
+                }
+            }
+        });
+    </script>
 </body>
 </html>

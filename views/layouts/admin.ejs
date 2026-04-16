@@ -17,9 +17,69 @@
     <!-- Scripts -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        /* ── PAGE LOADER ── */
+        #page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 24px;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+        #page-loader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-brand {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #fff;
+        }
+        .loader-brand span { color: #ff6a00; }
+        .loader-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+        }
+        .loader-bar-track {
+            width: 140px;
+            height: 1px;
+            background: rgba(255,255,255,0.06);
+            overflow: hidden;
+            position: relative;
+        }
+        .loader-bar-fill {
+            position: absolute;
+            left: -60%;
+            top: 0; bottom: 0;
+            width: 60%;
+            background: linear-gradient(90deg, transparent, #ff6a00, transparent);
+            animation: loader-slide 1s ease-in-out infinite;
+        }
+        @keyframes loader-slide {
+            0%   { left: -60%; }
+            100% { left: 110%; }
+        }
+    </style>
 </head>
 <body class="flex min-h-screen bg-black text-text-primary overflow-x-hidden">
+
+    <!-- Page Loader -->
+    <div id="page-loader" aria-hidden="true">
+        <div class="loader-brand">STAR<span>ZO</span></div>
+        <div class="loader-bar-track"><div class="loader-bar-fill"></div></div>
+        <div class="loader-label">Admin Panel</div>
+    </div>
     
     <!-- Sidebar -->
     <aside class="w-64 border-r border-black-border flex flex-col h-screen sticky top-0 bg-black">
@@ -139,8 +199,28 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="/js/main.js"></script>
     <%- include('../partials/toast') %>
     <%- include('../partials/confirm-modal') %>
+    <script>
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.classList.add('fade-out');
+                setTimeout(() => loader.remove(), 450);
+            }
+        });
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a');
+            if (a && a.href && !a.href.includes('#') && a.target !== '_blank' && !a.href.startsWith('javascript')) {
+                const loader = document.createElement('div');
+                loader.id = 'page-loader';
+                loader.setAttribute('aria-hidden','true');
+                loader.innerHTML = `<div class="loader-brand">STAR<span>ZO</span></div><div class="loader-bar-track"><div class="loader-bar-fill"></div></div><div class="loader-label">Admin Panel</div>`;
+                document.body.appendChild(loader);
+            }
+        });
+    </script>
 </body>
 </html>

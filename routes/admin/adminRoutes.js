@@ -14,6 +14,7 @@ import {
 import adminAuth from "../../middlewares/adminAuth.js";
 import categoryRoutes from '../products/categoryRoutes.js';
 import productRoutes from '../products/productRoutes.js';
+import adminOrderRoutes from './adminOrderRoutes.js';
 
 const router = express.Router();
 
@@ -29,6 +30,7 @@ router.get('/logout', adminLogout);
 
 router.use('/', categoryRoutes);
 router.use('/', productRoutes);
+router.use('/', adminOrderRoutes);
 
 // Dashboard & Users
 router.get('/dashboard', getAdminDashboard);

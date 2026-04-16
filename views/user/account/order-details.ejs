@@ -1,0 +1,336 @@
+<!-- views/user/account/order-details.ejs -->
+<%- contentFor('body') %>
+
+<div class="min-h-screen bg-black py-24">
+    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+        <div class="mb-16 flex items-end justify-between gap-8 fade-up">
+            <div>
+                <a href="/account/orders" class="text-accent text-[10px] font-bold tracking-widest uppercase mb-8 inline-block hover:underline">← Back to orders</a>
+                <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">ORDER #<%= order.orderId %>.</h1>
+                <p class="text-text-muted text-label font-bold uppercase mt-2">Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
+            </div>
+            <% if (['Pending', 'Confirmed', 'Processing'].includes(order.orderStatus)) { %>
+                <button onclick="confirmCancel('<%= order._id %>')" class="text-status-danger text-[10px] font-bold tracking-widest uppercase border border-status-danger/30 px-8 py-4 hover:bg-status-danger hover:text-white transition-all">Cancel Order</button>
+            <% } %>
+            <% if (order.orderStatus === 'Delivered') { %>
+                <button onclick="confirmReturn('<%= order._id %>')" class="text-status-warning text-[10px] font-bold tracking-widest uppercase border border-status-warning/30 px-8 py-4 hover:bg-status-warning hover:text-white transition-all ml-4">Return Order</button>
+            <% } %>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- Order Status Tracker -->
+            <div class="lg:col-span-2 space-y-12">
+                <div class="bg-[#0a0a0a] border border-white/5 p-8 rounded-xl shadow-inner">
+                    <div class="flex justify-between items-center mb-10 pb-4 border-b border-white/5">
+                        <h3 class="text-white text-xs font-bold tracking-[0.2em] uppercase">Tracking Status</h3>
+                        <%- include('../../partials/status-badge', { status: order.orderStatus }) %>
+                    </div>
+                    
+                    <div class="relative pt-4 pb-8">
+                        <% if (order.orderStatus !== 'Cancelled') { %>
+                            <% 
+                            const stages = [
+                                { name: 'Confirmed', desc: 'Order received', date: order.createdAt, active: true },
+                                { name: 'Processing', desc: 'Being packed', date: order.orderStatus === 'Processing' || order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus !== 'Pending' },
+                                { name: 'Shipped', desc: 'Out for delivery', date: order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' },
+                                { name: 'Delivered', desc: 'Order arrived', date: order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus === 'Delivered' }
+                            ];
+                
+                            // Calculate active stages
+                            let activeIndex = -1;
+                            for(let i=stages.length-1; i>=0; i--) {
+                                if(stages[i].active) { activeIndex = i; break; }
+                            }
+                            // Calculate progress percentage accurately based on spacing
+                            const progressPercent = activeIndex === -1 ? 0 : (activeIndex / (stages.length - 1)) * 100;
+                            %>
+                            
+                            <!-- Connecting Line Base -->
+                            <div class="absolute top-[35px] left-[12.5%] right-[12.5%] h-1 bg-white/5 rounded-full z-0 hidden sm:block"></div>
+                            
+                            <!-- Active Connecting Line -->
+                            <!-- Uses a mapped width percentage aligned with the center nodes -->
+                            <div class="absolute top-[35px] left-[12.5%] h-1 bg-accent rounded-full z-0 hidden sm:block transition-all duration-1000 shadow-[0_0_15px_rgba(255,106,0,0.6)]" style="width: calc((100% - 25%) * <%= activeIndex / Math.max(1, stages.length - 1) %>);"></div>
+
+                            <div class="flex flex-col sm:flex-row justify-between relative z-10 w-full gap-8 sm:gap-0">
+                                <% stages.forEach((stage, index) => { %>
+                                    <div class="flex flex-row sm:flex-col items-center sm:text-center w-full sm:w-1/4 relative group">
+                                        
+                                        <!-- Vertical line mapping for mobile -->
+                                        <% if (index !== stages.length - 1) { %>
+                                            <div class="absolute left-[1.4rem] top-12 bottom-[-2rem] w-[2px] bg-white/5 sm:hidden z-0"></div>
+                                            <% if (stage.active && stages[index+1].active) { %>
+                                                <div class="absolute left-[1.4rem] top-12 bottom-[-2rem] w-[2px] bg-accent sm:hidden z-0 shadow-[0_0_10px_rgba(255,106,0,0.5)]"></div>
+                                            <% } %>
+                                        <% } %>
+
+                                        <!-- Icon / Dot -->
+                                        <div class="w-12 h-12 rounded-full border-[3px] border-[#0a0a0a] flex items-center justify-center flex-shrink-0 <%= stage.active ? 'bg-accent shadow-[0_0_20px_rgba(255,106,0,0.4)]' : 'bg-[#1a1a1a]' %> mb-4 sm:mx-auto transition-transform duration-300 group-hover:scale-110 z-10 mr-4 sm:mr-0">
+                                            <% if(stage.active) { %>
+                                                <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                            <% } else { %>
+                                                <div class="w-2.5 h-2.5 bg-white/20 rounded-full"></div>
+                                            <% } %>
+                                        </div>
+                                        
+                                        <!-- Text Details -->
+                                        <div class="flex flex-col sm:items-center w-full">
+                                            <p class="<%= stage.active ? 'text-white' : 'text-white/40' %> text-xs font-bold uppercase tracking-wider mb-1 transition-colors"><%= stage.name %></p>
+                                            <p class="text-white/30 text-[10px] hidden sm:block mb-1.5 font-medium"><%= stage.desc %></p>
+                                            <% if (stage.date && stage.active) { %>
+                                                <span class="inline-block bg-white/5 px-2 py-1 rounded text-accent text-[9px] font-mono tracking-widest"><%= new Date(stage.date).toLocaleDateString() %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        <% } else { %>
+                            <!-- Cancelled State -->
+                            <div class="flex items-center justify-center py-6">
+                                <div class="text-center">
+                                    <div class="w-20 h-20 rounded-full border-[4px] border-[#0a0a0a] bg-status-danger/10 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(239,68,68,0.2)]" style="box-shadow: inset 0 0 20px rgba(239,68,68,0.2), 0 0 30px rgba(239,68,68,0.3);">
+                                        <svg class="w-10 h-10 text-status-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </div>
+                                    <p class="text-status-danger text-lg font-black uppercase tracking-[0.2em] mb-2">Order Arrested</p>
+                                    <p class="text-white/50 text-sm font-medium">Termination Reason: <span class="text-white/80"><%= order.cancellationReason || 'Not specified' %></span></p>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Product Table -->
+                <div class="bg-black-card border border-black-border overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-white/5 border-b border-black-border">
+                                <th class="px-8 py-5 text-[10px] font-bold tracking-widest uppercase text-white/30">Item Details</th>
+                                <th class="px-8 py-5 text-[10px] font-bold tracking-widest uppercase text-white/30">Quantity</th>
+                                <th class="px-8 py-5 text-[10px] font-bold tracking-widest uppercase text-white/30 text-right">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-black-border">
+                            <% order.items.forEach(item => { %>
+                                <tr>
+                                    <td class="px-8 py-8">
+                                        <div class="flex items-center gap-6">
+                                            <% 
+                                                const productTitle = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
+                                                let productImg = '/images/placeholder.png';
+                                                if (item.product && item.product.variants && item.product.variants.length > 0) {
+                                                    const targetVar = item.variant || {};
+                                                    const matchedVariant = item.product.variants.find(v => 
+                                                        (!targetVar.color || v.color === targetVar.color) && 
+                                                        (!targetVar.storage || v.storage === targetVar.storage) && 
+                                                        (!targetVar.ram || v.ram === targetVar.ram)
+                                                    ) || item.product.variants[0];
+                                                    
+                                                    if (matchedVariant && matchedVariant.images && matchedVariant.images.length > 0) {
+                                                        productImg = matchedVariant.images[0];
+                                                    }
+                                                }
+                                            %>
+                                            <div class="w-16 h-16 bg-black p-3 border border-white/5 flex-shrink-0">
+                                                <img src="<%= productImg %>" class="w-full h-full object-contain" alt="Product Image">
+                                            </div>
+                                            <div>
+                                                <p class="text-white text-[11px] font-bold uppercase"><%= productTitle %></p>
+                                                <p class="text-white/30 text-[9px] tracking-widest uppercase mt-1"><%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' ') : (item.variant || 'Standard') %></p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-8">
+                                        <span class="text-white font-mono text-xs font-bold">× <%= item.qty %></span>
+                                    </td>
+                                    <td class="px-8 py-8 text-right">
+                                        <span class="text-white font-mono text-sm font-bold">₹<%= (item.price * item.qty).toLocaleString() %></span>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-white/[0.02]">
+                                <td colspan="2" class="px-8 py-8 text-right text-white/30 text-[10px] font-bold tracking-widest uppercase">Subtotal</td>
+                                <td class="px-8 py-8 text-right text-white font-mono text-sm font-bold">₹<%= order.subtotal.toLocaleString() %></td>
+                            </tr>
+                            <tr class="bg-white/[0.02]">
+                                <td colspan="2" class="px-8 py-4 text-right text-white/30 text-[10px] font-bold tracking-widest uppercase">Shipping</td>
+                                <td class="px-8 py-4 text-right text-status-success font-mono text-sm font-bold">₹<%= order.shippingFee === 0 ? 'FREE' : order.shippingFee.toLocaleString() %></td>
+                            </tr>
+                            <% if (order.discount > 0) { %>
+                                <tr class="bg-white/[0.02]">
+                                    <td colspan="2" class="px-8 py-4 text-right text-status-success text-[10px] font-bold tracking-widest uppercase">Discount Applied</td>
+                                    <td class="px-8 py-4 text-right text-status-success font-mono text-sm font-bold">- ₹<%= order.discount.toLocaleString() %></td>
+                                </tr>
+                            <% } %>
+                            <tr class="bg-white/[0.05] border-t border-black-border">
+                                <td colspan="2" class="px-8 py-8 text-right text-white text-[11px] font-bold tracking-widest uppercase">Total Amount Due</td>
+                                <td class="px-8 py-8 text-right text-accent font-mono text-2xl font-bold">₹<%= order.totalAmount.toLocaleString() %></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sidebar Info -->
+            <div class="space-y-8">
+                <!-- Shipping Address -->
+                <div class="bg-black-card border border-black-border p-10">
+                    <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-8 border-b border-black-border pb-4">Dispatch Destination</h3>
+                    <div class="text-white/60 text-xs leading-relaxed space-y-2 uppercase">
+                        <p class="font-bold text-white"><%= order.shippingAddress.fullName %></p>
+                        <p><%= order.shippingAddress.streetAddress %></p>
+                        <p><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> - <%= order.shippingAddress.pinCode %></p>
+                        <p class="pt-4 text-[10px] font-mono tracking-tighter text-white/40">+91 <%= order.shippingAddress.phone %></p>
+                    </div>
+                </div>
+
+                <!-- Payment Info -->
+                <div class="bg-black-card border border-black-border p-10">
+                    <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-8 border-b border-black-border pb-4">Financial Ledger</h3>
+                    <div class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/30 text-[9px] uppercase font-bold tracking-widest">Method</span>
+                            <span class="text-white text-[10px] font-bold uppercase"><%= order.paymentMethod %></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/30 text-[9px] uppercase font-bold tracking-widest">Status</span>
+                            <span class="text-[9px] font-bold uppercase tracking-widest <%= order.paymentStatus === 'Paid' ? 'text-status-success' : 'text-status-warning' %>"><%= order.paymentStatus %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support -->
+                <div class="bg-accent/5 border border-accent/10 p-10">
+                    <h3 class="text-accent text-[11px] font-bold tracking-widest uppercase mb-4">Need Assistance?</h3>
+                    <p class="text-white/40 text-[10px] leading-relaxed mb-6 uppercase">Our logistics team is available 24/7 for any inquiries regarding your dispatch.</p>
+                    <a href="/support" class="text-white text-[9px] font-bold tracking-[0.2em] uppercase hover:text-accent transition-colors underline">Contact Support Interface</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    async function confirmReturn(orderId) {
+        const { value: reason } = await Swal.fire({
+            title: 'Request Return',
+            input: 'textarea',
+            inputLabel: 'Reason for return',
+            inputPlaceholder: 'Please provide a detailed reason (at least 10 characters)...',
+            inputAttributes: {
+                'aria-label': 'Reason for return'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Submit Request',
+            confirmButtonColor: '#ff9800',
+            cancelButtonColor: '#1a1a1a',
+            background: '#0a0a0a',
+            color: '#fff',
+            inputValidator: (value) => {
+                if (!value || value.trim().length < 10) {
+                    return 'Please provide a reason with at least 10 characters';
+                }
+            }
+        });
+
+        if (reason) {
+            try {
+                const response = await fetch('/account/orders/return', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    await Swal.fire({
+                        title: 'Request Submitted',
+                        text: data.message,
+                        icon: 'success',
+                        background: '#0a0a0a',
+                        color: '#fff'
+                    });
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'Could not submit return request. Please try again.',
+                    icon: 'error',
+                    background: '#0a0a0a',
+                    color: '#fff'
+                });
+            }
+        }
+    }
+
+    async function confirmCancel(orderId) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Cancel Order?',
+            text: 'Are you sure you want to cancel this order? This cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#1a1a1a',
+            confirmButtonText: 'Yes, Cancel It',
+            cancelButtonText: 'Keep Order',
+            background: '#0a0a0a',
+            color: '#fff'
+        });
+
+        if (isConfirmed) {
+            const { value: reason } = await Swal.fire({
+                title: 'Reason for Cancellation',
+                input: 'select',
+                inputOptions: {
+                    'Changed my mind': 'Changed my mind',
+                    'Price dropped elsewhere': 'Price dropped elsewhere',
+                    'Delivery taking too long': 'Delivery taking too long',
+                    'Other': 'Other'
+                },
+                inputPlaceholder: 'Select a reason',
+                showCancelButton: true,
+                confirmButtonText: 'Submit',
+                background: '#0a0a0a',
+                color: '#fff',
+                inputValidator: (value) => {
+                    if (!value) return 'Please select a cancellation reason';
+                }
+            });
+
+            if (reason) {
+                try {
+                    const response = await fetch('/account/orders/cancel', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, reason })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        await Swal.fire({
+                            title: 'Order Cancelled',
+                            text: 'Your order has been successfully cancelled.',
+                            icon: 'success',
+                            background: '#0a0a0a',
+                            color: '#fff'
+                        });
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: error.message || 'Could not cancel order. Please try again.',
+                        icon: 'error',
+                        background: '#0a0a0a',
+                        color: '#fff'
+                    });
+                }
+            }
+        }
+    }
+</script>

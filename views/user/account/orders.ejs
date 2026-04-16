@@ -39,16 +39,32 @@
                                     <div class="space-y-6">
                                         <% order.items.forEach(item => { %>
                                             <div class="flex items-center justify-between gap-8">
+                                                <% 
+                                                    const productTitle = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
+                                                    let productImg = '/images/placeholder.png';
+                                                    if (item.product && item.product.variants && item.product.variants.length > 0) {
+                                                        const targetVar = item.variant || {};
+                                                        const matchedVariant = item.product.variants.find(v => 
+                                                            (!targetVar.color || v.color === targetVar.color) && 
+                                                            (!targetVar.storage || v.storage === targetVar.storage) && 
+                                                            (!targetVar.ram || v.ram === targetVar.ram)
+                                                        ) || item.product.variants[0];
+                                                        
+                                                        if (matchedVariant && matchedVariant.images && matchedVariant.images.length > 0) {
+                                                            productImg = matchedVariant.images[0];
+                                                        }
+                                                    }
+                                                %>
                                                 <div class="flex items-center gap-6">
                                                     <div class="w-12 h-12 bg-black p-2 border border-white/5 flex-shrink-0">
-                                                        <img src="<%= item.product.images[0].url %>" class="w-full h-full object-contain">
+                                                        <img src="<%= productImg %>" class="w-full h-full object-contain" alt="Product Image">
                                                     </div>
                                                     <div>
-                                                        <p class="text-white text-[11px] font-bold uppercase"><%= item.product.title %></p>
-                                                        <p class="text-white/30 text-[9px] tracking-wider uppercase mt-1">QTY: <%= item.qty %> · <%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' ') : item.variant %></p>
+                                                        <p class="text-white text-[11px] font-bold uppercase"><%= productTitle %></p>
+                                                        <p class="text-white/30 text-[9px] tracking-wider uppercase mt-1">QTY: <%= item.qty %> · <%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' ') : (item.variant || 'Standard') %></p>
                                                     </div>
                                                 </div>
-                                                <% if (order.status === 'delivered') { %>
+                                                <% if (order.status === 'delivered' && item.product) { %>
                                                     <a href="/product/<%= item.product.slug %>/review" class="text-accent text-[9px] font-bold tracking-widest uppercase border border-accent/20 px-3 py-1.5 hover:bg-accent/10 transition-all">Review</a>
                                                 <% } %>
                                             </div>
@@ -58,18 +74,72 @@
                                     <div class="mt-8 pt-8 border-t border-white/5 flex justify-between items-center">
                                         <div class="flex gap-4">
                                             <a href="/account/orders/<%= order._id %>" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-bold tracking-widest uppercase px-6 py-3 transition-all rounded-sm">Order Details</a>
-                                            <% if (order.status === 'delivered') { %>
+                                            <% if (order.status && order.status.toLowerCase() === 'delivered') { %>
                                                 <button class="text-white/40 hover:text-white text-[10px] font-bold tracking-widest uppercase transition-all">Download Invoice</button>
+                                                <button onclick="requestReturn('<%= order._id %>')" class="text-status-warning/40 hover:text-status-warning text-[10px] font-bold tracking-widest uppercase transition-all">Return Order</button>
                                             <% } %>
                                         </div>
-                                        <% if (order.status === 'pending' || order.status === 'processing') { %>
-                                            <button class="text-status-danger/40 hover:text-status-danger text-[10px] font-bold tracking-widest uppercase transition-all">Cancel Order</button>
+                                        <% if (order.status && (order.status.toLowerCase() === 'pending' || order.status.toLowerCase() === 'processing')) { %>
+                                            <button onclick="cancelOrder('<%= order._id %>')" class="text-status-danger/40 hover:text-status-danger text-[10px] font-bold tracking-widest uppercase transition-all">Cancel Order</button>
                                         <% } %>
                                     </div>
                                 </div>
                             </div>
                         <% }) %>
                     </div>
+
+                    <script>
+                        async function requestReturn(orderId) {
+                            const reason = prompt('Please enter the reason for your return (mandatory, min 10 characters):');
+                            if (reason === null) return;
+                            
+                            if (reason.trim().length < 10) {
+                                alert('Please provide a more detailed reason (at least 10 characters).');
+                                return;
+                            }
+
+                            try {
+                                const response = await fetch('/account/orders/return', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ orderId, reason })
+                                });
+                                const result = await response.json();
+                                if (result.success) {
+                                    alert(result.message);
+                                    window.location.reload();
+                                } else {
+                                    alert(result.message);
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                alert('An error occurred. Please try again.');
+                            }
+                        }
+
+                        async function cancelOrder(orderId) {
+                            const reason = prompt('Why are you cancelling this order?');
+                            if (reason === null) return;
+
+                            try {
+                                const response = await fetch('/account/orders/cancel', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ orderId, reason })
+                                });
+                                const result = await response.json();
+                                if (result.success) {
+                                    alert(result.message);
+                                    window.location.reload();
+                                } else {
+                                    alert(result.message);
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                alert('An error occurred. Please try again.');
+                            }
+                        }
+                    </script>
 
                     <!-- Pagination -->
                     <% if (typeof totalPages !== 'undefined') { %>

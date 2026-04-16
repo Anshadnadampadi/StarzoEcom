@@ -1,0 +1,48 @@
+<%- contentFor('body') %>
+
+<div class="min-h-[85vh] flex items-center justify-center p-4 bg-black">
+    <div class="max-w-lg w-full bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden">
+        
+        <!-- Subtle Accent Glow -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-accent/20 blur-[80px] pointer-events-none"></div>
+
+        <!-- Success Icon -->
+        <div class="w-20 h-20 bg-accent/10 border border-accent/20 rounded-full flex items-center justify-center mx-auto mb-8 relative z-10 shadow-[0_0_20px_rgba(255,106,0,0.2)]">
+            <svg class="w-10 h-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-display font-black tracking-tight text-white mb-3 relative z-10">Order Successful!</h1>
+        <p class="text-white/60 mb-8 max-w-sm mx-auto relative z-10 text-sm leading-relaxed">Your order has been placed successfully. We'll send you an email confirmation shortly.</p>
+
+        <!-- Order Summary Card -->
+        <div class="bg-black border border-white/10 rounded-xl p-6 text-left mb-8 relative z-10 shadow-inner">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
+                <span class="text-white/40 text-xs font-semibold uppercase tracking-wider">Order ID</span>
+                <span class="text-white font-mono font-bold text-sm"><%= order.orderId %></span>
+            </div>
+            
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
+                <span class="text-white/40 text-xs font-semibold uppercase tracking-wider">Payment Method</span>
+                <span class="text-white font-bold text-sm"><%= order.paymentMethod %></span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+                <span class="text-white/40 text-xs font-semibold uppercase tracking-wider">Total amount</span>
+                <span class="text-accent text-2xl font-black tracking-tighter">₹<%= order.totalAmount.toLocaleString() %></span>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+            <a href="/account/orders" class="w-full sm:w-auto px-6 py-4 bg-accent text-black font-black uppercase text-xs tracking-widest hover:bg-white rounded-lg transition-all shadow-[0_0_15px_rgba(255,106,0,0.3)] hover:shadow-[0_0_20px_rgba(255,106,0,0.5)]">
+                View My Order
+            </a>
+            <a href="/products" class="w-full sm:w-auto px-6 py-4 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-xs tracking-widest rounded-lg transition-all">
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>

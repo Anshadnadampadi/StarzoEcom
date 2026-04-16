@@ -2,7 +2,7 @@
 <% if (totalPages > 1) { %>
 <div class="flex items-center justify-center mt-20 gap-2">
     <!-- Prev -->
-    <a href="?page=<%= currentPage - 1 %><%= typeof query !== 'undefined' ? '&' + query : '' %>" 
+    <a href="?page=<%= currentPage - 1 %><%= (typeof query !== 'undefined' && query) ? '&' + query : '' %>" 
        class="w-10 h-10 border border-white/10 flex items-center justify-center text-white/40 hover:border-white hover:text-white transition-all <%= currentPage === 1 ? 'pointer-events-none opacity-20' : '' %>">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"></path></svg>
     </a>
@@ -15,7 +15,7 @@
     %>
 
     <% for(let i = startPage; i <= endPage; i++) { %>
-        <a href="?page=<%= i %><%= typeof query !== 'undefined' ? '&' + query : '' %>" 
+        <a href="?page=<%= i %><%= (typeof query !== 'undefined' && query) ? '&' + query : '' %>" 
            class="w-10 h-10 border flex items-center justify-center text-[11px] font-bold transition-all
            <%= currentPage === i ? 'bg-white border-white text-black' : 'border-white/10 text-white/40 hover:border-white hover:text-white' %>">
             <%= i %>
@@ -23,7 +23,7 @@
     <% } %>
 
     <!-- Next -->
-    <a href="?page=<%= currentPage + 1 %><%= typeof query !== 'undefined' ? '&' + query : '' %>" 
+    <a href="?page=<%= currentPage + 1 %><%= (typeof query !== 'undefined' && query) ? '&' + query : '' %>" 
        class="w-10 h-10 border border-white/10 flex items-center justify-center text-white/40 hover:border-white hover:text-white transition-all <%= currentPage === totalPages ? 'pointer-events-none opacity-20' : '' %>">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"></path></svg>
     </a>
