@@ -12,9 +12,14 @@
             <% if (['Pending', 'Confirmed', 'Processing'].includes(order.orderStatus)) { %>
                 <button onclick="confirmCancel('<%= order._id %>')" class="text-status-danger text-[10px] font-bold tracking-widest uppercase border border-status-danger/30 px-8 py-4 hover:bg-status-danger hover:text-white transition-all">Cancel Order</button>
             <% } %>
-            <% if (order.orderStatus === 'Delivered') { %>
-                <button onclick="confirmReturn('<%= order._id %>')" class="text-status-warning text-[10px] font-bold tracking-widest uppercase border border-status-warning/30 px-8 py-4 hover:bg-status-warning hover:text-white transition-all ml-4">Return Order</button>
-            <% } %>
+            <div class="flex gap-4">
+                <% if (order.paymentStatus === 'Paid' || order.orderStatus === 'Delivered') { %>
+                    <a href="/account/orders/<%= order._id %>/invoice" class="bg-white text-black text-[10px] font-bold tracking-widest uppercase px-8 py-4 hover:bg-accent transition-all">Download Invoice</a>
+                <% } %>
+                <% if (order.orderStatus === 'Delivered') { %>
+                    <button onclick="confirmReturn('<%= order._id %>')" class="text-status-warning text-[10px] font-bold tracking-widest uppercase border border-status-warning/30 px-8 py-4 hover:bg-status-warning hover:text-white transition-all">Return Order</button>
+                <% } %>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -27,7 +32,7 @@
                     </div>
                     
                     <div class="relative pt-4 pb-8">
-                        <% if (order.orderStatus !== 'Cancelled') { %>
+                        <% if (!['Cancelled', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned', 'Partially Returned', 'Return Rejected'].includes(order.orderStatus)) { %>
                             <% 
                             const stages = [
                                 { name: 'Confirmed', desc: 'Order received', date: order.createdAt, active: true },
@@ -35,55 +40,23 @@
                                 { name: 'Shipped', desc: 'Out for delivery', date: order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' },
                                 { name: 'Delivered', desc: 'Order arrived', date: order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus === 'Delivered' }
                             ];
-                
-                            // Calculate active stages
-                            let activeIndex = -1;
-                            for(let i=stages.length-1; i>=0; i--) {
-                                if(stages[i].active) { activeIndex = i; break; }
-                            }
-                            // Calculate progress percentage accurately based on spacing
-                            const progressPercent = activeIndex === -1 ? 0 : (activeIndex / (stages.length - 1)) * 100;
                             %>
-                            
-                            <!-- Connecting Line Base -->
-                            <div class="absolute top-[35px] left-[12.5%] right-[12.5%] h-1 bg-white/5 rounded-full z-0 hidden sm:block"></div>
-                            
-                            <!-- Active Connecting Line -->
-                            <!-- Uses a mapped width percentage aligned with the center nodes -->
-                            <div class="absolute top-[35px] left-[12.5%] h-1 bg-accent rounded-full z-0 hidden sm:block transition-all duration-1000 shadow-[0_0_15px_rgba(255,106,0,0.6)]" style="width: calc((100% - 25%) * <%= activeIndex / Math.max(1, stages.length - 1) %>);"></div>
-
-                            <div class="flex flex-col sm:flex-row justify-between relative z-10 w-full gap-8 sm:gap-0">
-                                <% stages.forEach((stage, index) => { %>
-                                    <div class="flex flex-row sm:flex-col items-center sm:text-center w-full sm:w-1/4 relative group">
-                                        
-                                        <!-- Vertical line mapping for mobile -->
-                                        <% if (index !== stages.length - 1) { %>
-                                            <div class="absolute left-[1.4rem] top-12 bottom-[-2rem] w-[2px] bg-white/5 sm:hidden z-0"></div>
-                                            <% if (stage.active && stages[index+1].active) { %>
-                                                <div class="absolute left-[1.4rem] top-12 bottom-[-2rem] w-[2px] bg-accent sm:hidden z-0 shadow-[0_0_10px_rgba(255,106,0,0.5)]"></div>
-                                            <% } %>
-                                        <% } %>
-
-                                        <!-- Icon / Dot -->
-                                        <div class="w-12 h-12 rounded-full border-[3px] border-[#0a0a0a] flex items-center justify-center flex-shrink-0 <%= stage.active ? 'bg-accent shadow-[0_0_20px_rgba(255,106,0,0.4)]' : 'bg-[#1a1a1a]' %> mb-4 sm:mx-auto transition-transform duration-300 group-hover:scale-110 z-10 mr-4 sm:mr-0">
-                                            <% if(stage.active) { %>
-                                                <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                                            <% } else { %>
-                                                <div class="w-2.5 h-2.5 bg-white/20 rounded-full"></div>
-                                            <% } %>
-                                        </div>
-                                        
-                                        <!-- Text Details -->
-                                        <div class="flex flex-col sm:items-center w-full">
-                                            <p class="<%= stage.active ? 'text-white' : 'text-white/40' %> text-xs font-bold uppercase tracking-wider mb-1 transition-colors"><%= stage.name %></p>
-                                            <p class="text-white/30 text-[10px] hidden sm:block mb-1.5 font-medium"><%= stage.desc %></p>
-                                            <% if (stage.date && stage.active) { %>
-                                                <span class="inline-block bg-white/5 px-2 py-1 rounded text-accent text-[9px] font-mono tracking-widest"><%= new Date(stage.date).toLocaleDateString() %></span>
-                                            <% } %>
-                                        </div>
-                                    </div>
-                                <% }) %>
-                            </div>
+                            <%- include('../../partials/tracker-render', { stages: stages, order: order }) %>
+                        <% } else if (['Return Requested', 'Return Approved', 'Return Picked', 'Returned', 'Partially Returned', 'Return Rejected'].includes(order.orderStatus)) { %>
+                            <% 
+                            const stages = [
+                                { name: 'Delivered', desc: 'Initial Delivery', date: order.createdAt, active: true },
+                                { name: 'Requested', desc: 'Return initiated', date: order.updatedAt, active: true },
+                                { name: 'Processing', desc: 'Reviewing request', date: ['Return Approved', 'Return Picked', 'Returned'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Return Approved', 'Return Picked', 'Returned'].includes(order.orderStatus) },
+                                { name: 'Picked', desc: 'Item collected', date: ['Return Picked', 'Returned'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Return Picked', 'Returned'].includes(order.orderStatus) },
+                                { name: 'Returned', desc: 'Refund complete', date: order.orderStatus === 'Returned' ? order.updatedAt : null, active: order.orderStatus === 'Returned' }
+                            ];
+                
+                            if (order.orderStatus === 'Return Rejected') {
+                                stages[2] = { name: 'Rejected', desc: 'Return declined', date: order.updatedAt, active: true, color: 'text-status-danger' };
+                            }
+                            %>
+                            <%- include('../../partials/tracker-render', { stages: stages, order: order }) %>
                         <% } else { %>
                             <!-- Cancelled State -->
                             <div class="flex items-center justify-center py-6">
@@ -106,6 +79,7 @@
                             <tr class="bg-white/5 border-b border-black-border">
                                 <th class="px-8 py-5 text-[10px] font-bold tracking-widest uppercase text-white/30">Item Details</th>
                                 <th class="px-8 py-5 text-[10px] font-bold tracking-widest uppercase text-white/30">Quantity</th>
+                                <th class="px-8 py-5 text-[10px] font-bold tracking-widest uppercase text-white/30">Status</th>
                                 <th class="px-8 py-5 text-[10px] font-bold tracking-widest uppercase text-white/30 text-right">Price</th>
                             </tr>
                         </thead>
@@ -141,6 +115,37 @@
                                     </td>
                                     <td class="px-8 py-8">
                                         <span class="text-white font-mono text-xs font-bold">× <%= item.qty %></span>
+                                    </td>
+                                    <td class="px-8 py-8">
+                                        <div class="flex flex-col gap-2">
+                                            <% if (item.status === 'Cancelled') { %>
+                                                <span class="text-status-danger text-[9px] font-bold uppercase tracking-widest border border-status-danger/30 px-3 py-1 bg-status-danger/5 inline-block w-fit">Cancelled</span>
+                                            <% } else if (['Return Requested', 'Return Approved', 'Returned', 'Return Rejected'].includes(item.status)) { %>
+                                                <span class="text-status-warning text-[9px] font-bold uppercase tracking-widest border border-status-warning/30 px-3 py-1 bg-status-warning/5 inline-block w-fit"><%= item.status %></span>
+                                            <% } else { %>
+                                                <span class="text-status-success text-[9px] font-bold uppercase tracking-widest border border-status-success/30 px-3 py-1 bg-status-success/5 inline-block w-fit"><%= item.status || 'Ordered' %></span>
+                                                
+                                                <div class="flex flex-col gap-1 mt-1">
+                                                    <% if (['Pending', 'Confirmed', 'Processing'].includes(order.orderStatus)) { %>
+                                                        <button onclick="confirmCancelItem('<%= order._id %>', '<%= item._id %>', '<%= productTitle %>')" 
+                                                            class="text-[9px] font-bold text-accent uppercase tracking-[0.2em] hover:underline transition-all flex items-center gap-1">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                            Cancel Item
+                                                        </button>
+                                                    <% } %>
+
+                                                    <% if (order.orderStatus === 'Delivered' || order.orderStatus === 'Partially Returned') { %>
+                                                        <% if (item.status === 'Delivered') { %>
+                                                            <button onclick="confirmReturnItem('<%= order._id %>', '<%= item._id %>', '<%= productTitle %>')" 
+                                                                class="text-[9px] font-bold text-status-warning uppercase tracking-[0.2em] hover:underline transition-all flex items-center gap-1">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v4a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2h3m4 3l5 5m0 0l-5 5m5-5H8"></path></svg>
+                                                                Return Item
+                                                            </button>
+                                                        <% } %>
+                                                    <% } %>
+                                                </div>
+                                            <% } %>
+                                        </div>
                                     </td>
                                     <td class="px-8 py-8 text-right">
                                         <span class="text-white font-mono text-sm font-bold">₹<%= (item.price * item.qty).toLocaleString() %></span>
@@ -330,6 +335,121 @@
                         color: '#fff'
                     });
                 }
+            }
+        }
+    }
+
+    async function confirmCancelItem(orderId, itemId, productName) {
+        const { isConfirmed } = await Swal.fire({
+            title: 'Cancel Item?',
+            text: `Are you sure you want to cancel ${productName}? This part of your order will be terminated.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#1a1a1a',
+            confirmButtonText: 'Confirm Cancellation',
+            cancelButtonText: 'Keep Item',
+            background: '#0a0a0a',
+            color: '#fff'
+        });
+
+        if (isConfirmed) {
+            const { value: reason } = await Swal.fire({
+                title: 'Cancellation Reason',
+                input: 'select',
+                inputOptions: {
+                    'Changed my mind': 'Changed my mind',
+                    'Found a better price': 'Found a better price',
+                    'Ordered by mistake': 'Ordered by mistake',
+                    'Other': 'Other'
+                },
+                inputPlaceholder: 'Select a reason',
+                showCancelButton: true,
+                confirmButtonText: 'Submit',
+                background: '#0a0a0a',
+                color: '#fff'
+            });
+
+            if (reason) {
+                try {
+                    const response = await fetch('/account/orders/cancel-item', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, itemId, reason })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        await Swal.fire({
+                            title: 'Item Cancelled',
+                            text: data.message,
+                            icon: 'success',
+                            background: '#0a0a0a',
+                            color: '#fff'
+                        });
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: error.message || 'Could not cancel item.',
+                        icon: 'error',
+                        background: '#0a0a0a',
+                        color: '#fff'
+                    });
+                }
+            }
+        }
+    }
+
+    async function confirmReturnItem(orderId, itemId, productName) {
+        const { value: reason } = await Swal.fire({
+            title: 'Return Item',
+            text: `Reason for returning ${productName}:`,
+            input: 'textarea',
+            inputPlaceholder: 'Please provide a detailed reason (at least 10 characters)...',
+            showCancelButton: true,
+            confirmButtonText: 'Submit Request',
+            confirmButtonColor: '#ff9800',
+            cancelButtonColor: '#1a1a1a',
+            background: '#0a0a0a',
+            color: '#fff',
+            inputValidator: (value) => {
+                if (!value || value.trim().length < 10) {
+                    return 'Please provide a reason with at least 10 characters';
+                }
+            }
+        });
+
+        if (reason) {
+            try {
+                const response = await fetch('/account/orders/return-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, itemId, reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    await Swal.fire({
+                        title: 'Request Submitted',
+                        text: data.message,
+                        icon: 'success',
+                        background: '#0a0a0a',
+                        color: '#fff'
+                    });
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'Could not submit return request.',
+                    icon: 'error',
+                    background: '#0a0a0a',
+                    color: '#fff'
+                });
             }
         }
     }

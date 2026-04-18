@@ -28,6 +28,15 @@ const orderSchema = new mongoose.Schema({
         price: {
             type: Number,
             required: true
+        },
+        status: {
+            type: String,
+            enum: ['Ordered', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Return Approved', 'Returned', 'Return Rejected'],
+            default: 'Ordered'
+        },
+        returnReason: {
+            type: String,
+            default: null
         }
     }],
     shippingAddress: {
@@ -72,7 +81,7 @@ const orderSchema = new mongoose.Schema({
     orderStatus: {
         type: String,
         default: 'Pending',
-        enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned']
+        enum: ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned', 'Return Rejected', 'Partially Returned']
     },
     couponCode: {
         type: String,
@@ -110,6 +119,6 @@ orderSchema.virtual('address').get(function() {
 orderSchema.set('toJSON', { virtuals: true });
 orderSchema.set('toObject', { virtuals: true });
 
-const Order = mongoose.model('Order', orderSchema);
+const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
 
 export default Order;

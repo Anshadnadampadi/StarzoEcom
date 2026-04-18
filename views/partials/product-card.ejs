@@ -25,6 +25,14 @@
 
   // Flag from wishlist service: true if the saved variant was soft-deleted by admin
   const isVariantUnavailable = typeof product.isVariantUnavailable !== 'undefined' ? product.isVariantUnavailable : false;
+
+  // Determine which variant info to use for wishlist checks
+  const currentV = (isWishlistCard && product.variant) ? product.variant : (product.variants?.[0] || {});
+  const normalize = (val) => String(val || '').toLowerCase().replace(/\s+/g, "").replace(/gb$/i, "").trim();
+  const wishlistKey = `${pId}_${normalize(currentV.color)}_${normalize(currentV.storage)}_${normalize(currentV.ram)}`;
+  
+  const wishlistedIdsList = typeof wishlistedIds !== 'undefined' ? wishlistedIds : [];
+  const isWishlisted = wishlistedIdsList.includes(wishlistKey);
 %>
 
 <div class="bg-black-card group relative overflow-hidden transition-all duration-300 border border-transparent hover:border-white/5 h-full flex flex-col">
@@ -97,9 +105,14 @@
             </button>
         <% } else { %>
             <button
-                class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white/50 hover:text-white p-2"
-                onclick="event.stopPropagation(); toggleWishlist('<%= pId %>', { button: this })">
-                <svg class="w-5 h-5 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="absolute top-4 right-4 <%= isWishlisted ? 'opacity-100 text-status-danger' : 'opacity-0 group-hover:opacity-100 text-white/50' %> transition-all duration-300 hover:text-white p-2"
+                onclick="event.stopPropagation(); toggleWishlist('<%= pId %>', { 
+                    button: this,
+                    color: '<%= currentV.color || "" %>',
+                    storage: '<%= currentV.storage || "" %>',
+                    ram: '<%= currentV.ram || "" %>'
+                })">
+                <svg class="w-5 h-5 drop-shadow-md" fill="<%= isWishlisted ? 'currentColor' : 'none' %>" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
                     </path>

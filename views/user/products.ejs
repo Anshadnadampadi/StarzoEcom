@@ -835,11 +835,13 @@
         const node = template.content.cloneNode(true);
         const card = node.querySelector('.product-card');
 
-        const variant = p.variants && p.variants.length > 0 ? p.variants[0] : null;
+        const variant = p.variants && p.variants.length > 0 ? p.variants[0] : {};
         const imageUrl = (variant && variant.images && variant.images.length > 0) ? variant.images[0] : '/images/placeholder.jpg';
-        const price = variant ? variant.price : (p.price || 0);
+        const price = variant.price || (p.price || 0);
         
-        const isWishlisted = wishlistedIds.includes(p._id.toString());
+        const normalize = (val) => String(val || '').toLowerCase().replace(/\s+/g, "").replace(/gb$/i, "").trim();
+        const wishlistKey = `${p._id}_${normalize(variant.color)}_${normalize(variant.storage)}_${normalize(variant.ram)}`;
+        const isWishlisted = wishlistedIds.includes(wishlistKey);
 
         const imgBlock = node.querySelector('.card-img');
         imgBlock.onclick = () => window.location.href = `/products/${p._id}`;
@@ -863,7 +865,12 @@
         }
         fav.onclick = (e) => { 
             e.stopPropagation(); 
-            toggleWishlist(p._id, { button: fav }); 
+            toggleWishlist(p._id, { 
+                button: fav,
+                color: variant.color || "",
+                storage: variant.storage || "",
+                ram: variant.ram || ""
+            }); 
         };
 
         container.appendChild(node);

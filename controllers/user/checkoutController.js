@@ -1,7 +1,9 @@
+import crypto from 'crypto';
 import * as cartService from "../../services/user/cartService.js";
 import User from "../../models/user/User.js";
 import Order from "../../models/order/order.js";
 import Product from "../../models/product/Product.js";
+import { isSameVariant } from "../../utils/productHelpers.js";
 
 export const getCheckout = async (req, res) => {
     try {
@@ -41,7 +43,6 @@ export const getCheckout = async (req, res) => {
     }
 };
 
-import crypto from 'crypto';
 
 export const placeOrder = async (req, res) => {
     try {
@@ -57,12 +58,25 @@ export const placeOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Cart is empty.' });
         }
 
-        // Final sanity check for unlisted/blocked items
-        if (cart.items.some(i => i.isUnavailable)) {
-            return res.status(400).json({ success: false, message: 'Some items in your cart are unavailable. Please remove them to proceed.' });
+        // Final sanity check for stock and availability
+        if (cart.items.some(i => i.isUnavailable || i.isOutOfStock || i.insufficientStock)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Some items in your cart are no longer available or out of stock. Please return to the cart to resolve issues.' 
+            });
         }
 
         const user = await User.findById(userId).populate("addresses");
+        
+        if (!user || user.isBlocked) {
+            console.warn(`[ORDER REJECTED] User ${userId} is blocked or not found. Terminating session.`);
+            if (req.session) {
+                req.session.destroy();
+                res.clearCookie('connect.sid');
+            }
+            return res.status(403).json({ success: false, message: 'Your account has been restricted. Access denied.' });
+        }
+
         const address = user.addresses.find(a => a._id.toString() === addressId);
         
         if (!address) {
@@ -94,13 +108,20 @@ export const placeOrder = async (req, res) => {
         for (const item of cart.items) {
             const product = await Product.findById(item.product._id);
             if (product) {
-                if (product.stock >= item.qty) {
-                    product.stock -= item.qty;
-                }
                 if (item.variant && product.variants.length > 0) {
-                    const variantIndex = product.variants.findIndex(v => v._id.toString() === item.variant || v.color === item.variant);
-                    if (variantIndex > -1 && product.variants[variantIndex].stock >= item.qty) {
-                        product.variants[variantIndex].stock -= item.qty;
+                    const variantIndex = product.variants.findIndex(v => isSameVariant(v, item.variant));
+                    if (variantIndex > -1) {
+                        if (product.variants[variantIndex].stock >= item.qty) {
+                            product.variants[variantIndex].stock -= item.qty;
+                        } else {
+                            throw new Error(`Insufficient stock for ${product.name} (${item.variantDisplay})`);
+                        }
+                    }
+                } else {
+                    if (product.stock >= item.qty) {
+                        product.stock -= item.qty;
+                    } else {
+                        throw new Error(`Insufficient stock for ${product.name}`);
                     }
                 }
                 await product.save();

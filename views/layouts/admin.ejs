@@ -70,6 +70,16 @@
             0%   { left: -60%; }
             100% { left: 110%; }
         }
+
+        /* ── GLOBAL NUMBER INPUT UX ── */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body class="flex min-h-screen bg-black text-text-primary overflow-x-hidden">
@@ -219,6 +229,13 @@
                 loader.setAttribute('aria-hidden','true');
                 loader.innerHTML = `<div class="loader-brand">STAR<span>ZO</span></div><div class="loader-bar-track"><div class="loader-bar-fill"></div></div><div class="loader-label">Admin Panel</div>`;
                 document.body.appendChild(loader);
+            }
+        });
+
+        // Prevent number input value changes on scroll
+        document.addEventListener("wheel", (event) => {
+            if (document.activeElement.type === "number") {
+                document.activeElement.blur();
             }
         });
     </script>

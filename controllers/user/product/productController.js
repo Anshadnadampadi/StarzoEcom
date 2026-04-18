@@ -1,5 +1,6 @@
 import * as userProductService from "../../../services/user/userProductService.js";
 import Wishlist from "../../../models/wishlist/wishlist.js";
+import { normalize } from "../../../utils/productHelpers.js";
 
 export const loadProductListing = async (req, res) => {
     console.log("ok")
@@ -18,9 +19,13 @@ export const loadProductListing = async (req, res) => {
         // ── Wishlist State ──
         let wishlistedIds = [];
         if (req.session.user) {
-            const wishlist = await Wishlist.findOne({ userId: req.session.user }).select("items.productId").lean();
+            const wishlist = await Wishlist.findOne({ userId: req.session.user }).select("items").lean();
             if (wishlist) {
-                wishlistedIds = wishlist.items.map(item => item.productId.toString());
+                // Return keys in format: productId_color_storage_ram (normalized using productHelpers)
+                wishlistedIds = wishlist.items.map(item => {
+                    const v = item.variant || {};
+                    return `${item.productId}_${normalize(v.color)}_${normalize(v.storage)}_${normalize(v.ram)}`;
+                });
             }
         }
 
@@ -95,12 +100,23 @@ export const getProductDetailsPage = async (req, res) => {
 
         // ── Wishlist state ──
         let isWishlisted = false;
+        let wishlistedIds = [];
         if (req.session.user) {
-            const wishlist = await Wishlist.findOne({ 
-                userId: req.session.user,
-                "items.productId": req.params.id 
-            });
-            if (wishlist) isWishlisted = true;
+            const wishlist = await Wishlist.findOne({ userId: req.session.user }).lean();
+            if (wishlist && wishlist.items) {
+                wishlistedIds = wishlist.items.map(item => {
+                    const v = item.variant || {};
+                    return `${item.productId}_${normalize(v.color)}_${normalize(v.storage)}_${normalize(v.ram)}`;
+                });
+
+                // Check if the current default variant is in the list
+                isWishlisted = wishlist.items.some(item => 
+                    item.productId.toString() === req.params.id &&
+                    normalize(item.variant?.color) === normalize(defaultVariant?.color) &&
+                    normalize(item.variant?.storage) === normalize(defaultVariant?.storage) &&
+                    normalize(item.variant?.ram) === normalize(defaultVariant?.ram)
+                );
+            }
         }
 
         const { msg, icon } = req.query;
@@ -110,6 +126,7 @@ export const getProductDetailsPage = async (req, res) => {
             recommendedProducts,
             recentlyViewedProducts,
             isWishlisted,
+            wishlistedIds,
 
             // NEW DATA 
             defaultVariant,

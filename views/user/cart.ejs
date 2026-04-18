@@ -42,12 +42,20 @@
                                         <span class="inline-block mt-3 px-3 py-1 bg-status-danger/10 border border-status-danger/30 text-status-danger text-[9px] font-black uppercase tracking-[0.2em]">
                                             ● Unavailable
                                         </span>
+                                    <% } else if (item.isOutOfStock) { %>
+                                        <span class="inline-block mt-3 px-3 py-1 bg-status-danger/10 border border-status-danger/30 text-status-danger text-[9px] font-black uppercase tracking-[0.2em]">
+                                            ● Out of Stock
+                                        </span>
+                                    <% } else if (item.insufficientStock) { %>
+                                        <span class="inline-block mt-3 px-3 py-1 bg-status-warning/10 border border-status-warning/30 text-status-warning text-[9px] font-black uppercase tracking-[0.2em]">
+                                            ● Only <%= item.availableStock %> Left
+                                        </span>
                                     <% } %>
                                 </div>
 
                                 <!-- Qty & Price -->
                                 <div class="flex flex-col md:items-end gap-4 w-full md:w-auto">
-                                    <div class="flex items-center border border-black-border w-fit mx-auto md:mx-0 <%= item.isUnavailable ? 'opacity-30 pointer-events-none' : '' %>">
+                                    <div class="flex items-center border border-black-border w-fit mx-auto md:mx-0 <%= (item.isUnavailable || item.isOutOfStock) ? 'opacity-30 pointer-events-none' : '' %>">
                                         <button class="px-4 py-2 text-white hover:bg-black-elevated transition-colors"
                                             onclick="updateQty('<%= item._id %>', -1)">−</button>
                                         <span
@@ -58,7 +66,7 @@
                                             onclick="updateQty('<%= item._id %>', 1)">+</button>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-white font-mono font-bold text-lg">₹<%= (item.price *
+                                        <p class="text-white font-mono font-bold text-lg" data-item-total>₹<%= (item.price *
                                                 item.qty).toLocaleString() %>
                                         </p>
                                         <button
@@ -90,17 +98,17 @@
                                 </div>
                                 <div class="pt-6 border-t border-black-border flex justify-between items-baseline">
                                     <span class="text-white text-label font-bold uppercase">Total Pay</span>
-                                    <span class="text-white text-2xl font-mono font-bold">₹<%=
+                                    <span class="text-white text-2xl font-mono font-bold" data-cart-total>₹<%=
                                             cart.subtotal.toLocaleString() %></span>
                                 </div>
                             </div>
 
-                            <% const hasUnavailableItems = cart.items.some(item => item.isUnavailable); %>
+                            <% const hasIssues = cart.items.some(item => item.isUnavailable || item.isOutOfStock || item.insufficientStock); %>
                             
-                            <% if (hasUnavailableItems) { %>
+                            <% if (hasIssues) { %>
                                 <div class="mt-8 p-4 bg-status-danger/5 border border-status-danger/20">
                                     <p class="text-status-danger text-[10px] font-bold uppercase tracking-wider leading-relaxed text-center">
-                                        Some items in your cart are no longer available. Please remove them to proceed.
+                                        Some items in your cart have issues (Unavailable/Out of Stock). Please resolve to proceed.
                                     </p>
                                 </div>
                                 <button disabled
@@ -163,12 +171,13 @@
                     itemDiv.querySelector('.qty').textContent = data.newQty;
 
                     // Update item total
-                    const priceEl = itemDiv.querySelector('.text-lg');
+                    const priceEl = itemDiv.querySelector('[data-item-total]');
                     priceEl.textContent = `₹${data.itemTotal.toLocaleString()}`;
 
-                    // Update subtotal
-                    document.querySelector('[data-subtotal]').textContent =
-                        `₹${data.cartSubtotal.toLocaleString()}`;
+                    // Update subtotal and total
+                    const formattedSubtotal = `₹${data.cartSubtotal.toLocaleString()}`;
+                    document.querySelector('[data-subtotal]').textContent = formattedSubtotal;
+                    document.querySelector('[data-cart-total]').textContent = formattedSubtotal;
                 } // Quickest way to sync state for now
                 else {
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Error updating quantity', type: 'error' } }));

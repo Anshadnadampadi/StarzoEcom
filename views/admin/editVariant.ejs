@@ -49,12 +49,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div class="space-y-2">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Pricing (INR)</label>
-                        <input type="number" x-model="form.price" required
+                        <input type="number" x-model="form.price" required onwheel="this.blur()"
                             class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
                     </div>
                     <div class="space-y-2">
                         <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Inventory Level</label>
-                        <input type="number" x-model="form.stock" required
+                        <input type="number" x-model="form.stock" required onwheel="this.blur()"
                             class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono">
                     </div>
                 </div>

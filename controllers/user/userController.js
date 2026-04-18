@@ -1,5 +1,6 @@
 import User from "../../models/user/User.js";
 import Address from "../../models/user/Address.js";
+import Order from "../../models/order/order.js";
 import bcrypt from "bcryptjs";
 import { registerUser, loginUser, updateUserProfile, changeUserPassword, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultAddress, validateAndNormalizeAddress, generateReferralCode } from "../../services/user/authServices.js";
 import { sendOtpService, verifyOtpService, forgotPasswordService, resendOtpService, requestEmailChangeOtpService, verifyEmailChangeOtpService } from "../../services/user/authServices.js";
@@ -345,6 +346,17 @@ export const getProfile = async (req, res) => {
             await updatedUser.save();
             user.referralCode = updatedUser.referralCode;
         }
+
+        const [ordersCount, totalSpendResult] = await Promise.all([
+            Order.countDocuments({ user: user._id }),
+            Order.aggregate([
+                { $match: { user: user._id, orderStatus: { $ne: 'Cancelled' } } },
+                { $group: { _id: null, total: { $sum: "$totalAmount" } } }
+            ])
+        ]);
+
+        user.totalOrders = ordersCount;
+        user.totalSpend = totalSpendResult.length > 0 ? totalSpendResult[0].total : 0;
 
         const { msg, icon } = req.query;
         res.render("user/account/profile", {

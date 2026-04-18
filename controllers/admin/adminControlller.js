@@ -1,6 +1,7 @@
 import admin from '../../models/admin/admin.js';
 import User from '../../models/user/User.js';
 import Address from '../../models/user/Address.js';
+import Order from '../../models/order/order.js';
 import bcrypt from 'bcryptjs';
 import { adminLogin} from '../../services/admin/adminServices.js';
 import {
@@ -63,11 +64,23 @@ export const postAdminLogin = async (req, res) => {
 
 export const getAdminDashboard = async (req, res) => {
     try {
-        const totalCustomers = await User.countDocuments({ isAdmin: false });
-        
+        const [ordersStats, totalCustomers] = await Promise.all([
+            Order.aggregate([
+                { $match: { orderStatus: { $ne: 'Cancelled' } } },
+                { 
+                    $group: { 
+                        _id: null, 
+                        totalRevenue: { $sum: "$totalAmount" },
+                        totalOrders: { $sum: 1 }
+                    } 
+                }
+            ]),
+            User.countDocuments({ isAdmin: false })
+        ]);
+
         const stats = {
-            revenue: { total: 1250000 },
-            orders: { total: 450 },
+            revenue: { total: ordersStats.length > 0 ? ordersStats[0].totalRevenue : 0 },
+            orders: { total: ordersStats.length > 0 ? ordersStats[0].totalOrders : 0 },
             customers: { total: totalCustomers },
             recentActivity: [
                 { title: 'New Order #8829', time: '2 mins ago', desc: 'Iphone 15 Pro Max - ₹1,44,900' },

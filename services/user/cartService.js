@@ -16,12 +16,15 @@ export const getCartData = async (userId) => {
 
             const isProductUnavailable = product.isBlocked || !product.isListed;
             let isVariantUnavailable = false;
+            let currentStock = product.stock || 0;
 
             if (product.variants?.length > 0 && item.variant) {
                 // Check if the specific variant stored in cart is soft-deleted
                 const specificVariant = product.variants.find(v => isSameVariant(v, item.variant));
                 if (!specificVariant || specificVariant.isDeleted) {
                     isVariantUnavailable = true;
+                } else {
+                    currentStock = specificVariant.stock || 0;
                 }
             }
 
@@ -48,7 +51,10 @@ export const getCartData = async (userId) => {
                 ...item, 
                 variantDisplay: getVariantDisplayString(currentVariant),
                 displayImage,
-                isUnavailable: isProductUnavailable || isVariantUnavailable
+                isUnavailable: isProductUnavailable || isVariantUnavailable,
+                isOutOfStock: currentStock <= 0,
+                insufficientStock: item.qty > currentStock,
+                availableStock: currentStock
             };
         });
     } else if (!cart) {

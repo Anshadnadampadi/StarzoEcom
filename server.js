@@ -79,6 +79,33 @@ app.use("/admin",
 );
 
 
+// 404 Handler
+app.use((req, res) => {
+    res.status(404).render("errors/404", {
+        title: "Page Not Found",
+        breadcrumbs: [{ label: '404', url: '#' }]
+    });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error("GLOBAL_ERROR:", err.stack);
+    
+    // Check if it's an AJAX request
+    if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
+        return res.status(err.status || 500).json({
+            success: false,
+            message: err.message || "Internal Server Error"
+        });
+    }
+
+    res.status(err.status || 500).render("errors/error", {
+        title: "Error Occurred",
+        message: err.message,
+        error: process.env.NODE_ENV === 'development' ? err : {},
+        breadcrumbs: [{ label: 'Error', url: '#' }]
+    });
+});
 
 connectDB();
 

@@ -53,17 +53,17 @@
             <div class="grid grid-cols-3 gap-8">
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Base Price (₹)</label>
-                    <input type="number" name="price" required value="<%= typeof product !== 'undefined' ? product.price : '' %>"
+                    <input type="number" name="price" required value="<%= typeof product !== 'undefined' ? product.price : '' %>" onwheel="this.blur()"
                            class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-all">
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">MRP (₹)</label>
-                    <input type="number" name="mrp" required value="<%= typeof product !== 'undefined' ? product.mrp : '' %>"
+                    <input type="number" name="mrp" required value="<%= typeof product !== 'undefined' ? product.mrp : '' %>" onwheel="this.blur()"
                            class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-all">
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-bold tracking-widest uppercase text-white/40">Stock Units</label>
-                    <input type="number" name="stock" required value="<%= typeof product !== 'undefined' ? product.stock : '' %>"
+                    <input type="number" name="stock" required value="<%= typeof product !== 'undefined' ? product.stock : '' %>" onwheel="this.blur()"
                            class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-all">
                 </div>
             </div>

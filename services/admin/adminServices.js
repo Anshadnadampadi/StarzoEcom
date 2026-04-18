@@ -111,10 +111,48 @@ export const getDashboardUsersService = async (search, page, limit, status, sort
         const sort = {};
         sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-        const users = await User.find(query)
-            .sort(sort)
-            .skip(skip)
-            .limit(safeLimit);
+        const users = await User.aggregate([
+            { $match: query },
+            { $sort: sort },
+            { $skip: skip },
+            { $limit: safeLimit },
+            {
+                $lookup: {
+                    from: "orders",
+                    localField: "_id",
+                    foreignField: "user",
+                    as: "orders"
+                }
+            },
+            {
+                $project: {
+                    name: 1,
+                    email: 1,
+                    firstName: 1,
+                    lastName: 1,
+                    isBlocked: 1,
+                    status: 1,
+                    createdAt: 1,
+                    profileImage: 1,
+                    totalOrders: { $size: "$orders" },
+                    totalSpend: {
+                        $sum: {
+                            $map: {
+                                input: {
+                                    $filter: {
+                                        input: "$orders",
+                                        as: "o",
+                                        cond: { $ne: ["$$o.orderStatus", "Cancelled"] }
+                                    }
+                                },
+                                as: "order",
+                                in: "$$order.totalAmount"
+                            }
+                        }
+                    }
+                }
+            }
+        ]);
 
             console.log(users)
 

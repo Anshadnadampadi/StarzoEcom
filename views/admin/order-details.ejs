@@ -24,14 +24,26 @@
                 <button onclick="updateStatus('Return Picked')" class="bg-accent text-black font-bold px-10 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all">MARK AS PICKED</button>
             <% } else if (order.orderStatus === 'Return Picked') { %>
                 <button onclick="updateStatus('Returned')" class="bg-status-success text-black font-bold px-10 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all shadow-[0_0_20px_rgba(22,163,74,0.3)]">PROCESS REFUND & CLOSE</button>
+            <% } else if (['Cancelled', 'Returned', 'Partially Returned', 'Return Rejected'].includes(order.orderStatus)) { %>
+                <div class="bg-white/5 border border-white/10 px-6 py-4 rounded-sm flex items-center gap-4">
+                    <p class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40">Status: <%= order.orderStatus %></p>
+                    <% if (order.orderStatus === 'Partially Returned' || order.orderStatus === 'Return Rejected') { %>
+                        <span class="text-white/20 text-[9px] uppercase tracking-widest border-l border-white/10 pl-4">Delivery Finalized</span>
+                    <% } %>
+                </div>
             <% } else { %>
+                <% 
+                    const hierarchy = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+                    const currentIndex = Math.max(0, hierarchy.indexOf(order.orderStatus));
+                %>
                 <select id="statusSelect" class="bg-black border border-white/10 px-6 py-4 text-[10px] font-bold tracking-widest uppercase text-white focus:outline-none focus:border-accent transition-all">
-                    <option value="Pending"          <%= order.orderStatus === 'Pending'          ? 'selected' : '' %>>Update: Pending</option>
-                    <option value="Confirmed"        <%= order.orderStatus === 'Confirmed'        ? 'selected' : '' %>>Update: Confirmed</option>
-                    <option value="Processing"       <%= order.orderStatus === 'Processing'       ? 'selected' : '' %>>Update: Processing</option>
-                    <option value="Shipped"          <%= order.orderStatus === 'Shipped'          ? 'selected' : '' %>>Update: Shipped</option>
-                    <option value="Delivered"        <%= order.orderStatus === 'Delivered'        ? 'selected' : '' %>>Update: Delivered</option>
-                    <option value="Cancelled"        <%= order.orderStatus === 'Cancelled'        ? 'selected' : '' %>>Update: Cancelled</option>
+                    <% hierarchy.forEach((s, idx) => { %>
+                        <% if (idx >= currentIndex || s === 'Cancelled') { %>
+                            <option value="<%= s %>" <%= order.orderStatus === s ? 'selected' : '' %>>
+                                <%= order.orderStatus === s ? 'Current: ' : 'Update to: ' %><%= s %>
+                            </option>
+                        <% } %>
+                    <% }) %>
                 </select>
                 <button id="update-status-btn" class="bg-accent text-black font-bold px-8 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all font-display tracking-widest">UPDATE STATUS</button>
             <% } %>
@@ -83,11 +95,32 @@
                                     <p class="text-white text-sm font-bold uppercase mb-1"><%= pName %></p>
                                     <p class="text-white/30 text-[10px] tracking-widest uppercase"><%= variantStr %></p>
                                     <p class="text-white/20 text-[9px] mt-1">Qty: <%= item.qty %></p>
+                                    <% if (item.status === 'Cancelled') { %>
+                                        <span class="text-status-danger text-[8px] font-bold uppercase tracking-widest border border-status-danger/30 px-2 py-0.5 bg-status-danger/5 mt-1 inline-block">Cancelled</span>
+                                    <% } else if (item.status === 'Return Requested') { %>
+                                        <div class="space-y-2 mt-2">
+                                            <span class="text-status-warning text-[8px] font-bold uppercase tracking-widest border border-status-warning/30 px-2 py-0.5 bg-status-warning/5 inline-block">Return Requested</span>
+                                            <p class="text-white/40 text-[9px] italic">Reason: <%= item.returnReason %></p>
+                                            <div class="flex gap-2">
+                                                <button onclick="updateItemReturn('<%= item._id %>', 'Return Approved')" class="text-[8px] font-bold uppercase tracking-widest bg-status-success/20 text-status-success border border-status-success/30 px-2 py-1 hover:bg-status-success hover:text-black transition-all">Approve</button>
+                                                <button onclick="updateItemReturn('<%= item._id %>', 'Return Rejected')" class="text-[8px] font-bold uppercase tracking-widest bg-status-danger/20 text-status-danger border border-status-danger/30 px-2 py-1 hover:bg-status-danger hover:text-white transition-all">Reject</button>
+                                            </div>
+                                        </div>
+                                    <% } else if (item.status === 'Return Approved') { %>
+                                        <div class="space-y-2 mt-2">
+                                            <span class="text-status-warning text-[8px] font-bold uppercase tracking-widest border border-status-warning/30 px-2 py-0.5 bg-status-warning/5 inline-block">Return Approved</span>
+                                            <button onclick="updateItemReturn('<%= item._id %>', 'Returned')" class="block text-[8px] font-bold uppercase tracking-widest bg-accent/20 text-accent border border-accent/30 px-2 py-1 hover:bg-accent hover:text-black transition-all">Process Refund</button>
+                                        </div>
+                                    <% } else if (item.status === 'Returned') { %>
+                                        <span class="text-status-success text-[8px] font-bold uppercase tracking-widest border border-status-success/30 px-2 py-0.5 bg-status-success/5 mt-1 inline-block">Returned & Refunded</span>
+                                    <% } else if (item.status === 'Return Rejected') { %>
+                                        <span class="text-status-danger text-[8px] font-bold uppercase tracking-widest border border-status-danger/30 px-2 py-0.5 bg-status-danger/5 mt-1 inline-block">Return Rejected</span>
+                                    <% } %>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-white/50 font-mono text-xs mb-1">₹<%= itemPrice.toLocaleString() %> × <%= item.qty %></p>
-                                <p class="text-accent font-mono text-base font-bold">₹<%= (itemPrice * item.qty).toLocaleString() %></p>
+                                <p class="<%= item.status === 'Cancelled' ? 'text-white/10 line-through' : 'text-white/50' %> font-mono text-xs mb-1">₹<%= itemPrice.toLocaleString() %> × <%= item.qty %></p>
+                                <p class="<%= item.status === 'Cancelled' ? 'text-white/10 line-through' : 'text-accent' %> font-mono text-base font-bold">₹<%= (itemPrice * item.qty).toLocaleString() %></p>
                             </div>
                         </div>
                     <% }) %>
@@ -224,5 +257,54 @@
             const status = document.getElementById('statusSelect').value;
             updateStatus(status);
         });
+    }
+
+    async function updateItemReturn(itemId, status) {
+        const orderId = '<%= order._id %>';
+        const action = status === 'Return Approved' ? 'approve' : (status === 'Returned' ? 'process refund for' : 'reject');
+        
+        const { isConfirmed } = await Swal.fire({
+            title: `Are you sure?`,
+            text: `Confirm you want to ${action} this item return request.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ff6a00',
+            cancelButtonColor: '#1a1a1a',
+            confirmButtonText: 'Yes, Proceed',
+            background: '#0a0a0a',
+            color: '#fff'
+        });
+
+        if (isConfirmed) {
+            try {
+                const response = await fetch('/admin/orders/item-return', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, itemId, status })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    await Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        background: '#0a0a0a',
+                        color: '#fff'
+                    });
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'Failed to update item return status.',
+                    icon: 'error',
+                    background: '#0a0a0a',
+                    color: '#fff'
+                });
+            }
+        }
     }
 </script>

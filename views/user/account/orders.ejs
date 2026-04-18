@@ -4,8 +4,8 @@
 <div class="min-h-screen bg-black py-24">
     <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
         <div class="mb-16 fade-up">
-            <span class="text-accent text-label font-bold uppercase mb-4 block">Order Tracking</span>
-            <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">MY ORDERS.</h1>
+            <span class="text-accent text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Personal Archives</span>
+            <h1 class="text-white text-5xl font-black tracking-tighter uppercase font-display italic">PURCHASE HISTORY.</h1>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
@@ -15,30 +15,33 @@
             <!-- Main Panel -->
             <div class="lg:col-span-3">
                 <% if (typeof orders !== 'undefined' && orders.length > 0) { %>
-                    <div class="space-y-6">
+                    <div class="space-y-8">
                         <% orders.forEach(order => { %>
-                            <div class="bg-black-card border border-black-border overflow-hidden group hover:border-white/10 transition-all">
-                                <div class="px-8 py-6 border-b border-black-border flex flex-wrap justify-between items-center gap-6">
-                                    <div class="flex items-center gap-12">
+                            <div class="bg-[#0a0a0a] border border-white/[0.03] rounded-sm overflow-hidden group hover:border-white/10 transition-all duration-500 shadow-2xl">
+                                <!-- Order Header -->
+                                <div class="px-8 py-6 bg-white/[0.02] border-b border-white/[0.03] flex flex-wrap justify-between items-center gap-6">
+                                    <div class="flex items-center gap-10">
                                         <div>
-                                            <p class="text-text-muted text-[9px] font-bold uppercase mb-1">Order ID</p>
-                                            <p class="text-white text-xs font-mono font-bold tracking-wider">#<%= order.orderId %></p>
+                                            <p class="text-white/20 text-[8px] font-bold uppercase tracking-widest mb-1.5">Reference ID</p>
+                                            <p class="text-white text-[11px] font-mono font-bold tracking-wider">#<%= order.orderId %></p>
                                         </div>
                                         <div>
-                                            <p class="text-text-muted text-[9px] font-bold uppercase mb-1">Placed On</p>
-                                            <p class="text-white text-xs font-bold uppercase"><%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></p>
+                                            <p class="text-white/20 text-[8px] font-bold uppercase tracking-widest mb-1.5">Acquisition Date</p>
+                                            <p class="text-white text-[11px] font-bold uppercase tracking-wide"><%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></p>
                                         </div>
-                                        <div>
-                                            <p class="text-text-muted text-[9px] font-bold uppercase mb-1">Total</p>
-                                            <p class="text-white text-xs font-mono font-bold">₹<%= order.totalAmount.toLocaleString() %></p>
+                                        <div class="hidden sm:block">
+                                            <p class="text-white/20 text-[8px] font-bold uppercase tracking-widest mb-1.5">Total Value</p>
+                                            <p class="text-accent text-[11px] font-mono font-bold">₹<%= order.totalAmount.toLocaleString() %></p>
                                         </div>
                                     </div>
                                     <%- include('../../partials/status-badge', { status: order.status }) %>
                                 </div>
+
+                                <!-- Order Items -->
                                 <div class="p-8">
-                                    <div class="space-y-6">
+                                    <div class="space-y-8">
                                         <% order.items.forEach(item => { %>
-                                            <div class="flex items-center justify-between gap-8">
+                                            <div class="flex items-center justify-between gap-8 group/item">
                                                 <% 
                                                     const productTitle = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
                                                     let productImg = '/images/placeholder.png';
@@ -56,31 +59,43 @@
                                                     }
                                                 %>
                                                 <div class="flex items-center gap-6">
-                                                    <div class="w-12 h-12 bg-black p-2 border border-white/5 flex-shrink-0">
-                                                        <img src="<%= productImg %>" class="w-full h-full object-contain" alt="Product Image">
+                                                    <div class="w-16 h-16 bg-black p-3 border border-white/5 flex-shrink-0 group-hover/item:border-accent/30 transition-colors">
+                                                        <img src="<%= productImg %>" class="w-full h-full object-contain filter brightness-90 group-hover/item:brightness-100 transition-all" alt="Product Image">
                                                     </div>
                                                     <div>
-                                                        <p class="text-white text-[11px] font-bold uppercase"><%= productTitle %></p>
-                                                        <p class="text-white/30 text-[9px] tracking-wider uppercase mt-1">QTY: <%= item.qty %> · <%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' ') : (item.variant || 'Standard') %></p>
+                                                        <p class="text-white text-xs font-bold uppercase tracking-tight mb-1"><%= productTitle %></p>
+                                                        <div class="flex items-center gap-3">
+                                                            <span class="text-white/20 text-[9px] font-bold uppercase">QTY: <%= item.qty %></span>
+                                                            <span class="w-1 h-1 rounded-full bg-white/5"></span>
+                                                            <span class="text-white/40 text-[9px] tracking-widest uppercase font-mono">
+                                                                <%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' / ') : (item.variant || 'Standard') %>
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <% if (order.status === 'delivered' && item.product) { %>
-                                                    <a href="/product/<%= item.product.slug %>/review" class="text-accent text-[9px] font-bold tracking-widest uppercase border border-accent/20 px-3 py-1.5 hover:bg-accent/10 transition-all">Review</a>
+                                                <% if (order.status && order.status.toLowerCase() === 'delivered' && item.product) { %>
+                                                    <a href="/product/<%= item.product.slug %>/review" class="text-white/40 text-[9px] font-bold tracking-widest uppercase border border-white/5 px-4 py-2 hover:bg-white hover:text-black hover:border-white transition-all">Write Review</a>
                                                 <% } %>
                                             </div>
                                         <% }) %>
                                     </div>
                                     
-                                    <div class="mt-8 pt-8 border-t border-white/5 flex justify-between items-center">
-                                        <div class="flex gap-4">
-                                            <a href="/account/orders/<%= order._id %>" class="bg-white/5 hover:bg-white/10 text-white text-[10px] font-bold tracking-widest uppercase px-6 py-3 transition-all rounded-sm">Order Details</a>
+                                    <!-- Footer Actions -->
+                                    <div class="mt-10 pt-8 border-t border-white/[0.03] flex flex-wrap justify-between items-center gap-6">
+                                        <div class="flex items-center gap-4">
+                                            <a href="/account/orders/<%= order._id %>" class="bg-white text-black text-[10px] font-bold tracking-widest uppercase px-8 py-3.5 hover:bg-accent transition-all">Details</a>
+                                            
+                                            <% if (order.paymentStatus === 'Paid' || (order.status && order.status.toLowerCase() === 'delivered')) { %>
+                                                <a href="/account/orders/<%= order._id %>/invoice" class="text-white/20 hover:text-white text-[10px] font-bold tracking-widest uppercase px-4 py-3 transition-all">Invoice</a>
+                                            <% } %>
+
                                             <% if (order.status && order.status.toLowerCase() === 'delivered') { %>
-                                                <button class="text-white/40 hover:text-white text-[10px] font-bold tracking-widest uppercase transition-all">Download Invoice</button>
-                                                <button onclick="requestReturn('<%= order._id %>')" class="text-status-warning/40 hover:text-status-warning text-[10px] font-bold tracking-widest uppercase transition-all">Return Order</button>
+                                                <button onclick="requestReturn('<%= order._id %>')" class="text-status-warning/40 hover:text-status-warning text-[10px] font-bold tracking-widest uppercase px-4 py-3 transition-all">Return</button>
                                             <% } %>
                                         </div>
-                                        <% if (order.status && (order.status.toLowerCase() === 'pending' || order.status.toLowerCase() === 'processing')) { %>
-                                            <button onclick="cancelOrder('<%= order._id %>')" class="text-status-danger/40 hover:text-status-danger text-[10px] font-bold tracking-widest uppercase transition-all">Cancel Order</button>
+
+                                        <% if (order.status && (['pending', 'processing', 'confirmed'].includes(order.status.toLowerCase()))) { %>
+                                            <button onclick="cancelOrder('<%= order._id %>')" class="text-status-danger/40 hover:text-status-danger text-[10px] font-bold tracking-widest uppercase px-6 py-3 transition-all border border-status-danger/5 hover:border-status-danger/20">Void Order</button>
                                         <% } %>
                                     </div>
                                 </div>
@@ -88,55 +103,90 @@
                         <% }) %>
                     </div>
 
+                    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
                     <script>
                         async function requestReturn(orderId) {
-                            const reason = prompt('Please enter the reason for your return (mandatory, min 10 characters):');
-                            if (reason === null) return;
-                            
-                            if (reason.trim().length < 10) {
-                                alert('Please provide a more detailed reason (at least 10 characters).');
-                                return;
-                            }
-
-                            try {
-                                const response = await fetch('/account/orders/return', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ orderId, reason })
-                                });
-                                const result = await response.json();
-                                if (result.success) {
-                                    alert(result.message);
-                                    window.location.reload();
-                                } else {
-                                    alert(result.message);
+                            const { value: reason } = await Swal.fire({
+                                title: 'INITIATE RETURN',
+                                input: 'textarea',
+                                inputLabel: 'Please provide a valid reason for this request',
+                                inputPlaceholder: 'Minimum 10 characters required...',
+                                background: '#0a0a0a',
+                                color: '#fff',
+                                confirmButtonColor: '#ff6a00',
+                                cancelButtonColor: '#1a1a1a',
+                                showCancelButton: true,
+                                confirmButtonText: 'SUBMIT REQUEST',
+                                inputValidator: (value) => {
+                                    if (!value || value.trim().length < 10) {
+                                        return 'Please provide a detailed reason (min 10 characters)';
+                                    }
                                 }
-                            } catch (error) {
-                                console.error('Error:', error);
-                                alert('An error occurred. Please try again.');
+                            });
+
+                            if (reason) {
+                                try {
+                                    const response = await fetch('/account/orders/return', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ orderId, reason })
+                                    });
+                                    const result = await response.json();
+                                    if (result.success) {
+                                        await Swal.fire({
+                                            title: 'REQUEST LOGGED',
+                                            text: result.message,
+                                            icon: 'success',
+                                            background: '#0a0a0a',
+                                            color: '#fff'
+                                        });
+                                        window.location.reload();
+                                    } else {
+                                        Swal.fire({ title: 'ERROR', text: result.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                    }
+                                } catch (error) {
+                                    Swal.fire({ title: 'SYSTEM ERROR', text: 'Internal failure, please retry.', icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                }
                             }
                         }
 
                         async function cancelOrder(orderId) {
-                            const reason = prompt('Why are you cancelling this order?');
-                            if (reason === null) return;
+                            const { value: reason } = await Swal.fire({
+                                title: 'TERMINATE ORDER',
+                                input: 'select',
+                                inputOptions: {
+                                    'Change of mind': 'Change of mind',
+                                    'Found better price': 'Found better price',
+                                    'Incorrect item selected': 'Incorrect item selected',
+                                    'Shipping time too long': 'Shipping time too long',
+                                    'Other': 'Other'
+                                },
+                                inputPlaceholder: 'Select cancellation reason',
+                                background: '#0a0a0a',
+                                color: '#fff',
+                                confirmButtonColor: '#ef4444',
+                                cancelButtonColor: '#1a1a1a',
+                                showCancelButton: true,
+                                confirmButtonText: 'CANCEL ORDER'
+                            });
 
-                            try {
-                                const response = await fetch('/account/orders/cancel', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ orderId, reason })
-                                });
-                                const result = await response.json();
-                                if (result.success) {
-                                    alert(result.message);
-                                    window.location.reload();
-                                } else {
-                                    alert(result.message);
+                            if (reason) {
+                                try {
+                                    const response = await fetch('/account/orders/cancel', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ orderId, reason })
+                                    });
+                                    const result = await response.json();
+                                    if (result.success) {
+                                        await Swal.fire({ title: 'VOIDED', text: result.message, icon: 'success', background: '#0a0a0a', color: '#fff' });
+                                        window.location.reload();
+                                    } else {
+                                        Swal.fire({ title: 'ERROR', text: result.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                    }
+                                } catch (error) {
+                                    Swal.fire({ title: 'SYSTEM ERROR', text: 'Internal failure, please retry.', icon: 'error', background: '#0a0a0a', color: '#fff' });
                                 }
-                            } catch (error) {
-                                console.error('Error:', error);
-                                alert('An error occurred. Please try again.');
                             }
                         }
                     </script>
@@ -147,9 +197,12 @@
                     <% } %>
 
                 <% } else { %>
-                    <div class="py-32 text-center bg-black-card border border-black-border">
-                        <p class="text-text-muted text-label font-bold uppercase mb-8 italic">You haven't placed any orders yet.</p>
-                        <a href="/phones" class="bg-accent text-black font-bold px-10 py-5 text-sm tracking-[0.2em] uppercase hover:bg-accent-hover transition-all btn-press">DISCOVER PRODUCTS</a>
+                    <div class="py-40 text-center bg-black border border-white/[0.03] rounded-sm">
+                        <div class="mb-10 opacity-20">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <p class="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em] mb-12">No transactions recorded in your archive</p>
+                        <a href="/phones" class="bg-white text-black font-bold px-12 py-5 text-[10px] tracking-[0.3em] uppercase hover:bg-accent transition-all">COMMENCE SHOPPING</a>
                     </div>
                 <% } %>
             </div>

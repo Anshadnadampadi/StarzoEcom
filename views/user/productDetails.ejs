@@ -1193,9 +1193,9 @@
 
                     <!-- Action row -->
                     <div style="display:flex;gap:8px;margin-bottom:24px;">
-                      <button class="btn-icon" id="wishlistBtn" onclick="toggleWishlist('<%= product._id %>')"
+                      <button class="btn-icon <%= isWishlisted ? 'active' : '' %>" id="wishlistBtn" onclick="toggleWishlist('<%= product._id %>')"
                         style="flex:1;gap:6px;width:auto;font-size:12px;color:var(--t2);">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="<%= isWishlisted ? 'currentColor' : 'none' %>" stroke="currentColor"
                           stroke-width="1.8">
                           <path
                             d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -1492,9 +1492,19 @@
       }));
     }
     const serverVariants = product.variants || [];
+    const wishlistedKeys = <%- JSON.stringify(wishlistedIds || []) %>;
 
     let qty = 1;
-    let wishlisted = <%= locals.isWishlisted ? 'true' : 'false' %>;
+    function checkCurrentWishlist() {
+        const selectedColor = document.getElementById('selectedColor')?.textContent?.trim() || "";
+        const selectedStorage = document.getElementById('selectedStorage')?.textContent?.trim() || "";
+        const selectedRam = document.getElementById('selectedRam')?.textContent?.trim() || "";
+        const normalize = (val) => String(val || '').toLowerCase().replace(/\s+/g, "").replace(/gb$/i, "").trim();
+        const productId = '<%= product._id %>';
+        const key = `${productId}_${normalize(selectedColor)}_${normalize(selectedStorage)}_${normalize(selectedRam)}`;
+        return wishlistedKeys.includes(key);
+    }
+    let wishlisted = checkCurrentWishlist();
 
     // Set initial wishlist state
     document.addEventListener('DOMContentLoaded', () => {
@@ -1737,6 +1747,16 @@
             });
           }
         }
+
+        // ── UPDATE WISHLIST BUTTON ──
+        wishlisted = checkCurrentWishlist();
+        const wlBtn = document.getElementById('wishlistBtn');
+        if (wlBtn) {
+            wlBtn.classList.toggle('active', wishlisted);
+            wlBtn.style.color = wishlisted ? 'var(--danger)' : 'var(--t2)';
+            const heartSvg = wlBtn.querySelector('svg');
+            if (heartSvg) heartSvg.setAttribute('fill', wishlisted ? 'currentColor' : 'none');
+        }
       } else {
         const badge = document.getElementById('stockStatusBadge');
         if (badge) {
@@ -1849,9 +1869,20 @@
 
         const data = await response.json();
 
-        if (data.success) {
-            wishlisted = data.added;
-            const btn = document.getElementById('wishlistBtn');
+            if (data.success) {
+                wishlisted = data.added;
+                
+                // Update local keys list
+                const normalize = (val) => String(val || '').toLowerCase().replace(/\s+/g, "").replace(/gb$/i, "").trim();
+                const key = `${productId}_${normalize(colorBase)}_${normalize(storageBase)}_${normalize(ramBase)}`;
+                if (wishlisted) {
+                    if (!wishlistedKeys.includes(key)) wishlistedKeys.push(key);
+                } else {
+                    const idx = wishlistedKeys.indexOf(key);
+                    if (idx > -1) wishlistedKeys.splice(idx, 1);
+                }
+
+                const btn = document.getElementById('wishlistBtn');
             if (btn) {
                 btn.classList.toggle('active', wishlisted);
                 btn.style.color = wishlisted ? 'var(--danger)' : 'var(--t2)';
