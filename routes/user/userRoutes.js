@@ -23,6 +23,7 @@ import addressRoutes from "./addressRoutes.js"
 import cartRoutes from "./cartRoutes.js"
 import checkoutRoutes from "./checkoutRoutes.js"
 import orderRoutes from "./orderRoutes.js"
+import walletRoutes from "./walletRoutes.js"
 const router = express.Router();
 
 // Mount auth sub-router
@@ -31,6 +32,7 @@ router.use("/auth", authRoutes);
 // Protected User Routes (Require checkBlocked + ensureLoggedIn for private data)
 router.use("/account", ensureLoggedIn, addressRoutes);
 router.use("/account", ensureLoggedIn, orderRoutes);
+router.use("/account", ensureLoggedIn, walletRoutes);
 router.use("/cart", ensureLoggedIn, cartRoutes);
 router.use("/checkout", ensureLoggedIn, checkoutRoutes);
 

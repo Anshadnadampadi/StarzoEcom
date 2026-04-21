@@ -1,5 +1,6 @@
 import * as cartService from "../../services/user/cartService.js";
 import User from "../../models/user/User.js";
+import Wallet from "../../models/user/Wallet.js";
 import Order from "../../models/order/order.js";
 import { placeOrderService, verifyPaymentService } from "../../services/user/checkoutService.js";
 import { sendAdminNotification } from "../../utils/notificationHelper.js";
@@ -20,11 +21,13 @@ export const getCheckout = async (req, res) => {
         }
 
         const user = await User.findById(req.session.user).populate("addresses").lean();
+        const wallet = await Wallet.findOne({ user: req.session.user }).lean();
 
         res.render("user/checkout", {
             title: "Checkout",
             cart, user,
             addresses: user.addresses || [],
+            walletBalance: wallet ? wallet.balance : 0,
             razorpayKeyId: process.env.RAZORPAY_KEY_ID,
             breadcrumbs: [
                 { label: 'Shop', url: '/products' },

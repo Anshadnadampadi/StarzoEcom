@@ -26,6 +26,14 @@ const walletSchema = new mongoose.Schema({
             type: String,
             required: true
         },
+        txnId: {
+            type: String,
+            unique: true,
+            sparse: true
+        },
+        orderId: {
+            type: String
+        },
         timestamp: {
             type: Date,
             default: Date.now

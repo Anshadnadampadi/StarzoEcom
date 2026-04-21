@@ -176,6 +176,31 @@
                                 <p class="text-white/40 text-[9px] font-mono leading-relaxed mt-auto uppercase tracking-wide">Pay instantly via UPI, Credit Card, and other secure digital gateways.</p>
                             </div>
                         </label>
+
+                        <label class="cursor-pointer group">
+                            <input type="radio" x-model="orderData.paymentMethod" value="WALLET" class="peer sr-only" :disabled="walletBalance < totalAmount">
+
+                            <div class="flex flex-col border border-white/10 p-6 peer-checked:border-accent peer-checked:bg-accent/[0.05] transition-all bg-black/40 h-full relative overflow-hidden group-hover:border-white/30"
+                                :class="walletBalance < totalAmount ? 'opacity-50 cursor-not-allowed' : ''">
+                                <div class="absolute -right-10 -top-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl filter"></div>
+                                <div class="flex items-center justify-between mb-4 relative z-10">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center">
+                                            <svg class="w-4 h-4 text-emerald-400/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-white text-xs font-black uppercase tracking-widest">Wallet Payment</span>
+                                            <span class="text-emerald-400/80 text-[8px] font-black uppercase tracking-widest" x-text="'Balance: ₹' + walletBalance.toLocaleString()"></span>
+                                        </div>
+                                    </div>
+                                    <div class="w-4 h-4 rounded-full border border-white/30 peer-checked:border-accent flex items-center justify-center transition-colors">
+                                        <div class="w-2 h-2 rounded-full bg-accent scale-0 peer-checked:scale-100 transition-transform"></div>
+                                    </div>
+                                </div>
+                                <p class="text-white/40 text-[9px] font-mono leading-relaxed mt-auto uppercase tracking-wide">Pay using your Starzo Wallet balance.</p>
+                                <p x-show="walletBalance < totalAmount" class="text-status-danger text-[7px] font-black uppercase tracking-widest mt-2">Insufficient Balance</p>
+                            </div>
+                        </label>
                      </div>
 
                      <div class="pt-8 mt-8 border-t border-white/10">
@@ -430,6 +455,7 @@
             isSubmitting: false,
             addresses: userAddresses,
             hasCartIssues: hasCartIssues,
+            walletBalance: <%= walletBalance %>,
             
             // Financials logic
             subtotal: baseSubtotal,
@@ -617,21 +643,22 @@
             },
 
             initiateRazorpay(orderInfo) {
+                const selectedAddr = this.addresses.find(a => a._id === this.orderData.addressId) || {};
+                
                 const options = {
                     key: "<%= razorpayKeyId %>", 
                     amount: orderInfo.razorpayOrder.amount,
-
                     currency: orderInfo.razorpayOrder.currency,
                     name: "STARZO MOBILES",
-                    description: "Secure Checkout Payment",
+                    description: "Secure Order Payment",
                     order_id: orderInfo.razorpayOrder.id,
                     handler: async (response) => {
                         await this.verifyOnlinePayment(response, orderInfo.orderId);
                     },
                     prefill: {
-                        name: document.querySelector('[x-model="addressForm.name"]')?.value || "Customer",
+                        name: selectedAddr.name || "Customer",
                         email: userEmail,
-                        contact: userPhone
+                        contact: selectedAddr.phone || userPhone
                     },
                     theme: {
                         color: "#ff6a00"
@@ -639,12 +666,21 @@
                     modal: {
                         ondismiss: () => {
                             this.isSubmitting = false;
-                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment cancelled.', type: 'warning' }}));
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment window closed. Please complete the payment to place order.', type: 'warning' }}));
                         }
                     }
                 };
-                const rzp = new Razorpay(options);
-                rzp.open();
+                try {
+                    const rzp = new Razorpay(options);
+                    rzp.on('payment.failed', function (response){
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment Declined: ' + response.error.description, type: 'error' }}));
+                    });
+                    rzp.open();
+                } catch (err) {
+                    console.error("Razorpay Open Error:", err);
+                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to open payment gateway. Please try again.', type: 'error' }}));
+                    this.isSubmitting = false;
+                }
             },
 
             async verifyOnlinePayment(razorpayResponse, orderId) {

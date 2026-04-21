@@ -95,7 +95,11 @@ const orderSchema = new mongoose.Schema({
     returnReason: {
         type: String,
         default: null
-    }
+    },
+    // Razorpay Specific tracking
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
+    razorpaySignature: String
 }, {
     timestamps: true
 });

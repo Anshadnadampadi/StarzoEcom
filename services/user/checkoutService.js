@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import Order from '../../models/order/order.js';
 import Product from '../../models/product/Product.js';
 import User from '../../models/user/User.js';
+import Wallet from '../../models/user/Wallet.js';
 import * as cartService from './cartService.js';
 import { isSameVariant } from '../../utils/productHelpers.js';
 import { createAdminNotification } from '../../utils/notificationHelper.js';
@@ -88,9 +89,28 @@ export const placeOrderService = async (userId, orderData) => {
             country: address.country
         },
         subtotal, tax, shippingFee, discount, totalAmount, couponCode, paymentMethod,
-        paymentStatus: 'Pending', 
+        paymentStatus: paymentMethod === 'WALLET' ? 'Paid' : 'Pending', 
         orderStatus: 'Processing'
     });
+
+    // If Wallet payment, deduct balance
+    if (paymentMethod === 'WALLET') {
+        const wallet = await Wallet.findOne({ user: userId });
+        if (!wallet || wallet.balance < totalAmount) {
+            return { success: false, message: 'Insufficient wallet balance.', status: 400 };
+        }
+
+        wallet.balance -= totalAmount;
+        wallet.transactions.push({
+            amount: totalAmount,
+            type: 'debit',
+            description: `Payment for Order #${orderId}`,
+            txnId: `TXN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+            orderId: orderId,
+            timestamp: new Date()
+        });
+        await wallet.save();
+    }
 
     // If Razorpay, create razorpay order
     let razorpayOrder = null;
