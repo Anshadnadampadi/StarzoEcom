@@ -107,6 +107,7 @@ export const placeOrderService = async (userId, orderData) => {
             description: `Payment for Order #${orderId}`,
             txnId: `TXN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
             orderId: orderId,
+            status: 'Success',
             timestamp: new Date()
         });
         await wallet.save();

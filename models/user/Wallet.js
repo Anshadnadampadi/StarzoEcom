@@ -34,6 +34,11 @@ const walletSchema = new mongoose.Schema({
         orderId: {
             type: String
         },
+        status: {
+            type: String,
+            enum: ['Success', 'Failed', 'Pending'],
+            default: 'Success'
+        },
         timestamp: {
             type: Date,
             default: Date.now

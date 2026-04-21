@@ -153,8 +153,8 @@ export const downloadInvoice = async (req, res) => {
 
         if (!order) return res.status(404).send('Order not found');
 
-        if ( order.orderStatus !== 'Delivered') {
-            return res.status(400).send('Invoice is only available for delivered orders.');
+        if (order.orderStatus !== 'Delivered') {
+            return res.redirect(`/account/orders/${order._id}?msg=Invoice is only available for delivered orders.&icon=error`);
         }
 
         const doc = new PDFDocument({ margin: 50 });

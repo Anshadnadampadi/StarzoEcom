@@ -89,6 +89,201 @@
     <%- include('../partials/toast') %>
     <%- include('../partials/ios-alert') %>
 
+    <!-- Wallet Top-Up Modal (global — persists across SPA navigations) -->
+    <div id="wallet-topup-modal"
+         x-data="topupModal()"
+         x-cloak
+         @open-topup-modal.window="openModal()"
+         :style="{ display: showModal ? 'flex' : 'none' }"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="wallet-modal-overlay"
+         @click.self="if(!isProcessing) closeModal()">
+
+        <div x-show="showModal"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             style="background:#0d0d0d;width:100%;max-width:400px;padding:2.5rem;position:relative;box-shadow:0 30px 80px rgba(0,0,0,0.8);border:1px solid rgba(255,255,255,0.08);">
+
+            <button @click="closeModal()" :disabled="isProcessing"
+                    style="position:absolute;top:1rem;right:1rem;width:2rem;height:2rem;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-size:0.9rem;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;">&#10005;</button>
+
+            <div style="margin-bottom:2rem;">
+                <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:900;text-transform:uppercase;color:#fff;line-height:1.1;margin:0 0 0.4rem 0;">Add Money To <span style="color:#ff6a00;font-style:italic;">Wallet.</span></h2>
+                <p style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.18em;color:rgba(255,255,255,0.3);margin:0;">Funds available instantly after payment</p>
+            </div>
+
+            <div style="margin-bottom:1.25rem;">
+                <label style="display:block;font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:0.15em;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;">Enter Amount (&#8377;)</label>
+                <input type="number" x-model="topupAmount"
+                       min="100" max="50000"
+                       style="width:100%;border:1px solid rgba(255,255,255,0.1);padding:0.85rem 1rem;font-size:1.4rem;color:#fff;background:rgba(255,255,255,0.04);outline:none;box-sizing:border-box;font-weight:500;transition:border-color 0.15s;font-family:'Outfit',sans-serif;"
+                       placeholder="0.00"
+                       @focus="$el.style.borderColor='#ff6a00'" @blur="$el.style.borderColor='rgba(255,255,255,0.1)'">
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1.5rem;">
+                <template x-for="amt in [500, 1000, 2000]" :key="amt">
+                    <button @click="topupAmount = amt"
+                            :style="`border:1px solid ${topupAmount==amt?'#ff6a00':'rgba(255,255,255,0.1)'};background:${topupAmount==amt?'rgba(255,106,0,0.15)':'transparent'};color:${topupAmount==amt?'#ff6a00':'rgba(255,255,255,0.5)'};padding:0.6rem 0.5rem;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.15s;`"
+                            x-text="'\u20b9' + amt"></button>
+                </template>
+            </div>
+
+            <button @click="initiateTopup()" 
+                    :disabled="isProcessing || topupAmount < 100 || topupAmount > 50000"
+                    class="btn-proceed-pay">
+                <span x-show="!isProcessing">Proceed To Pay</span>
+                <span x-show="isProcessing" style="display:flex;align-items:center;gap:0.5rem;">
+                    <svg style="animation:spin 1s linear infinite;width:1rem;height:1rem;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle><path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    Processing...
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .wallet-modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.78);
+            backdrop-filter: blur(6px);
+        }
+        .btn-proceed-pay {
+            width: 100%;
+            background: #ff6a00;
+            color: #000 !important;
+            border: none;
+            padding: 1rem;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            transition: all 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-proceed-pay:hover:not(:disabled) {
+            background: #fff;
+            color: #000 !important;
+        }
+        .btn-proceed-pay:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+    <script>
+        function topupModal() {
+            return {
+                showModal: false,
+                topupAmount: '',
+                isProcessing: false,
+                get razorpayKey() { return window.__RZPKEY__ || ''; },
+
+                openModal() {
+                    this.topupAmount = '';
+                    this.isProcessing = false;
+                    this.showModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    document.body.style.overflow = '';
+                },
+
+                async initiateTopup() {
+                    const amount = parseFloat(this.topupAmount);
+                    
+                    if (isNaN(amount) || amount < 100) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { 
+                            detail: { message: 'Minimum sequence of \u20b9100 required.', type: 'error' } 
+                        }));
+                        return;
+                    }
+                    
+                    if (amount > 50000) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { 
+                            detail: { message: 'Maximum sequence limit of \u20b950,000 exceeded.', type: 'error' } 
+                        }));
+                        return;
+                    }
+
+                    this.isProcessing = true;
+                    try {
+                        const res = await fetch('/account/wallet/topup/create', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ amount: amount })
+                        });
+                        const data = await res.json();
+                        if (data.success) { 
+                            this.openRazorpay(data.razorpayOrder); 
+                        } else { 
+                            throw new Error(data.message || 'Transmission error'); 
+                        }
+                    } catch(err) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { 
+                            detail: { message: err.message, type: 'error' } 
+                        }));
+                        this.isProcessing = false;
+                    }
+                },
+
+                openRazorpay(order) {
+                    const options = {
+                        key: this.razorpayKey,
+                        amount: order.amount, currency: order.currency,
+                        name: 'STARZO MOBILES', description: 'Wallet Top-Up',
+                        order_id: order.id,
+                        handler: async (r) => { await this.verifyTopup(r); },
+                        modal: { ondismiss: () => { this.isProcessing = false; } },
+                        theme: { color: '#ff6a00' }
+                    };
+                    this.closeModal();
+                    new Razorpay(options).open();
+                },
+
+                async verifyTopup(r) {
+                    try {
+                        const res = await fetch('/account/wallet/topup/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...r, amount: this.topupAmount })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Wallet topped up successfully!', type: 'success' } }));
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else { throw new Error(data.message); }
+                    } catch(err) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: err.message, type: 'error' } }));
+                        this.isProcessing = false;
+                    }
+                }
+            }
+        }
+    </script>
+
 
 
     <!-- Global Scripts -->

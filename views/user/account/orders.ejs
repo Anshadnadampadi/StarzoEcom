@@ -85,7 +85,7 @@
                                         <div class="flex items-center gap-4">
                                             <a href="/account/orders/<%= order._id %>" class="bg-white text-black text-[10px] font-bold tracking-widest uppercase px-8 py-3.5 hover:bg-accent transition-all">Details</a>
                                             
-                                            <% if (order.paymentStatus === 'Paid' || (order.status && order.status.toLowerCase() === 'delivered')) { %>
+                                            <% if (order.status && order.status.toLowerCase() === 'delivered') { %>
                                                 <a href="/account/orders/<%= order._id %>/invoice" class="text-white/20 hover:text-white text-[10px] font-bold tracking-widest uppercase px-4 py-3 transition-all">Invoice</a>
                                             <% } %>
 

@@ -7,10 +7,10 @@ export const getWallet = async (req, res) => {
     try {
         const userId = req.session.user;
         const user = await User.findById(userId).lean();
-        
+
         // Find wallet or create a default one if it doesn't exist
         let wallet = await Wallet.findOne({ user: userId }).lean();
-        
+
         if (!wallet) {
             wallet = { balance: 0, transactions: [] };
         } else {
@@ -38,8 +38,13 @@ export const getWallet = async (req, res) => {
 export const createTopupOrder = async (req, res) => {
     try {
         const { amount } = req.body;
-        if (!amount || amount < 100) {
+        const numAmount = parseFloat(amount);
+        
+        if (!numAmount || numAmount < 100) {
             return res.status(400).json({ success: false, message: "Minimum top-up amount is ₹100" });
+        }
+        if (numAmount > 50000) {
+            return res.status(400).json({ success: false, message: "Maximum top-up amount allowed is ₹50,000" });
         }
 
         const options = {
@@ -83,6 +88,7 @@ export const verifyTopupPayment = async (req, res) => {
                 type: 'credit',
                 description: "Wallet Top-up via Razorpay",
                 txnId: `TXN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+                status: 'Success',
                 timestamp: new Date()
             });
 
