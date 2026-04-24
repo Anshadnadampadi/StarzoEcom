@@ -120,7 +120,11 @@ export const renderWishlistPage = async (req, res) => {
 
         res.render("user/account/wishlist", {
             wishlist,
-            user: await User.findById(req.session.user).lean()
+            user: await User.findById(req.session.user).lean(),
+            breadcrumbs: [
+                { label: 'Profile', url: '/profile' },
+                { label: 'Wishlist', url: '/wishlist' }
+            ]
         });
 
     } catch (err) {

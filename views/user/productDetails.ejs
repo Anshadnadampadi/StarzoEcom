@@ -1174,16 +1174,17 @@
                         <button class="qty-btn" onclick="adjustQty(1)">+</button>
                       </div>
                       <!-- Stock warning -->
-                      <div
-                        style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);margin-bottom:16px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
-                          <path
-                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <div id="stockWarningContainer"
+                        style="display: <%= (defaultVariant ? defaultVariant.stock : product.stock) > 0 ? 'flex' : 'none' %>; align-items:center; gap:8px; padding:10px 14px; background:<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(34, 197, 94, 0.06)' %>; border:1px solid <%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)' %>; margin-bottom:16px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'var(--danger)' : 'var(--success)' %>" stroke-width="2">
+                          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                           <line x1="12" y1="9" x2="12" y2="13" />
                           <line x1="12" y1="17" x2="12.01" y2="17" />
                         </svg>
-                        <span style="font-size:12px;color:var(--warning);font-weight:500;">Only 8 left in stock — order
-                          soon</span>
+                        <span id="stockWarningText" style="font-size:12px; color:<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'var(--danger)' : 'var(--success)' %>; font-weight:500;">
+                           <% const initialStock = (defaultVariant ? defaultVariant.stock : product.stock); %>
+                           <%= initialStock <= 5 ? `Hurry! Only ${initialStock} left in stock — order soon` : `${initialStock} units currently available` %>
+                        </span>
                       </div>
                       <button class="btn-primary" style="width:100%;margin-bottom:10px;" onclick="addToCart()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1731,6 +1732,22 @@
             badge.innerHTML = `● IN STOCK`;
             badge.style.color = 'var(--success)';
           }
+
+          // Update Stock Warning
+          const stockWarningContainer = document.getElementById('stockWarningContainer');
+          const stockWarningText = document.getElementById('stockWarningText');
+          if (stockWarningContainer && stockWarningText) {
+            const isLowStock = match.stock <= 5;
+            stockWarningContainer.style.display = 'flex';
+            stockWarningContainer.style.background = isLowStock ? 'rgba(239, 68, 68, 0.06)' : 'rgba(34, 197, 94, 0.06)';
+            stockWarningContainer.style.borderColor = isLowStock ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)';
+            stockWarningText.style.color = isLowStock ? 'var(--danger)' : 'var(--success)';
+            stockWarningContainer.querySelector('svg').style.stroke = isLowStock ? 'var(--danger)' : 'var(--success)';
+            stockWarningText.textContent = isLowStock 
+              ? `Hurry! Only ${match.stock} left in stock — order soon` 
+              : `${match.stock} units currently available`;
+          }
+
           actionBtns.forEach(btn => {
             btn.disabled = false;
             btn.style.opacity = '1';
@@ -1742,6 +1759,11 @@
             badge.innerHTML = match.isDeleted ? `● UNAVAILABLE` : `● OUT OF STOCK`;
             badge.style.color = 'var(--danger)';
           }
+
+          // Hide stock warning if out of stock (since button says it)
+          const stockWarningContainer = document.getElementById('stockWarningContainer');
+          if (stockWarningContainer) stockWarningContainer.style.display = 'none';
+
           actionBtns.forEach(btn => {
             btn.disabled = true;
             btn.style.opacity = '0.5';

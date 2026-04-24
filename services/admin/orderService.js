@@ -232,14 +232,21 @@ export const updateItemReturnStatusService = async (orderId, itemId, status) => 
         }
     }
 
-    const allItemsReturned = order.items.every(i => i.status === 'Returned' || i.status === 'Cancelled');
+    const allItemsTerminal = order.items.every(i => i.status === 'Returned' || i.status === 'Cancelled');
     const anyItemReturned = order.items.some(i => i.status === 'Returned');
+    const anyItemPicked = order.items.some(i => i.status === 'Return Picked');
+    const anyItemRequested = order.items.some(i => i.status === 'Return Requested');
+    const anyItemApproved = order.items.some(i => i.status === 'Return Approved');
     
-    if (allItemsReturned) {
+    if (allItemsTerminal) {
         order.orderStatus = 'Returned';
         order.paymentStatus = 'Refunded';
-    } else if (order.items.some(i => i.status === 'Return Requested')) {
+    } else if (anyItemRequested) {
         order.orderStatus = 'Return Requested';
+    } else if (anyItemApproved) {
+        order.orderStatus = 'Return Approved';
+    } else if (anyItemPicked) {
+        order.orderStatus = 'Return Picked';
     } else if (anyItemReturned) {
         order.orderStatus = 'Partially Returned';
     } else {

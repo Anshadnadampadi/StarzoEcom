@@ -272,8 +272,9 @@
                         <div class="mb-8 p-4 bg-black/40 border border-white/5 border-l-2 border-l-accent/50">
                             <label class="text-[8px] font-black uppercase tracking-[0.2em] text-white/40 block mb-2">Apply Coupon</label>
                             <div class="flex gap-2 mb-4">
-                                <input type="text" x-model="orderData.couponCode" class="w-full bg-black border border-white/10 text-white px-3 py-2 text-[10px] font-mono focus:border-accent outline-none transition-all uppercase placeholder-white/20" placeholder="ENTER COUPON CODE">
-                                <button type="button" @click="applyCoupon" class="bg-white/5 border border-white/10 text-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">Verify</button>
+                                <input type="text" x-model="orderData.couponCode" :disabled="discount > 0" class="flex-1 bg-black border border-white/10 text-white px-3 py-2 text-[10px] font-mono focus:border-accent outline-none transition-all uppercase placeholder-white/20 disabled:opacity-50" placeholder="ENTER COUPON CODE">
+                                <button x-show="discount === 0" type="button" @click="applyCoupon" class="bg-white/5 border border-white/10 text-white px-4 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">Verify</button>
+                                <button x-show="discount > 0" type="button" @click="removeCoupon" class="bg-status-danger/10 border border-status-danger/20 text-status-danger px-4 py-2 text-[9px] font-bold uppercase tracking-widest hover:bg-status-danger hover:text-white transition-all" x-cloak>Remove</button>
                             </div>
 
                             <!-- Available Coupons Horizontal Scroll -->
@@ -515,6 +516,12 @@
                     console.error(err);
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to verify coupon.', type: 'error' }}));
                 }
+            },
+            
+            removeCoupon() {
+                this.orderData.couponCode = '';
+                this.discount = 0;
+                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Coupon removed.', type: 'success' }}));
             },
 
             orderData: {

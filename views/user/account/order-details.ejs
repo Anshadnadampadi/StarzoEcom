@@ -9,13 +9,30 @@
                 <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">ORDER #<%= order.orderId %>.</h1>
                 <p class="text-text-muted text-label font-bold uppercase mt-2">Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
             </div>
-            <% if (['Pending', 'Confirmed', 'Processing'].includes(order.orderStatus)) { %>
-                <button onclick="confirmCancel('<%= order._id %>')" class="text-status-danger text-[10px] font-bold tracking-widest uppercase border border-status-danger/30 px-8 py-4 hover:bg-status-danger hover:text-white transition-all">Cancel Order</button>
-            <% } %>
-            <div class="flex gap-4">
-                <% if (order.orderStatus === 'Delivered') { %>
-                    <a href="/account/orders/<%= order._id %>/invoice" class="bg-white text-black text-[10px] font-bold tracking-widest uppercase px-8 py-4 hover:bg-accent transition-all">Download Invoice</a>
+            <div class="flex flex-wrap gap-4 justify-end">
+                <% 
+                   const allowedInvoiceStatuses = ['Confirmed', 'Processing', 'Shipped', 'Delivered', 'Partially Returned', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned'];
+                   const hasReturnedItems = order.items.some(i => i.status === 'Returned');
+                %>
+
+                <% if (allowedInvoiceStatuses.includes(order.orderStatus)) { %>
+                    <a href="/account/orders/<%= order._id %>/invoice" class="bg-white text-black text-[10px] font-bold tracking-widest uppercase px-8 py-4 hover:bg-accent transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Download Invoice
+                    </a>
                 <% } %>
+
+                <% if (hasReturnedItems) { %>
+                    <a href="/account/orders/<%= order._id %>/credit-note" class="bg-status-success/10 text-status-success text-[10px] font-bold tracking-widest uppercase border border-status-success/30 px-8 py-4 hover:bg-status-success hover:text-black transition-all flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v4a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2h3m4 3l5 5m0 0l-5 5m5-5H8"></path></svg>
+                        Download Credit Note
+                    </a>
+                <% } %>
+
+                <% if (['Pending', 'Confirmed', 'Processing'].includes(order.orderStatus)) { %>
+                    <button onclick="confirmCancel('<%= order._id %>')" class="text-status-danger text-[10px] font-bold tracking-widest uppercase border border-status-danger/30 px-8 py-4 hover:bg-status-danger hover:text-white transition-all">Cancel Order</button>
+                <% } %>
+
                 <% if (order.orderStatus === 'Delivered') { %>
                     <button onclick="confirmReturn('<%= order._id %>')" class="text-status-warning text-[10px] font-bold tracking-widest uppercase border border-status-warning/30 px-8 py-4 hover:bg-status-warning hover:text-white transition-all">Return Order</button>
                 <% } %>

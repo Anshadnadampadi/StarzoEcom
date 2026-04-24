@@ -578,40 +578,63 @@
     </div>
   </main>
 
-  <!-- :: CLIENT SIDE TEMPLATE :: -->
   <template id="product-template">
-    <div class="product-card">
-      <div class="card-img">
-        <img src="" alt="">
-        <div class="quick-add">Add to Cart</div>
-        <button class="btn-fav">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
-        <span class="badge badge-sale" style="display:none;"></span>
-      </div>
-      <div style="padding:24px;">
-        <p class="brand-name"
-          style="font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:6px;">
-        </p>
-        <h3 class="prod-name font-syne"
-          style="font-size:16px;font-weight:700;margin-bottom:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-        </h3>
-        <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px;">
-          <span style="font-size:11px;color:var(--accent);">★</span>
-          <span style="font-size:11px;color:var(--accent);">★</span>
-          <span style="font-size:11px;color:var(--accent);">★</span>
-          <span style="font-size:11px;color:var(--accent);">★</span>
-          <span style="font-size:11px;color:var(--t3);">★</span>
-          <span style="font-size:11px;color:var(--t2);margin-left:4px;">(24)</span>
+    <div class="bg-black-card group relative overflow-hidden transition-all duration-300 border border-transparent hover:border-white/5 h-full flex flex-col">
+        <!-- Image block -->
+        <div class="aspect-square bg-black overflow-hidden relative cursor-pointer img-link">
+            <img src="" alt="" class="w-full h-full object-contain p-8 lg:p-12 block transition-transform duration-500 group-hover:scale-110" loading="lazy">
+            
+            <!-- Badges -->
+            <div class="absolute top-4 left-4 flex flex-col gap-2">
+                <span class="bg-accent text-black text-[9px] font-black px-2 py-0.5 tracking-widest uppercase badge-new" style="display:none;">NEW</span>
+                <span class="bg-status-success text-black text-[9px] font-black px-2 py-0.5 tracking-widest uppercase badge-offer" style="display:none;">OFFER</span>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-10">
+                <button type="button" class="w-full bg-accent text-black font-black py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-colors quick-add-btn">
+                    QUICK ADD
+                </button>
+                <button type="button" disabled class="w-full bg-white/20 text-white/50 font-black py-4 text-[10px] tracking-[0.2em] uppercase cursor-not-allowed out-of-stock-btn" style="display:none;">
+                    OUT OF STOCK
+                </button>
+            </div>
+
+            <!-- Wishlist Toggle -->
+            <button class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 text-white/50 transition-all duration-300 hover:text-white p-2 wishlist-btn">
+                <svg class="w-5 h-5 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>
+            </button>
         </div>
-        <div style="display:flex;align-items:baseline;gap:8px;">
-          <span class="price-val font-mono" style="font-size:18px;font-weight:700;color:var(--t1);"></span>
-          <span class="orig-val font-mono" style="font-size:13px;color:var(--t3);text-decoration:line-through;"></span>
+
+        <!-- Details -->
+        <div class="p-6 flex-grow flex flex-col">
+            <p class="text-white/30 text-[9px] uppercase font-black tracking-[0.2em] mb-2 brand-name"></p>
+            <h3 class="text-white font-bold text-sm leading-snug mb-3 line-clamp-2 h-10 group-hover:text-accent transition-colors">
+                <a href="" class="product-link"></a>
+            </h3>
+            
+            <!-- Ratings -->
+            <div class="flex items-center gap-1 mb-4">
+                <div class="flex items-center">
+                    <svg class="w-2.5 h-2.5 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <svg class="w-2.5 h-2.5 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <svg class="w-2.5 h-2.5 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <svg class="w-2.5 h-2.5 text-accent" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <svg class="w-2.5 h-2.5 text-white/10" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                </div>
+                <span class="text-white/20 text-[9px] font-bold ml-1 tracking-wider">(24)</span>
+            </div>
+
+            <div class="mt-auto flex items-center justify-between">
+                <div class="flex flex-col price-container">
+                    <span class="text-white/30 text-[10px] line-through font-mono orig-price" style="display:none;"></span>
+                    <span class="text-white font-mono font-black text-base italic current-price"></span>
+                </div>
+                <span class="text-status-danger text-[8px] font-black uppercase tracking-widest out-of-stock-label" style="display:none;">Out of Stock</span>
+            </div>
         </div>
-      </div>
     </div>
   </template>
 
@@ -833,35 +856,71 @@
 
       products.forEach(p => {
         const node = template.content.cloneNode(true);
-        const card = node.querySelector('.product-card');
-
+        
         const variant = p.variants && p.variants.length > 0 ? p.variants[0] : {};
         const imageUrl = (variant && variant.images && variant.images.length > 0) ? variant.images[0] : '/images/placeholder.jpg';
-        const price = variant.price || (p.price || 0);
         
+        // Price logic
+        const basePrice = variant.price || (p.price || 0);
+        const hasOffer = p.hasOffer || false;
+        const discountedPrice = p.discountedPrice || basePrice;
+        
+        const pStock = typeof variant.stock !== 'undefined' ? variant.stock : (p.stock || 0);
+        const isOutOfStock = pStock <= 0;
+
         const normalize = (val) => String(val || '').toLowerCase().replace(/\s+/g, "").replace(/gb$/i, "").trim();
         const wishlistKey = `${p._id}_${normalize(variant.color)}_${normalize(variant.storage)}_${normalize(variant.ram)}`;
         const isWishlisted = wishlistedIds.includes(wishlistKey);
 
-        const imgBlock = node.querySelector('.card-img');
-        imgBlock.onclick = () => window.location.href = `/products/${p._id}`;
-
+        // Populate Template
+        const imgLink = node.querySelector('.img-link');
+        imgLink.onclick = () => window.location.href = `/products/${p._id}`;
+        
         node.querySelector("img").src = imageUrl;
         node.querySelector("img").alt = p.name;
+        
+        // Badges
+        if (p.isNew) node.querySelector('.badge-new').style.display = 'block';
+        if (hasOffer) node.querySelector('.badge-offer').style.display = 'block';
+
+        // Details
         node.querySelector(".brand-name").textContent = p.brand;
-        node.querySelector(".prod-name").textContent = p.name;
-        node.querySelector(".prod-name").href = `/products/${p._id}`;
-        node.querySelector(".price-val").textContent = "₹" + price.toLocaleString('en-IN');
+        const productLink = node.querySelector(".product-link");
+        productLink.textContent = p.name;
+        productLink.href = `/products/${p._id}`;
 
-        // Action buttons
-        const quickAddBtn = node.querySelector('.quick-add');
-        quickAddBtn.onclick = (e) => { e.stopPropagation(); addToCartFromCard(p._id, p.name); };
+        // Prices
+        if (hasOffer) {
+            const origPriceEl = node.querySelector(".orig-price");
+            origPriceEl.textContent = "₹" + basePrice.toLocaleString('en-IN');
+            origPriceEl.style.display = 'block';
+        }
+        node.querySelector(".current-price").textContent = "₹" + discountedPrice.toLocaleString('en-IN');
 
-        const fav = node.querySelector('.btn-fav');
+        // Stock actions
+        if (isOutOfStock) {
+            node.querySelector('.quick-add-btn').style.display = 'none';
+            node.querySelector('.out-of-stock-btn').style.display = 'block';
+            node.querySelector('.out-of-stock-label').style.display = 'block';
+        } else {
+            const quickAddBtn = node.querySelector('.quick-add-btn');
+            quickAddBtn.onclick = (e) => { 
+                e.stopPropagation(); 
+                if (typeof addToCartFromCard === 'function') {
+                    addToCartFromCard(p._id, p.name); 
+                } else {
+                    quickAdd(p._id, p.name);
+                }
+            };
+        }
+
+        // Wishlist
+        const fav = node.querySelector('.wishlist-btn');
+        const favSvg = fav.querySelector('svg');
         if (isWishlisted) {
-            fav.classList.add('active');
-            fav.style.color = 'var(--danger)';
-            fav.querySelector('svg').setAttribute('fill', 'currentColor');
+            fav.classList.add('opacity-100', 'text-status-danger');
+            fav.classList.remove('opacity-0', 'text-white/50');
+            favSvg.setAttribute('fill', 'currentColor');
         }
         fav.onclick = (e) => { 
             e.stopPropagation(); 

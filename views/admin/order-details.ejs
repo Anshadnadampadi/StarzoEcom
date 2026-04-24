@@ -128,7 +128,12 @@
                                     <% } else if (item.status === 'Return Approved') { %>
                                         <div class="space-y-2 mt-2">
                                             <span class="text-status-warning text-[8px] font-bold uppercase tracking-widest border border-status-warning/30 px-2 py-0.5 bg-status-warning/5 inline-block">Return Approved</span>
-                                            <button onclick="updateItemReturn('<%= item._id %>', 'Returned')" class="block text-[8px] font-bold uppercase tracking-widest bg-accent/20 text-accent border border-accent/30 px-2 py-1 hover:bg-accent hover:text-black transition-all">Process Refund</button>
+                                            <button onclick="updateItemReturn('<%= item._id %>', 'Return Picked')" class="block text-[8px] font-bold uppercase tracking-widest bg-accent/20 text-accent border border-accent/30 px-2 py-1 hover:bg-accent hover:text-black transition-all">Mark as Picked</button>
+                                        </div>
+                                    <% } else if (item.status === 'Return Picked') { %>
+                                        <div class="space-y-2 mt-2">
+                                            <span class="text-status-warning text-[8px] font-bold uppercase tracking-widest border border-status-warning/30 px-2 py-0.5 bg-status-warning/5 inline-block">Item Picked</span>
+                                            <button onclick="updateItemReturn('<%= item._id %>', 'Returned')" class="block text-[8px] font-bold uppercase tracking-widest bg-status-success/20 text-status-success border border-status-success/30 px-2 py-1 hover:bg-status-success hover:text-black transition-all">Process Refund</button>
                                         </div>
                                     <% } else if (item.status === 'Returned') { %>
                                         <span class="text-status-success text-[8px] font-bold uppercase tracking-widest border border-status-success/30 px-2 py-0.5 bg-status-success/5 mt-1 inline-block">Returned & Refunded</span>
@@ -273,7 +278,9 @@
 
     async function updateItemReturn(itemId, status) {
         const orderId = '<%= order._id %>';
-        const action = status === 'Return Approved' ? 'APPROVE' : (status === 'Returned' ? 'PROCESS REFUND FOR' : 'REJECT');
+        const action = status === 'Return Approved' ? 'APPROVE' : 
+                       (status === 'Return Picked' ? 'MARK AS PICKED' : 
+                       (status === 'Returned' ? 'PROCESS REFUND FOR' : 'REJECT'));
         
         const confirmed = await window.confirmAction({
             title: `AUTHORIZE ACTION?`,

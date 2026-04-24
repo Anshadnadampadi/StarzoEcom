@@ -31,7 +31,7 @@ const orderSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ['Ordered', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Return Approved', 'Returned', 'Return Rejected'],
+            enum: ['Ordered', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned', 'Return Rejected'],
             default: 'Ordered'
         },
         returnReason: {
