@@ -4,6 +4,8 @@
   const pName = product.name || product.title || "Unknown Product";
   const pId = product._id;
   const pPrice = product.price || 0;
+  const pDiscountedPrice = product.discountedPrice || pPrice;
+  const hasOffer = product.hasOffer || false;
   const isWishlistCard = typeof isWishlist !== 'undefined' ? isWishlist : false;
   
   // Extract variant if passed
@@ -45,6 +47,9 @@
         <div class="absolute top-4 left-4 flex flex-col gap-2">
             <% if (product.isNew) { %>
                 <span class="bg-accent text-black text-[9px] font-black px-2 py-0.5 tracking-widest uppercase">NEW</span>
+            <% } %>
+            <% if (hasOffer) { %>
+                <span class="bg-status-success text-black text-[9px] font-black px-2 py-0.5 tracking-widest uppercase">OFFER</span>
             <% } %>
         </div>
 
@@ -146,7 +151,14 @@
         <% } %>
 
         <div class="mt-auto flex items-center justify-between">
-            <span class="text-white font-mono font-black text-base italic">₹<%= pPrice.toLocaleString() %></span>
+            <div class="flex flex-col">
+                <% if (hasOffer) { %>
+                    <span class="text-white/30 text-[10px] line-through font-mono">₹<%= pPrice.toLocaleString() %></span>
+                    <span class="text-white font-mono font-black text-base italic">₹<%= pDiscountedPrice.toLocaleString() %></span>
+                <% } else { %>
+                    <span class="text-white font-mono font-black text-base italic">₹<%= pPrice.toLocaleString() %></span>
+                <% } %>
+            </div>
             <% if (isOutOfStock) { %>
                 <span class="text-status-danger text-[8px] font-black uppercase tracking-widest">Out of Stock</span>
             <% } %>

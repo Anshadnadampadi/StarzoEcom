@@ -682,7 +682,9 @@
         <div style="display:flex;gap:8px;margin-bottom:16px;">
           <span class="badge badge-new">New</span>
           <span class="badge badge-hot">Bestseller</span>
-          <span class="badge badge-sale">15% Off</span>
+          <% if (product.hasOffer) { %>
+            <span class="badge badge-sale">Limited Time Offer</span>
+          <% } %>
         </div>
 
         <!-- Main Image -->
@@ -1037,8 +1039,12 @@
         <!-- Price -->
         <div style="margin-bottom:20px;" class="fade-up fade-up-d2">
           <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
-            <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%=
-                (defaultVariant ? defaultVariant.price : product.price).toLocaleString() %></span>
+            <% if (product.hasOffer) { %>
+              <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%= product.discountedPrice.toLocaleString() %></span>
+              <span class="font-mono" style="font-size:18px;color:var(--t3);text-decoration:line-through;">₹<%= (defaultVariant ? defaultVariant.price : product.price).toLocaleString() %></span>
+            <% } else { %>
+              <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%= (defaultVariant ? defaultVariant.price : product.price).toLocaleString() %></span>
+            <% } %>
           </div>
           <p style="font-size:11px;color:var(--t3);margin-top:4px;">Incl. 18% GST · Free delivery</p>
         </div>
@@ -1188,6 +1194,21 @@
                         </svg>
                         Add to Cart
                       </button>
+                      
+                      <% if (product.bestOffer) { %>
+                        <div style="margin: 20px 0; padding: 16px; background: rgba(34, 197, 94, 0.05); border: 1px dashed rgba(34, 197, 94, 0.3);">
+                          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2">
+                              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                              <line x1="7" y1="7" x2="7.01" y2="7" />
+                            </svg>
+                            <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--success);">Active Offer Applied</span>
+                          </div>
+                          <p style="font-size:13px; font-weight:700; color:var(--t1); margin-bottom:4px;"><%= product.bestOffer.name %></p>
+                          <p style="font-size:11px; color:var(--t2);"><%= product.bestOffer.discountType === 'percentage' ? product.bestOffer.discountValue + '%' : '₹' + product.bestOffer.discountValue.toLocaleString() %> discount automatically applied at checkout.</p>
+                        </div>
+                      <% } %>
+
                       <button class="btn-secondary" style="width:100%;">Buy Now</button>
                     </div>
 

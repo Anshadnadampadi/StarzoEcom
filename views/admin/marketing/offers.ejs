@@ -1,0 +1,323 @@
+<!-- views/admin/marketing/offers.ejs -->
+<%- contentFor('body') %>
+
+    <div class="space-y-10" x-data="offerManager()">
+        <div class="flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">PROMOTIONAL OFFERS.</h1>
+                <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Configure Product and Category specific discounts</p>
+            </div>
+            <button @click="openCreateModal()"
+                class="px-8 py-4 bg-white text-black text-[10px] font-bold tracking-widest uppercase hover:bg-accent transition-all btn-press shadow-[0_0_15px_rgba(255,255,255,0.1)]">Create
+                Offer</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <% offers.forEach(offer => { %>
+                <div class="bg-black-surface border border-white/5 p-8 relative overflow-hidden group hover:border-accent/30 transition-all">
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <div class="bg-accent/10 border border-accent/20 px-3 py-1 font-mono text-accent text-[10px] font-bold tracking-widest uppercase inline-block mb-2">
+                                <%= offer.type %> Offer
+                            </div>
+                            <h3 class="text-white text-lg font-black tracking-tight"><%= offer.name %></h3>
+                        </div>
+                        <%- include('../../partials/status-badge', { status: offer.isActive ? 'active' : 'inactive' }) %>
+                    </div>
+
+                    <div class="mb-10">
+                        <h3 class="text-white text-2xl font-black tracking-tight mb-2">
+                            <%= offer.discountType === 'percentage' ? offer.discountValue + '%' : '₹' + offer.discountValue.toLocaleString() %> OFF
+                        </h3>
+                        <p class="text-white/40 text-[10px] font-bold tracking-widest uppercase">
+                            Applies to: <span class="text-white"><%= offer.type === 'Product' ? (offer.productId ? offer.productId.name : 'Unknown Product') : (offer.categoryId ? offer.categoryId.name : 'Unknown Category') %></span>
+                        </p>
+                    </div>
+
+                    <div class="pt-8 border-t border-white/5 flex justify-between items-center">
+                        <div>
+                            <p class="text-white/20 text-[8px] uppercase tracking-widest mb-1">Expires On</p>
+                            <p class="text-white text-[10px] font-bold uppercase">
+                                <%= new Date(offer.expiryDate).toLocaleDateString() %>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 mt-6 pt-6 border-t border-white/5">
+                        <button
+                            @click="openEditModal('<%= offer._id %>', '<%= offer.name %>', '<%= offer.type %>', '<%= offer.discountType %>', <%= offer.discountValue %>, '<%= offer.productId ? offer.productId._id : `` %>', '<%= offer.categoryId ? offer.categoryId._id : `` %>', '<%= offer.expiryDate ? new Date(offer.expiryDate).toISOString().split(`T`)[0] : `` %>')"
+                            class="flex-1 py-3 bg-white/5 text-white/70 hover:bg-white hover:text-black text-[10px] font-bold tracking-widest uppercase transition-all">
+                            Edit
+                        </button>
+                        <button @click="toggleStatus('<%= offer._id %>')"
+                            class="flex-1 py-3 bg-white/5 text-white/70 text-[10px] font-bold tracking-widest uppercase transition-all <%= offer.isActive ? 'hover:bg-status-danger/20 hover:text-status-danger' : 'hover:bg-status-success/20 hover:text-status-success' %>">
+                            <%= offer.isActive ? 'Disable' : 'Enable' %>
+                        </button>
+                        <button @click="deleteOffer('<%= offer._id %>')"
+                            class="flex-1 py-3 bg-white/5 text-white/70 hover:bg-status-danger/20 hover:text-status-danger text-[10px] font-bold tracking-widest uppercase transition-all">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <!-- Create/Edit Offer Modal -->
+        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+            style="display: none;" x-transition.opacity>
+
+            <div class="bg-black-surface border border-white/10 w-full max-w-lg p-6 relative shadow-2xl"
+                @click.away="closeModal()" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0">
+
+                <button @click="closeModal()" type="button"
+                    class="absolute top-6 left-6 text-white/40 hover:text-white transition-colors z-10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <h2 class="text-xl font-bold tracking-tight uppercase text-white mb-5 pl-10"
+                    x-text="isEditing ? 'Edit Offer' : 'Create Offer'"></h2>
+
+                <form @submit.prevent="submitForm()" class="space-y-5">
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-4">
+                        <div class="col-span-2 space-y-1">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Offer Name</label>
+                            <input type="text" x-model="formData.name"
+                                @input="validateField('name')"
+                                @blur="validateField('name')"
+                                :class="formErrors.name ? 'border-status-danger' : 'border-white/10'"
+                                class="w-full bg-black px-3 py-2 text-white text-xs border">
+                            <p x-show="formErrors.name" class="text-status-danger text-[10px] mt-1" x-text="formErrors.name"></p>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Offer Type</label>
+                            <select x-model="formData.type"
+                                class="w-full bg-black border border-white/10 px-3 py-2 text-white text-xs focus:border-accent focus:outline-none transition-colors">
+                                <option value="Product">Product Specific</option>
+                                <option value="Category">Category Wide</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Discount Type</label>
+                            <select x-model="formData.discountType"
+                                class="w-full bg-black border border-white/10 px-3 py-2 text-white text-xs focus:border-accent focus:outline-none transition-colors">
+                                <option value="percentage">Percentage (%)</option>
+                                <option value="fixed">Fixed Amount (₹)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1" x-show="formData.type === 'Product'">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Select Product</label>
+                            <select x-model="formData.productId"
+                                class="w-full bg-black border border-white/10 px-3 py-2 text-white text-xs focus:border-accent focus:outline-none transition-colors">
+                                <option value="">-- Choose Product --</option>
+                                <% products.forEach(product => { %>
+                                    <option value="<%= product._id %>"><%= product.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1" x-show="formData.type === 'Category'">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Select Category</label>
+                            <select x-model="formData.categoryId"
+                                class="w-full bg-black border border-white/10 px-3 py-2 text-white text-xs focus:border-accent focus:outline-none transition-colors">
+                                <option value="">-- Choose Category --</option>
+                                <% categories.forEach(category => { %>
+                                    <option value="<%= category._id %>"><%= category.name %></option>
+                                <% }) %>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Discount Value</label>
+                            <input type="number" x-model="formData.discountValue"
+                                @input="validateField('discountValue')" @blur="validateField('discountValue')"
+                                :class="formErrors.discountValue ? 'border-status-danger' : 'border-white/10'"
+                                class="w-full bg-black px-3 py-2 text-white text-xs border">
+                            <p x-show="formErrors.discountValue" class="text-status-danger text-[10px] mt-1" x-text="formErrors.discountValue"></p>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Expiry Date</label>
+                            <input type="date" x-model="formData.expiryDate" @change="validateField('expiryDate')"
+                                @blur="validateField('expiryDate')" :class="formErrors.expiryDate ? 'border-status-danger' : 'border-white/10'"
+                                class="w-full bg-black px-3 py-2 text-white text-xs border">
+                            <p x-show="formErrors.expiryDate" class="text-status-danger text-[10px] mt-1" x-text="formErrors.expiryDate"></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 pt-5 border-t border-white/5">
+                        <button type="button" @click="closeModal()"
+                            class="flex-1 py-3 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-white/5 transition-all">Cancel</button>
+                        <button type="submit"
+                            class="flex-1 py-3 bg-accent text-black text-[10px] font-bold tracking-widest uppercase hover:bg-white transition-all btn-press shadow-[0_0_15px_rgba(255,106,0,0.3)]">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('offerManager', () => ({
+                showModal: false,
+                isEditing: false,
+                currentId: null,
+                formData: {
+                    name: '',
+                    type: 'Product',
+                    discountType: 'percentage',
+                    discountValue: '',
+                    productId: '',
+                    categoryId: '',
+                    expiryDate: ''
+                },
+                formErrors: {
+                    name: '',
+                    discountValue: '',
+                    expiryDate: '',
+                    productId: '',
+                    categoryId: ''
+                },
+                openCreateModal() {
+                    this.isEditing = false;
+                    this.currentId = null;
+                    this.formData = {
+                        name: '',
+                        type: 'Product',
+                        discountType: 'percentage',
+                        discountValue: '',
+                        productId: '',
+                        categoryId: '',
+                        expiryDate: ''
+                    };
+                    Object.keys(this.formErrors).forEach(k => this.formErrors[k] = '');
+                    this.showModal = true;
+                },
+                openEditModal(id, name, type, dType, val, pId, cId, expiry) {
+                    this.isEditing = true;
+                    this.currentId = id;
+                    this.formData = {
+                        name: name,
+                        type: type,
+                        discountType: dType,
+                        discountValue: val,
+                        productId: pId || '',
+                        categoryId: cId || '',
+                        expiryDate: expiry || ''
+                    };
+                    Object.keys(this.formErrors).forEach(k => this.formErrors[k] = '');
+                    this.showModal = true;
+                },
+                async toggleStatus(id) {
+                    try {
+                        const res = await fetch(`/admin/marketing/offers/toggle/${id}`, { method: 'PATCH' });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Offer status updated', type: 'success' } }));
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Failed to update status', type: 'error' } }));
+                        }
+                    } catch (err) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Unexpected error occurred', type: 'error' } }));
+                    }
+                },
+                async deleteOffer(id) {
+                    if (!await window.confirmAction({ title: 'Delete Offer?', message: 'Are you sure you want to permanently delete this offer?', confirmText: 'Delete', type: 'danger' })) return;
+                    
+                    try {
+                        const res = await fetch(`/admin/marketing/offers/delete/${id}`, { method: 'DELETE' });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Offer deleted successfully', type: 'success' } }));
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Failed to delete offer', type: 'error' } }));
+                        }
+                    } catch (err) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Unexpected error occurred', type: 'error' } }));
+                    }
+                },
+                closeModal() {
+                    this.showModal = false;
+                },
+                validateField(field) {
+                    const v = this.formData;
+                    this.formErrors[field] = '';
+
+                    if (field === "name") {
+                        if (!v.name || v.name.trim().length < 3) this.formErrors.name = "Min 3 chars";
+                    }
+
+                    if (field === "discountValue") {
+                        if (!v.discountValue || v.discountValue <= 0) {
+                            this.formErrors.discountValue = "Must be > 0";
+                        } else if (v.discountType === "percentage" && v.discountValue > 99) {
+                            this.formErrors.discountValue = "Max 99%";
+                        }
+                    }
+
+                    if (field === "expiryDate") {
+                        if (!v.expiryDate) {
+                            this.formErrors.expiryDate = "Required";
+                        } else {
+                            const selected = new Date(v.expiryDate);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            if (selected < today) this.formErrors.expiryDate = "Cannot be a past date";
+                        }
+                    }
+                },
+                validateAll() {
+                    const fields = ["name", "discountValue", "expiryDate"];
+                    fields.forEach(f => this.validateField(f));
+                    
+                    if (this.formData.type === 'Product' && !this.formData.productId) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Please select a product', type: 'error' } }));
+                        return false;
+                    }
+                    if (this.formData.type === 'Category' && !this.formData.categoryId) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Please select a category', type: 'error' } }));
+                        return false;
+                    }
+
+                    return Object.values(this.formErrors).every(e => !e);
+                },
+                async submitForm() {
+                    if (!this.validateAll()) return;
+
+                    try {
+                        const url = this.isEditing
+                            ? `/admin/marketing/offers/update/${this.currentId}`
+                            : '/admin/marketing/offers/create';
+
+                        const method = this.isEditing ? 'PUT' : 'POST';
+
+                        const res = await fetch(url, {
+                            method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.formData)
+                        });
+
+                        const data = await res.json();
+
+                        if (data.success) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Offer saved successfully!', type: 'success' } }));
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Failed to save offer', type: 'error' } }));
+                        }
+
+                    } catch (err) {
+                        console.error(err);
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Unexpected error occurred', type: 'error' } }));
+                    }
+                }
+            }));
+        });
+    </script>

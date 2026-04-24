@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Product from "../../models/product/product.js";
 import Category from "../../models/category/category.js";
 import { commonCache, CACHE_KEYS } from "../common/cacheService.js";
+import * as offerService from "../common/offerService.js";
 
 /**
  * Service to handle user-side product operations
@@ -109,6 +110,8 @@ export const getProductListing = async ({ searchQuery, categoryFilter, brandFilt
         return product.variants.some(v => !v.isDeleted);
     });
 
+    const productsWithOffers = await offerService.applyOffersToProducts(activeProducts);
+
     const totalPages = Math.ceil(total / limit);
 
     let pagination = "";
@@ -117,7 +120,7 @@ export const getProductListing = async ({ searchQuery, categoryFilter, brandFilt
     }
 
     return {
-        products: activeProducts,
+        products: productsWithOffers,
         total,
         totalPages,
         categories,
@@ -154,9 +157,18 @@ export const getProductDetails = async (id) => {
         return p.variants.some(v => !v.isDeleted);
     });
 
+    // Apply offers to details and recommended
+    const { discountedPrice, bestOffer } = await offerService.getBestOfferForProduct(product);
+    const recommendedWithOffers = await offerService.applyOffersToProducts(activeRecommended);
+
     return {
-        product,
-        recommendedProducts: activeRecommended
+        product: {
+            ...product.toObject(),
+            discountedPrice,
+            bestOffer,
+            hasOffer: discountedPrice < product.price
+        },
+        recommendedProducts: recommendedWithOffers
     };
 };
 

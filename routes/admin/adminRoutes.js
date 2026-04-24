@@ -16,6 +16,7 @@ import categoryRoutes from '../products/categoryRoutes.js';
 import productRoutes from '../products/productRoutes.js';
 import adminOrderRoutes from './adminOrderRoutes.js';
 import couponRoutes from './adminCoupon.js';
+import offerRoutes from './adminOfferRoutes.js';
 import { getNotifications, markAsRead, markAllAsRead } from '../../controllers/admin/notificationController.js';
 
 const router = express.Router();
@@ -40,7 +41,8 @@ router.get('/logout', adminLogout);
 router.use('/', categoryRoutes);
 router.use('/', productRoutes);
 router.use('/', adminOrderRoutes)
-router.use("/",couponRoutes)
+router.use("/", couponRoutes);
+router.use("/marketing/offers", offerRoutes);
 
 // Dashboard & Users
 router.get('/dashboard', getAdminDashboard);

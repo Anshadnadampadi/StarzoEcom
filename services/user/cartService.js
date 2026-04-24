@@ -1,6 +1,7 @@
 import Cart from "../../models/cart/Cart.js";
 import Product from "../../models/product/Product.js";
 import { isSameVariant, findMatchingVariant, getVariantDisplayString } from "../../utils/productHelpers.js";
+import * as offerService from "../common/offerService.js";
 
 /**
  * Service to handle cart operations
@@ -9,8 +10,9 @@ export const getCartData = async (userId) => {
     let cart = await Cart.findOne({ userId }).populate("items.product").lean();
 
     if (cart && cart.items.length > 0) {
-        // Flag items as unavailable if product is blocked, unlisted, or variant is deleted
-        cart.items = cart.items.map(item => {
+        // Flag items as unavailable and update with BEST OFFER prices
+        const updatedItems = [];
+        for (const item of cart.items) {
             const product = item.product;
             if (!product) return { ...item, isUnavailable: true };
 
@@ -47,16 +49,26 @@ export const getCartData = async (userId) => {
                 }
             }
 
-            return { 
+            // ── Offer Calculation ──
+            const { discountedPrice } = await offerService.getBestOfferForProduct({
+                ...product,
+                price: item.price // Use the base price of the item/variant
+            });
+
+            updatedItems.push({ 
                 ...item, 
                 variantDisplay: getVariantDisplayString(currentVariant),
                 displayImage,
                 isUnavailable: isProductUnavailable || isVariantUnavailable,
                 isOutOfStock: currentStock <= 0,
                 insufficientStock: item.qty > currentStock,
-                availableStock: currentStock
-            };
-        });
+                availableStock: currentStock,
+                price: discountedPrice // Use discounted price
+            });
+        }
+        cart.items = updatedItems;
+        // Recalculate subtotal with discounted prices
+        cart.subtotal = updatedItems.reduce((total, item) => total + (item.price * item.qty), 0);
     } else if (!cart) {
         cart = { items: [], subtotal: 0 };
     }
@@ -113,6 +125,13 @@ export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => 
         targetVariant = { color: "", storage: "", ram: "" };
     }
 
+    // Apply Best Offer
+    const { discountedPrice } = await offerService.getBestOfferForProduct({
+        ...product.toObject(),
+        price: price
+    });
+    const finalPrice = discountedPrice;
+
     if (stock < 1) throw new Error("Item is out of stock");
     if (stock < qty) throw new Error(`Only ${stock} units available`);
 
@@ -147,13 +166,13 @@ export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => 
             }
 
             cart.items[itemIndex].qty = newQty;
-            cart.items[itemIndex].price = price; // Update price in case it's changed
+            cart.items[itemIndex].price = finalPrice; // Update price with offer
         } else {
             // Add new item if no match found
             if (qty > MAX_PER_USER_LIMIT) {
                 throw new Error(`Limit reached: Maximum ${MAX_PER_USER_LIMIT} units allowed`);
             }
-            cart.items.push({ product: productId, variant: targetVariant, qty, price });
+            cart.items.push({ product: productId, variant: targetVariant, qty, price: finalPrice });
         }
     }
 
