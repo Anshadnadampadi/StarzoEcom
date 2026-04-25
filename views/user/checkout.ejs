@@ -444,6 +444,13 @@
                             <span x-show="addressErrors.country" x-text="addressErrors.country" class="text-red-500 text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                         </div>
                     </div>
+
+                    <!-- Default Checkbox -->
+                    <div class="flex items-center gap-3 pt-4">
+                        <input type="checkbox" x-model="addressForm.default" id="defaultAddress" 
+                               class="w-4 h-4 rounded border-white/10 bg-[#0A0A0A] text-accent focus:ring-accent transition-all">
+                        <label for="defaultAddress" class="text-[10px] font-bold uppercase text-white/60 tracking-widest cursor-pointer select-none">Set as Default Address</label>
+                    </div>
                 </div>
 
                 <div class="pt-10 flex gap-4">
@@ -484,7 +491,7 @@
             subtotal: baseSubtotal,
             shippingFee: baseSubtotal > 500 ? 0 : 50,
             tax: Math.floor(baseSubtotal * 0.18),
-            discount: 0,
+            discount: <%= (cart && cart.discount) ? cart.discount : 0 %>,
             
             get totalAmount() {
                 return Math.max(0, this.subtotal + this.tax + this.shippingFee - this.discount);
@@ -518,16 +525,25 @@
                 }
             },
             
-            removeCoupon() {
-                this.orderData.couponCode = '';
-                this.discount = 0;
-                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Coupon removed.', type: 'success' }}));
+            async removeCoupon() {
+                try {
+                    const res = await fetch('/checkout/remove-coupon', { method: 'POST' });
+                    const data = await res.json();
+                    if(data.success) {
+                        this.orderData.couponCode = '';
+                        this.discount = 0;
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Coupon removed.', type: 'success' }}));
+                    }
+                } catch(err) {
+                    console.error(err);
+                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to remove coupon.', type: 'error' }}));
+                }
             },
 
             orderData: {
                 addressId: userAddresses.length > 0 ? (userAddresses.find(a => a.default) ? userAddresses.find(a => a.default)._id : userAddresses[0]._id) : '',
                 paymentMethod: 'CASH ON DELIVERY',
-                couponCode: ''
+                couponCode: '<%= (cart && cart.coupon) ? cart.coupon.code : "" %>'
             },
 
             // Address overlay functionality
@@ -553,7 +569,19 @@
                 this.addressMode = mode;
                 this.addressErrors = {};
                 if (mode === 'edit' && data) {
-                    this.addressForm = { ...data, id: data._id };
+                    this.addressForm = {
+                        id: data._id || data.id,
+                        type: data.type || 'Home',
+                        name: data.name || '',
+                        phone: data.phone || '',
+                        addr1: data.addr1 || '',
+                        addr2: data.addr2 || '',
+                        city: data.city || '',
+                        state: data.state || '',
+                        zip: data.zip || '',
+                        country: data.country || 'India',
+                        default: data.default || false
+                    };
                 } else {
                     this.addressForm = {
                         id: null, type: 'Home', name: '', phone: '',
@@ -565,37 +593,36 @@
             },
 
             validateAddressField(field) {
+                const val = (this.addressForm[field] || '').toString().trim();
                 switch (field) {
                     case 'name':
-                        this.addressErrors.name = this.addressForm.name.trim().length < 3 ? 'Full name is too short' : '';
+                        this.addressErrors.name = val.length < 3 ? 'Full name is too short' : '';
                         break;
                     case 'phone':
-                        const phoneRegex = /^[0-9]{10}$/;
-                        this.addressErrors.phone = !phoneRegex.test(this.addressForm.phone) ? 'Enter a valid 10-digit number' : '';
+                        // Relaxed validation: allow 7-15 digits, optional +
+                        const phoneRegex = /^\+?[0-9]{7,15}$/;
+                        this.addressErrors.phone = !phoneRegex.test(val.replace(/\s/g, '')) ? 'Enter a valid phone number' : '';
                         break;
                     case 'addr1':
-                        this.addressErrors.addr1 = this.addressForm.addr1.trim().length < 5 ? 'Address is too short' : '';
+                        this.addressErrors.addr1 = val.length < 5 ? 'Address is too short' : '';
                         break;
                     case 'city':
-                        this.addressErrors.city = this.addressForm.city.trim().length < 2 ? 'Invalid city name' : '';
+                        this.addressErrors.city = val.length < 2 ? 'Invalid city name' : '';
                         break;
                     case 'state':
-                        this.addressErrors.state = this.addressForm.state.trim().length < 2 ? 'Invalid state name' : '';
+                        this.addressErrors.state = val.length < 2 ? 'Invalid state name' : '';
                         break;
                     case 'zip':
-                        const zipRegex = /^[0-9]{6}$/;
-                        this.addressErrors.zip = !zipRegex.test(this.addressForm.zip) ? 'Enter a valid 6-digit postal code' : '';
+                        // Relaxed validation: 3-10 characters (alphanumeric for international)
+                        const zipRegex = /^[A-Za-z0-9 -]{3,10}$/;
+                        this.addressErrors.zip = !zipRegex.test(val) ? 'Enter a valid postal code' : '';
                         break;
                 }
             },
 
             validateAddressForm() {
-                this.validateAddressField('name');
-                this.validateAddressField('phone');
-                this.validateAddressField('addr1');
-                this.validateAddressField('city');
-                this.validateAddressField('state');
-                this.validateAddressField('zip');
+                const fields = ['name', 'phone', 'addr1', 'city', 'state', 'zip'];
+                fields.forEach(f => this.validateAddressField(f));
                 return !Object.values(this.addressErrors).some(error => error !== '');
             },
 

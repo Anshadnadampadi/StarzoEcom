@@ -480,10 +480,17 @@ export const setDefaultAddress = async (userId, addrId) => {
     try {
         const user = await User.findById(userId);
         if (!user) return { success: false, message: 'User not found' };
-        user.addresses.forEach(a => {
-            a.default = a._id.toString() === addrId.toString();
-        });
-        await user.save();
+        // Unset all addresses for this user as default
+        await Address.updateMany(
+            { _id: { $in: user.addresses } },
+            { $set: { default: false } }
+        );
+
+        // Set the selected address as default
+        const result = await Address.findByIdAndUpdate(addrId, { $set: { default: true } }, { new: true });
+        
+        if (!result) return { success: false, message: 'Address not found' };
+
         return { success: true };
     } catch (error) {
         console.log('Set default address error:', error);

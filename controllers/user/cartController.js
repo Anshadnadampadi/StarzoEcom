@@ -1,4 +1,5 @@
 import * as cartService from "../../services/user/cartService.js";
+import { getAvailableCouponsService } from "../../services/user/couponService.js";
 
 // Fetch user's cart
 export const getCart = async (req, res) => {
@@ -8,9 +9,12 @@ export const getCart = async (req, res) => {
         }
 
         const cart = await cartService.getCartData(req.session.user);
+        const availableCoupons = await getAvailableCouponsService(req.session.user);
         const { msg, icon } = req.query;
+        
         res.render("user/cart", { 
             cart, 
+            availableCoupons,
             title: "Shopping Cart — MobiVerse",
             breadcrumbs: [
                 { label: 'Shop', url: '/products' },
@@ -105,5 +109,15 @@ export const clearCart = async (req, res) => {
     } catch (error) {
         console.error("Clear Cart Error:", error);
         return res.status(500).json({ success: false, message: error.message || "Something went wrong" });
+    }
+};
+
+export const getAvailableCoupons = async (req, res) => {
+    try {
+        const coupons = await getAvailableCouponsService(req.session.user);
+        res.json({ success: true, coupons });
+    } catch (error) {
+        console.error("Fetch Coupons Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch coupons" });
     }
 };

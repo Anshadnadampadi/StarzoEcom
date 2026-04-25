@@ -7,7 +7,7 @@ import * as offerService from "../common/offerService.js";
  * Service to handle cart operations
  */
 export const getCartData = async (userId) => {
-    let cart = await Cart.findOne({ userId }).populate("items.product").lean();
+    let cart = await Cart.findOne({ userId }).populate("items.product").populate("coupon").lean();
 
     if (cart && cart.items.length > 0) {
         // Flag items as unavailable and update with BEST OFFER prices

@@ -35,3 +35,13 @@ export const markAllAsRead = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
+export const clearAllNotifications = async (req, res) => {
+    try {
+        await Notification.deleteMany({});
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing notifications:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};

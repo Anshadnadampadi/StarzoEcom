@@ -3,7 +3,7 @@ import User from "../../models/user/User.js";
 import Wallet from "../../models/user/Wallet.js";
 import Order from "../../models/order/order.js";
 import { placeOrderService, verifyPaymentService } from "../../services/user/checkoutService.js";
-import { applyCouponService, getAvailableCouponsService } from "../../services/user/couponService.js";
+import { applyCouponService, getAvailableCouponsService, removeCouponService } from "../../services/user/couponService.js";
 import { sendAdminNotification } from "../../utils/notificationHelper.js";
 
 
@@ -126,6 +126,16 @@ export const validateCoupon = async (req, res) => {
         const { code } = req.body;
         const userId = req.session.user;
         const result = await applyCouponService(userId, code);
+        res.status(200).json({ success: true, ...result });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const removeCoupon = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const result = await removeCouponService(userId);
         res.status(200).json({ success: true, ...result });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });

@@ -1,5 +1,5 @@
 import express from 'express';
-import { getCheckout, placeOrder, verifyPayment, getOrderSuccess, validateCoupon, getPaymentFailure } from '../../controllers/user/checkoutController.js';
+import { getCheckout, placeOrder, verifyPayment, getOrderSuccess, validateCoupon, removeCoupon, getPaymentFailure } from '../../controllers/user/checkoutController.js';
 import { ensureLoggedIn } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -15,6 +15,9 @@ router.post('/verify-payment', ensureLoggedIn, verifyPayment);
 
 // Validate coupon
 router.post('/validate-coupon', ensureLoggedIn, validateCoupon);
+
+// Remove coupon
+router.post('/remove-coupon', ensureLoggedIn, removeCoupon);
 
 // Payment Failure Page
 router.get('/payment-failure', ensureLoggedIn, getPaymentFailure);

@@ -17,16 +17,11 @@ import productRoutes from '../products/productRoutes.js';
 import adminOrderRoutes from './adminOrderRoutes.js';
 import couponRoutes from './adminCoupon.js';
 import offerRoutes from './adminOfferRoutes.js';
-import { getNotifications, markAsRead, markAllAsRead } from '../../controllers/admin/notificationController.js';
+import { getNotifications, markAsRead, markAllAsRead, clearAllNotifications } from '../../controllers/admin/notificationController.js';
 
 const router = express.Router();
 
 // ... existing code ...
-
-// Notifications API
-router.get('/api/notifications', getNotifications);
-router.patch('/api/notifications/:id/read', markAsRead);
-router.patch('/api/notifications/read-all', markAllAsRead);
 
 //  Public Routes
 router.get('/login', getAdminLogin);
@@ -34,6 +29,12 @@ router.post('/login', postAdminLogin);
 
 //  Protect everything below
 router.use(adminAuth);
+
+// Notifications API (Protected)
+router.get('/api/notifications', getNotifications);
+router.patch('/api/notifications/read-all', markAllAsRead);
+router.delete('/api/notifications/clear-all', clearAllNotifications);
+router.patch('/api/notifications/:id/read', markAsRead);
 
 //  Protected Routes
 router.get('/logout', adminLogout);

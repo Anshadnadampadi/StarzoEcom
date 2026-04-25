@@ -1,16 +1,14 @@
 <!-- views/user/cart.ejs -->
 <%- contentFor('body') %>
 
-    <div class="min-h-screen bg-black py-24">
+    <div class="min-h-screen bg-black py-24" x-data="cartManager()">
         <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
             <header class="mb-16">
                 <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">Shopping Cart</h1>
                 <p class="text-text-secondary text-sm mt-4">Review and manage the items in your cart before checkout.
                 </p>
             </header>
-
-
-
+            
             <% if (typeof cart !=='undefined' && cart.items.length> 0) { %>
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
 
@@ -68,7 +66,7 @@
                                             onclick="updateQty('<%= item._id %>', 1)">+</button>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-white font-mono font-bold text-lg" data-item-total>₹<%= (item.price *
+                                        <p class="text-white font-mono font-bold text-lg" id="item-total-<%= item._id %>">₹<%= (item.price *
                                                 item.qty).toLocaleString() %>
                                         </p>
                                         <button
@@ -82,6 +80,32 @@
 
                     <!-- Right: Summary -->
                     <div class="lg:col-span-4 sticky top-40">
+                        <!-- Coupon Section -->
+                        <div class="bg-black-card border border-black-border p-8 mb-8 relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 w-24 h-24 bg-accent/5 rounded-full blur-2xl group-hover:bg-accent/10 transition-colors"></div>
+                            <h3 class="text-white text-[10px] font-black tracking-[0.3em] uppercase mb-6 flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-accent rounded-full"></span>
+                          Coupons
+                            </h3>
+                            <div class="flex gap-2">
+                                <input type="text" x-model="couponCode" :disabled="discount > 0" 
+                                       class="flex-1 bg-black border border-white/10 text-white px-4 py-3 text-xs font-mono focus:border-accent outline-none transition-all uppercase placeholder-white/20 disabled:opacity-50" 
+                                       placeholder="ENTER CODE">
+                                <button x-show="discount === 0" @click="applyCoupon" 
+                                        class="bg-white/10 border border-white/10 text-white px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+                                    Apply
+                                </button>
+                                <button x-show="discount > 0" @click="removeCoupon" 
+                                        class="bg-status-danger/10 border border-status-danger/20 text-status-danger px-6 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-status-danger hover:text-white transition-all" x-cloak>
+                                    Remove
+                                </button>
+                            </div>
+                            <button @click="$dispatch('open-coupons-modal')" class="mt-6 text-accent text-[9px] font-black uppercase tracking-[0.2em] hover:text-white transition-colors flex items-center gap-2 group/btn">
+                                <span>View Available Coupons</span>
+                                <svg class="w-3 h-3 transform group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            </button>
+                        </div>
+
                         <div class="bg-black-card border border-black-border p-8">
                             <h2
                                 class="text-white text-label font-bold uppercase mb-8 border-b border-black-border pb-4">
@@ -90,9 +114,13 @@
                             <div class="space-y-6" id="cart-summary-actions">
                                 <div class="flex justify-between text-text-secondary text-sm">
                                     <span>Subtotal</span>
-                                    <span class="text-white font-mono" data-subtotal>
+                                    <span class="text-white font-mono" x-text="'₹' + subtotal.toLocaleString()">
                                         ₹<%= cart.subtotal.toLocaleString() %>
                                     </span>
+                                </div>
+                                <div class="flex justify-between text-text-secondary text-sm" x-show="discount > 0" x-cloak>
+                                    <span>Protocol Discount</span>
+                                    <span class="text-accent font-mono" x-text="'-₹' + discount.toLocaleString()"></span>
                                 </div>
                                 <div class="flex justify-between text-text-secondary text-sm">
                                     <span>Delivery</span>
@@ -100,8 +128,9 @@
                                 </div>
                                 <div class="pt-6 border-t border-black-border flex justify-between items-baseline">
                                     <span class="text-white text-label font-bold uppercase">Total Pay</span>
-                                    <span class="text-white text-2xl font-mono font-bold" data-cart-total>₹<%=
-                                            cart.subtotal.toLocaleString() %></span>
+                                    <span class="text-white text-2xl font-mono font-bold" x-text="'₹' + totalAmount.toLocaleString()">
+                                        ₹<%= cart.subtotal.toLocaleString() %>
+                                    </span>
                                 </div>
 
                                 <div id="checkout-container" class="pt-4">
@@ -159,43 +188,173 @@
                     </div>
                     <% } %>
         </div>
+
+        <!-- Coupons Modal -->
+        <div x-show="couponsModalOpen" x-cloak 
+             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="fixed inset-0 z-[100] flex items-center justify-center p-6"
+             @open-coupons-modal.window="couponsModalOpen = true; fetchCoupons()">
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="couponsModalOpen = false"></div>
+            <div class="bg-black-surface border border-white/10 w-full max-w-md relative z-10 overflow-hidden shadow-2xl">
+                <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/[0.02]">
+                    <h3 class="text-white text-[11px] font-black tracking-[0.3em] uppercase">Available Protocols</h3>
+                    <button @click="couponsModalOpen = false" class="text-white/20 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                
+                <div class="p-6 max-h-[400px] overflow-y-auto custom-scrollbar space-y-4">
+                    <!-- Loading State -->
+                    <template x-if="isLoadingCoupons">
+                        <div class="py-12 flex flex-col items-center gap-4">
+                            <div class="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+                            <p class="text-white/20 text-[9px] font-black uppercase tracking-widest">Scanning Protocols...</p>
+                        </div>
+                    </template>
+
+                    <!-- Coupon List -->
+                    <template x-if="!isLoadingCoupons && availableCoupons.length > 0">
+                        <template x-for="coupon in availableCoupons" :key="coupon._id">
+                            <div class="group relative bg-black/40 border border-white/10 p-4 transition-all duration-300 hover:border-accent/50 cursor-pointer overflow-hidden"
+                                 @click="couponCode = coupon.code; applyCoupon(); couponsModalOpen = false">
+                                
+                                <div class="relative z-10 flex justify-between items-center">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-accent text-[9px] font-bold tracking-widest uppercase" x-text="coupon.code"></span>
+                                        </div>
+                                        <h4 class="text-white text-lg font-bold" 
+                                            x-text="coupon.discountType === 'percentage' ? coupon.discountValue + '% OFF' : '₹' + coupon.discountValue.toLocaleString() + ' OFF'"></h4>
+                                        <p class="text-white/40 text-[8px] uppercase tracking-wider mt-1"
+                                           x-text="'Min. Purchase: ₹' + coupon.minAmount.toLocaleString()"></p>
+                                    </div>
+                                    
+                                    <button class="text-accent text-[9px] font-black uppercase tracking-widest px-4 py-2 border border-accent/20 group-hover:bg-accent group-hover:text-black transition-all duration-300">
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- Empty State -->
+                    <template x-if="!isLoadingCoupons && availableCoupons.length === 0">
+                        <div class="text-center py-12 border border-dashed border-white/10">
+                            <p class="text-white/20 text-[10px] font-black uppercase tracking-widest">No available protocols found.</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        function updateItemBadge(itemId, status) {
-            const badgeContainer = document.getElementById('item-badge-' + itemId);
-            if (!badgeContainer) return;
+        function cartManager() {
+            return {
+                subtotal: <%= cart.subtotal %>,
+                discount: 0,
+                couponCode: '',
+                couponsModalOpen: false,
+                availableCoupons: [],
+                isLoadingCoupons: false,
 
-            let badgeHtml = '';
-            if (status.isUnavailable) {
-                badgeHtml = `<span class="inline-block mt-3 px-3 py-1 bg-status-danger/10 border border-status-danger/30 text-status-danger text-[9px] font-black uppercase tracking-[0.2em]">● Unavailable</span>`;
-            } else if (status.isOutOfStock) {
-                badgeHtml = `<span class="inline-block mt-3 px-3 py-1 bg-status-danger/10 border border-status-danger/30 text-status-danger text-[9px] font-black uppercase tracking-[0.2em]">● Out of Stock</span>`;
-            } else if (status.insufficientStock) {
-                badgeHtml = `<span class="inline-block mt-3 px-3 py-1 bg-status-warning/10 border border-status-warning/30 text-status-warning text-[9px] font-black uppercase tracking-[0.2em]">● Only ${status.availableStock} Left</span>`;
-            }
+                get totalAmount() {
+                    return Math.max(0, this.subtotal - this.discount);
+                },
 
-            badgeContainer.innerHTML = badgeHtml;
-        }
+                async fetchCoupons() {
+                    this.isLoadingCoupons = true;
+                    try {
+                        const res = await fetch('/cart/available-coupons');
+                        const data = await res.json();
+                        if(data.success) {
+                            this.availableCoupons = data.coupons;
+                        }
+                    } catch(err) {
+                        console.error('Fetch Coupons Error:', err);
+                    } finally {
+                        this.isLoadingCoupons = false;
+                    }
+                },
 
-        function updateCheckoutUI(hasIssues) {
-            const issuesContainer = document.getElementById('cart-issues-container');
-            const buttonWrapper = document.getElementById('checkout-button-wrapper');
+                async applyCoupon() {
+                    const code = this.couponCode ? this.couponCode.trim().toUpperCase() : '';
+                    if(!code) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Please enter a coupon code.', type: 'warning' }}));
+                        return;
+                    }
 
-            if (hasIssues) {
-                issuesContainer.classList.remove('hidden');
-                buttonWrapper.innerHTML = `
-                    <button disabled class="w-full bg-white/20 text-white/40 font-bold py-5 text-sm tracking-[0.2em] uppercase cursor-not-allowed block text-center">
-                        PROCEED TO CHECKOUT
-                    </button>
-                `;
-            } else {
-                issuesContainer.classList.add('hidden');
-                buttonWrapper.innerHTML = `
-                    <a href="/checkout" class="w-full bg-accent text-black font-bold py-5 text-sm tracking-[0.2em] uppercase hover:bg-white transition-all btn-press block text-center">
-                        PROCEED TO CHECKOUT
-                    </a>
-                `;
+                    try {
+                        const res = await fetch('/checkout/validate-coupon', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ code })
+                        });
+                        const data = await res.json();
+                        
+                        if(data.success) {
+                            this.discount = data.discount;
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Coupon applied successfully!', type: 'success' }}));
+                        } else {
+                            this.discount = 0;
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Invalid coupon.', type: 'error' }}));
+                        }
+                    } catch(err) {
+                        console.error(err);
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to verify coupon.', type: 'error' }}));
+                    }
+                },
+
+                async removeCoupon() {
+                    try {
+                        const res = await fetch('/checkout/remove-coupon', { method: 'POST' });
+                        const data = await res.json();
+                        if(data.success) {
+                            this.couponCode = '';
+                            this.discount = 0;
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Coupon removed.', type: 'success' }}));
+                        }
+                    } catch(err) {
+                        console.error(err);
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to remove coupon.', type: 'error' }}));
+                    }
+                },
+
+                updateItemBadge(itemId, status) {
+                    const badgeContainer = document.getElementById('item-badge-' + itemId);
+                    if (!badgeContainer) return;
+
+                    let badgeHtml = '';
+                    if (status.isUnavailable) {
+                        badgeHtml = `<span class="inline-block mt-3 px-3 py-1 bg-status-danger/10 border border-status-danger/30 text-status-danger text-[9px] font-black uppercase tracking-[0.2em]">● Unavailable</span>`;
+                    } else if (status.isOutOfStock) {
+                        badgeHtml = `<span class="inline-block mt-3 px-3 py-1 bg-status-danger/10 border border-status-danger/30 text-status-danger text-[9px] font-black uppercase tracking-[0.2em]">● Out of Stock</span>`;
+                    } else if (status.insufficientStock) {
+                        badgeHtml = `<span class="inline-block mt-3 px-3 py-1 bg-status-warning/10 border border-status-warning/30 text-status-warning text-[9px] font-black uppercase tracking-[0.2em]">● Only ${status.availableStock} Left</span>`;
+                    }
+                    badgeContainer.innerHTML = badgeHtml;
+                },
+
+                updateCheckoutUI(hasIssues) {
+                    const issuesContainer = document.getElementById('cart-issues-container');
+                    const buttonWrapper = document.getElementById('checkout-button-wrapper');
+
+                    if (hasIssues) {
+                        issuesContainer.classList.remove('hidden');
+                        buttonWrapper.innerHTML = `
+                            <button disabled class="w-full bg-white/20 text-white/40 font-bold py-5 text-sm tracking-[0.2em] uppercase cursor-not-allowed block text-center">
+                                PROCEED TO CHECKOUT
+                            </button>
+                        `;
+                    } else {
+                        issuesContainer.classList.add('hidden');
+                        buttonWrapper.innerHTML = `
+                            <a href="/checkout" class="w-full bg-accent text-black font-bold py-5 text-sm tracking-[0.2em] uppercase hover:bg-white transition-all btn-press block text-center">
+                                PROCEED TO CHECKOUT
+                            </a>
+                        `;
+                    }
+                }
             }
         }
 
@@ -210,24 +369,22 @@
 
                 if (data.success) {
                     const itemDiv = document.getElementById('item-' + itemId);
-
-                    // Update quantity
                     itemDiv.querySelector('.qty').textContent = data.newQty;
-
-                    // Update item total
-                    const priceEl = itemDiv.querySelector('[data-item-total]');
+                    
+                    const priceEl = document.getElementById('item-total-' + itemId);
                     priceEl.textContent = `₹${data.itemTotal.toLocaleString()}`;
 
-                    // Update subtotal and total
-                    const formattedSubtotal = `₹${data.cartSubtotal.toLocaleString()}`;
-                    document.querySelector('[data-subtotal]').textContent = formattedSubtotal;
-                    document.querySelector('[data-cart-total]').textContent = formattedSubtotal;
-
-                    // Update Item Badge
-                    updateItemBadge(itemId, data.itemStatus);
+                    // Update Alpine state
+                    const alpineData = document.querySelector('[x-data]').__x.$data;
+                    alpineData.subtotal = data.cartSubtotal;
                     
-                    // Update Checkout Button State
-                    updateCheckoutUI(data.hasIssues);
+                    // If coupon was applied, re-validate it
+                    if(alpineData.discount > 0) {
+                        alpineData.applyCoupon();
+                    }
+
+                    alpineData.updateItemBadge(itemId, data.itemStatus);
+                    alpineData.updateCheckoutUI(data.hasIssues);
                 } 
                 else {
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Error updating quantity', type: 'error' } }));
@@ -259,13 +416,16 @@
                         window.location.reload();
                     } else {
                         document.getElementById('item-' + itemId).remove();
-                        // Update subtotal and total
-                        const formattedSubtotal = `₹${data.cartSubtotal.toLocaleString()}`;
-                        document.querySelector('[data-subtotal]').textContent = formattedSubtotal;
-                        document.querySelector('[data-cart-total]').textContent = formattedSubtotal;
                         
-                        // Update Checkout Button State
-                        updateCheckoutUI(data.hasIssues);
+                        // Update Alpine state
+                        const alpineData = document.querySelector('[x-data]').__x.$data;
+                        alpineData.subtotal = data.cartSubtotal;
+                        
+                        if(alpineData.discount > 0) {
+                            alpineData.applyCoupon();
+                        }
+
+                        alpineData.updateCheckoutUI(data.hasIssues);
                     }
                 } else {
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Error removing item', type: 'error' } }));
@@ -275,8 +435,14 @@
                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Server connection failed', type: 'error' } }));
             }
         }
-
     </script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 106, 0, 0.2); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ff6a00; }
+    </style>
     <script>
   document.getElementById("clearCartBtn").addEventListener("click", async () => {
 
