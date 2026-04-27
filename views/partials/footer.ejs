@@ -1,72 +1,75 @@
 <!-- views/partials/footer.ejs -->
-<footer class="bg-black border-t border-black-border pt-20 pb-10">
-    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-12 mb-20">
-            <!-- Branding -->
-            <div class="col-span-2 lg:col-span-1">
-                <a href="/" class="text-white font-bold tracking-widest text-xl mb-4 block">STARZO</a>
-                <p class="text-white/40 text-xs leading-relaxed mb-6">
-                    India's premier destination for high-end mobile technology. Curating the best flagship experiences since 2024.
+<footer class="bg-[#050505] border-t border-white/5 pt-24 pb-12">
+    <div class="max-w-[1200px] mx-auto px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-12 mb-20">
+            <!-- Branding & About -->
+            <div class="col-span-2 space-y-6">
+                <a href="/" class="text-white font-black tracking-[0.3em] text-2xl">STARZO</a>
+                <p class="text-white/30 text-[13px] leading-relaxed max-w-xs">
+                    India's leading destination for premium mobile hardware and official accessories. Delivering excellence since 2024.
                 </p>
-                <div class="flex gap-4">
-                    <!-- Social icons (simplified) -->
-                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white transition-all cursor-pointer">IG</div>
-                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white transition-all cursor-pointer">X</div>
-                    <div class="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:border-white transition-all cursor-pointer">FB</div>
+                <div class="flex gap-4 pt-2">
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-accent hover:border-accent transition-all text-xs font-bold">IG</a>
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-accent hover:border-accent transition-all text-xs font-bold">X</a>
+                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-accent hover:border-accent transition-all text-xs font-bold">FB</a>
                 </div>
             </div>
 
             <!-- Shop -->
-            <div>
-                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Shop</h4>
-                <ul class="space-y-4">
-                    <li><a href="/phones" class="text-white/40 hover:text-white text-xs transition-colors">All Phones</a></li>
-                    <li><a href="/brands/apple" class="text-white/40 hover:text-white text-xs transition-colors">Apple</a></li>
-                    <li><a href="/brands/samsung" class="text-white/40 hover:text-white text-xs transition-colors">Samsung</a></li>
-                    <li><a href="/deals" class="text-white/40 hover:text-white text-xs transition-colors">Special Offers</a></li>
+            <div class="space-y-6">
+                <h4 class="text-white text-[11px] font-black uppercase tracking-[0.2em]">Shop</h4>
+                <ul class="space-y-3">
+                    <li><a href="/phones" class="text-white/40 hover:text-white text-[13px] transition-colors">All Phones</a></li>
+                    <li><a href="/catalog?category=flagship" class="text-white/40 hover:text-white text-[13px] transition-colors">Flagships</a></li>
+                    <li><a href="/catalog?category=gaming" class="text-white/40 hover:text-white text-[13px] transition-colors">Gaming</a></li>
+                    <li><a href="/deals" class="text-white/40 hover:text-white text-[13px] transition-colors">Special Offers</a></li>
                 </ul>
             </div>
 
             <!-- Account -->
-            <div>
-                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Account</h4>
-                <ul class="space-y-4">
-                    <li><a href="/account" class="text-white/40 hover:text-white text-xs transition-colors">Profile</a></li>
-                    <li><a href="/account/orders" class="text-white/40 hover:text-white text-xs transition-colors">My Orders</a></li>
-                    <li><a href="/account/wishlist" class="text-white/40 hover:text-white text-xs transition-colors">Wishlist</a></li>
-                    <li><a href="/cart" class="text-white/40 hover:text-white text-xs transition-colors">Shopping Cart</a></li>
+            <div class="space-y-6">
+                <h4 class="text-white text-[11px] font-black uppercase tracking-[0.2em]">Account</h4>
+                <ul class="space-y-3">
+                    <li><a href="/account" class="text-white/40 hover:text-white text-[13px] transition-colors">Profile</a></li>
+                    <li><a href="/account/orders" class="text-white/40 hover:text-white text-[13px] transition-colors">My Orders</a></li>
+                    <li><a href="/wallet" class="text-white/40 hover:text-white text-[13px] transition-colors">Wallet</a></li>
+                    <li><a href="/cart" class="text-white/40 hover:text-white text-[13px] transition-colors">Shopping Bag</a></li>
                 </ul>
             </div>
 
-            <!-- Help -->
-            <div>
-                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Help</h4>
-                <ul class="space-y-4">
-                    <li><a href="/support" class="text-white/40 hover:text-white text-xs transition-colors">Support Center</a></li>
-                    <li><a href="/shipping-policy" class="text-white/40 hover:text-white text-xs transition-colors">Shipping Info</a></li>
-                    <li><a href="/return-policy" class="text-white/40 hover:text-white text-xs transition-colors">Returns</a></li>
-                    <li><a href="/exchange" class="text-white/40 hover:text-white text-xs transition-colors">Exchange</a></li>
+            <!-- Support -->
+            <div class="space-y-6">
+                <h4 class="text-white text-[11px] font-black uppercase tracking-[0.2em]">Support</h4>
+                <ul class="space-y-3">
+                    <li><a href="/support" class="text-white/40 hover:text-white text-[13px] transition-colors">Help Center</a></li>
+                    <li><a href="/shipping-policy" class="text-white/40 hover:text-white text-[13px] transition-colors">Shipping Info</a></li>
+                    <li><a href="/return-policy" class="text-white/40 hover:text-white text-[13px] transition-colors">Returns</a></li>
+                    <li><a href="/support" class="text-white/40 hover:text-white text-[13px] transition-colors">Contact Us</a></li>
                 </ul>
             </div>
 
             <!-- Newsltter -->
-            <div class="col-span-2 lg:col-span-1">
-                <h4 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6">Updates</h4>
-                <p class="text-white/40 text-xs mb-4">Be the first to know about flagship launches.</p>
-                <form class="flex gap-2">
-                    <input type="email" placeholder="Email" class="bg-white/5 border border-white/10 px-4 py-2 text-xs text-white focus:outline-none focus:border-accent w-full">
-                    <button class="bg-accent text-black px-4 py-2 text-[10px] font-bold">SUBMIT</button>
+            <div class="col-span-2 md:col-span-1 space-y-6">
+                <h4 class="text-white text-[11px] font-black uppercase tracking-[0.2em]">Updates</h4>
+                <p class="text-white/30 text-[12px]">Be the first to know about flagship launches.</p>
+                <form class="space-y-3">
+                    <input type="email" placeholder="Email Address" class="bg-white/5 border border-white/10 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-accent w-full rounded-sm">
+                    <button class="bg-white text-black hover:bg-accent transition-all w-full py-2.5 text-[10px] font-black uppercase tracking-widest rounded-sm">Subscribe</button>
                 </form>
             </div>
         </div>
 
         <!-- Bottom bar -->
-        <div class="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p class="text-white/20 text-[10px] tracking-widest uppercase">© 2024 STARZO PLATFORM. ALL RIGHTS RESERVED.</p>
-            <div class="flex gap-6">
-                <a href="/privacy-policy" class="text-white/20 hover:text-white text-[10px] tracking-widest uppercase transition-colors">Privacy Policy</a>
-                <a href="/terms" class="text-white/20 hover:text-white text-[10px] tracking-widest uppercase transition-colors">Terms of Service</a>
+        <div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-center md:text-left">
+                <p class="text-white/20 text-[10px] font-bold tracking-widest uppercase">© 2026 STARZO MOBILES INC.</p>
+                <div class="flex gap-6">
+                    <a href="/privacy-policy" class="text-white/20 hover:text-white text-[10px] font-bold tracking-widest uppercase transition-colors">Privacy</a>
+                    <a href="/terms" class="text-white/20 hover:text-white text-[10px] font-bold tracking-widest uppercase transition-colors">Terms</a>
+                    <a href="/shipping-policy" class="text-white/20 hover:text-white text-[10px] font-bold tracking-widest uppercase transition-colors">Shipping</a>
+                </div>
             </div>
+            <p class="text-white/10 text-[9px] font-medium tracking-tighter uppercase">Crafted for Excellence in India</p>
         </div>
     </div>
 </footer>

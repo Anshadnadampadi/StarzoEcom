@@ -10,13 +10,15 @@ import Category from "../../models/category/category.js";
 
 export const getOfferPage = async (req, res) => {
     try {
-        const offers = await getOffersService(req.query);
+        const { offers, totalPages, currentPage } = await getOffersService(req.query);
         const products = await Product.find({ isListed: true }).select('name');
         const categories = await Category.find({ isUnlisted: false }).select('name');
 
         res.render("admin/marketing/offers", {
             title: 'Offer Management',
             offers,
+            totalPages,
+            currentPage,
             products,
             categories
         });
@@ -38,8 +40,8 @@ export const createOffer = async (req, res) => {
 
 export const getOffers = async (req, res) => {
     try {
-        const offers = await getOffersService(req.query);
-        res.json({ success: true, data: offers });
+        const { offers, totalPages, currentPage } = await getOffersService(req.query);
+        res.json({ success: true, data: offers, totalPages, currentPage });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }

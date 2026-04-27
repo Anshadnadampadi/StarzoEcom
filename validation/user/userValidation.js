@@ -41,13 +41,23 @@ export const registerValidate = joi.object({
             'any.required': 'Password is a required field.',
             'string.pattern.base': 'Password must contain uppercase, lowercase, number and special character.'
         }),
+    confirmPassword: joi.string()
+        .valid(joi.ref('password'))
+        .required()
+        .messages({
+            'any.only': 'Passwords do not match.',
+            'any.required': 'Please confirm your password.'
+        }),
     agree: joi.boolean()
         .valid(true)
         .required()
         .messages({
             'any.only': 'You must agree to the terms and conditions.',
             'any.required': 'Agreement is required.'
-        })
+        }),
+    referralCode: joi.string()
+        .allow('', null)
+        .optional()
 });
 
 export const loginValidate = joi.object({

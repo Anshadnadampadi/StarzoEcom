@@ -1,184 +1,343 @@
-<!-- views/admin/dashboard.ejs -->
 <%- contentFor('body') %>
 
-<div class="space-y-10" x-data="{ 
+<style>
+    .dashboard-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .dashboard-card:hover {
+        border-color: rgba(255, 106, 0, 0.2);
+        background: rgba(255, 255, 255, 0.03);
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.4);
+    }
+    .filter-btn {
+        padding: 6px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        color: rgba(255, 255, 255, 0.4);
+    }
+    .filter-btn.active {
+        background: #ff6a00;
+        color: #000;
+    }
+    .progress-bar-bg {
+        background: rgba(255, 255, 255, 0.05);
+        height: 6px;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        background: #ff6a00;
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1s ease-out;
+    }
+    .alert-card {
+        padding: 24px;
+        border-radius: 12px;
+        text-align: center;
+        flex: 1;
+    }
+    .alert-out {
+        background: rgba(239, 68, 68, 0.05);
+        border: 1px solid rgba(239, 68, 68, 0.1);
+    }
+    .alert-low {
+        background: rgba(245, 158, 11, 0.05);
+        border: 1px solid rgba(245, 158, 11, 0.1);
+    }
+</style>
+
+<div class="space-y-8" x-data="{ 
     currentFilter: 'monthly', 
-    startDate: '', 
-    endDate: '',
     async fetchChart(filter) {
         this.currentFilter = filter;
         let url = `/admin/api/dashboard/chart-data?filter=${filter}`;
-        if (filter === 'custom') {
-            if (!this.startDate || !this.endDate) return;
-            url += `&startDate=${this.startDate}&endDate=${this.endDate}`;
-        }
-        await updateChart(url);
+        await updateCharts(url);
     }
 }">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-start gap-6 border-b border-white/5 pb-10">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-            <h1 class="text-4xl font-bold tracking-tight uppercase text-white mb-2">OPERATIONS OVERVIEW.</h1>
-            <p class="text-white/40 text-[10px] tracking-widest uppercase font-semibold">Real-time analytical infrastructure</p>
+            <h1 class="text-3xl font-bold text-white tracking-tight">Dashboard Overview</h1>
+            <p class="text-white/40 text-sm">Welcome back, here is your summary.</p>
         </div>
         
-        <div class="flex flex-col items-end gap-4">
-            <!-- Strategic Action -->
-            <a href="/admin/sales-report" class="px-8 py-3 bg-accent text-black text-[11px] font-black tracking-[0.2em] uppercase hover:bg-white transition-all flex items-center gap-3 group shadow-lg shadow-accent/10">
+        <!-- Actions -->
+        <div class="flex items-center gap-4">
+            <div class="bg-white/5 p-1 rounded-full flex gap-1">
+                <button @click="fetchChart('daily')" :class="currentFilter === 'daily' ? 'active' : ''" class="filter-btn">Day</button>
+                <button @click="fetchChart('weekly')" :class="currentFilter === 'weekly' ? 'active' : ''" class="filter-btn">Week</button>
+                <button @click="fetchChart('monthly')" :class="currentFilter === 'monthly' ? 'active' : ''" class="filter-btn">Month</button>
+                <button @click="fetchChart('yearly')" :class="currentFilter === 'yearly' ? 'active' : ''" class="filter-btn">Year</button>
+            </div>
+            <a href="/admin/sales-report" class="px-6 py-2.5 bg-accent text-black text-[11px] font-black uppercase tracking-widest rounded-sm hover:bg-white transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 Sales Report
-                <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
             </a>
         </div>
     </div>
 
-    <!-- Stats Grid -->
+    <!-- Top Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
-            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Total Revenue</h4>
-            <div class="flex items-baseline gap-2">
-                <span class="text-3xl font-mono font-bold text-white">₹<%= stats.revenue.total.toLocaleString() %></span>
+        <div class="dashboard-card p-6 flex items-center gap-6 bg-white/[0.04]">
+            <div class="stat-icon bg-accent/20 text-accent">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <p class="text-status-success text-[10px] mt-2 font-bold uppercase tracking-widest">↑ 12.5% from last month</p>
+            <div>
+                <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Total Earning</p>
+                <p class="text-2xl font-bold text-white">₹<%= stats.revenue.total.toLocaleString('en-IN') %></p>
+            </div>
         </div>
 
-        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
-            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Total Orders</h4>
-            <span class="text-3xl font-mono font-bold text-white"><%= stats.orders.total %></span>
-            <p class="text-white/20 text-[10px] mt-2 font-bold uppercase tracking-widest">Delivered successfully</p>
-        </div>
-
-        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
-            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Active Customers</h4>
-            <span class="text-3xl font-mono font-bold text-white"><%= stats.customers.total %></span>
-            <p class="text-accent text-[10px] mt-2 font-bold uppercase tracking-widest">Verified identities</p>
-        </div>
-
-        <div class="bg-black-surface border border-white/5 p-8 group hover:border-white/10 transition-all">
-            <h4 class="text-white/30 text-[10px] font-bold tracking-[0.2em] uppercase mb-6">Performance Index</h4>
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full border-2 border-accent/20 flex items-center justify-center">
-                    <span class="text-[10px] font-bold text-accent">94%</span>
+        <div class="dashboard-card p-6 flex items-center justify-between group">
+            <div class="flex items-center gap-6">
+                <div class="stat-icon">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
-                <p class="text-white/20 text-[10px] font-bold uppercase tracking-widest">System Efficiency</p>
+                <div>
+                    <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Total Customer</p>
+                    <p class="text-2xl font-bold text-white"><%= stats.customers.total %></p>
+                </div>
+            </div>
+            <a href="/admin/customers" class="text-white/20 hover:text-accent transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </a>
+        </div>
+
+        <div class="dashboard-card p-6 flex items-center justify-between group">
+            <div class="flex items-center gap-6">
+                <div class="stat-icon">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Total Order</p>
+                    <p class="text-2xl font-bold text-white"><%= stats.orders.total %></p>
+                </div>
+            </div>
+            <a href="/admin/orders" class="text-white/20 hover:text-accent transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </a>
+        </div>
+
+        <div class="dashboard-card p-6 flex items-center gap-6">
+            <div class="stat-icon">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            </div>
+            <div>
+                <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Avg Order Val</p>
+                <p class="text-2xl font-bold text-white">₹<%= Math.round(stats.aov).toLocaleString('en-IN') %></p>
             </div>
         </div>
     </div>
 
-    <!-- Charts / Leaderboards -->
+    <!-- Main Content Row -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Sales Chart -->
-        <div class="lg:col-span-2 bg-black-surface border border-white/5 p-10">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-white/5">
-                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase">Revenue Visualization</h3>
-                
-                <!-- Visualization Controls -->
-                <div class="flex items-center gap-3">
-                    <select x-model="currentFilter" @change="fetchChart(currentFilter)" class="bg-black border border-white/10 text-white text-[10px] px-3 py-1.5 focus:border-accent outline-none uppercase tracking-widest transition-colors min-w-[120px]">
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                        <option value="custom">Custom</option>
-                    </select>
-
-                    <div x-show="currentFilter === 'custom'" class="flex items-center gap-2 animate-in fade-in slide-in-from-right-1">
-                        <input type="date" x-model="startDate" @change="fetchChart('custom')" class="bg-black border border-white/10 text-white text-[9px] px-2 py-1.5 focus:border-accent outline-none">
-                        <span class="text-white/20 text-[9px] font-bold">TO</span>
-                        <input type="date" x-model="endDate" @change="fetchChart('custom')" class="bg-black border border-white/10 text-white text-[9px] px-2 py-1.5 focus:border-accent outline-none">
-                    </div>
+        <!-- Sales Activity Chart -->
+        <div class="lg:col-span-2 dashboard-card p-8 flex flex-col">
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <h3 class="text-white font-bold flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+                        Sales Activity
+                    </h3>
+                    <p class="text-white/20 text-[10px] font-bold uppercase tracking-widest mt-1">Daily sales this period</p>
                 </div>
+                <span class="text-[10px] font-bold text-white/40 border border-white/10 px-3 py-1 rounded-full uppercase tracking-tighter" x-text="'This ' + currentFilter.replace('ly', '')"></span>
             </div>
-            <div class="h-[400px]">
+            <div class="flex-1 h-[380px]">
                 <canvas id="salesChart"></canvas>
             </div>
         </div>
 
-        <!-- Leaderboards Section -->
-        <div class="space-y-8" x-data="{ tab: 'products' }">
-            <div class="bg-black-surface border border-white/5 overflow-hidden">
-                <div class="flex border-b border-white/5">
-                    <button @click="tab = 'products'" :class="tab === 'products' ? 'text-white border-b-2 border-accent' : 'text-white/30'" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest transition-colors hover:text-white">Products</button>
-                    <button @click="tab = 'categories'" :class="tab === 'categories' ? 'text-white border-b-2 border-accent' : 'text-white/30'" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest transition-colors hover:text-white">Categories</button>
-                    <button @click="tab = 'brands'" :class="tab === 'brands' ? 'text-white border-b-2 border-accent' : 'text-white/30'" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest transition-colors hover:text-white">Brands</button>
-                </div>
-
-                <div class="p-6">
-                    <!-- Top Products -->
-                    <div x-show="tab === 'products'" class="space-y-4">
-                        <% stats.topProducts.forEach((p, i) => { %>
-                            <div class="flex items-center justify-between group">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-[10px] font-mono text-white/20">0<%= i+1 %></span>
-                                    <span class="text-[11px] text-white/60 group-hover:text-white transition-colors truncate w-32 uppercase tracking-wide"><%= p.name %></span>
-                                </div>
-                                <span class="text-[10px] font-bold text-accent"><%= p.totalSold %> SOLD</span>
-                            </div>
-                        <% }) %>
-                    </div>
-
-                    <!-- Top Categories -->
-                    <div x-show="tab === 'categories'" class="space-y-4">
-                        <% stats.topCategories.forEach((c, i) => { %>
-                            <div class="flex items-center justify-between group">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-[10px] font-mono text-white/20">0<%= i+1 %></span>
-                                    <span class="text-[11px] text-white/60 group-hover:text-white transition-colors uppercase tracking-wide"><%= c.name %></span>
-                                </div>
-                                <span class="text-[10px] font-bold text-accent"><%= c.totalSold %> UNITS</span>
-                            </div>
-                        <% }) %>
-                    </div>
-
-                    <!-- Top Brands -->
-                    <div x-show="tab === 'brands'" class="space-y-4">
-                        <% stats.topBrands.forEach((b, i) => { %>
-                            <div class="flex items-center justify-between group">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-[10px] font-mono text-white/20">0<%= i+1 %></span>
-                                    <span class="text-[11px] text-white/60 group-hover:text-white transition-colors uppercase tracking-wide"><%= b.name %></span>
-                                </div>
-                                <span class="text-[10px] font-bold text-accent"><%= b.totalSold %> UNITS</span>
-                            </div>
-                        <% }) %>
-                    </div>
-                </div>
-                <div class="bg-white/[0.02] p-4 text-center border-t border-white/5">
-                    <p class="text-[9px] text-white/20 uppercase font-bold tracking-[0.2em]">Top 10 Strategic Leaders</p>
+        <!-- Order Status Donut -->
+        <div class="dashboard-card p-8 bg-[#0a0a0a]">
+            <h3 class="text-white font-bold mb-1">Order Status</h3>
+            <p class="text-white/20 text-[10px] font-bold uppercase tracking-widest mb-10">Distribution breakdown</p>
+            
+            <div class="relative h-[250px] mb-10">
+                <canvas id="statusChart"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="text-3xl font-black text-white"><%= stats.orders.total %></span>
+                    <span class="text-[8px] font-bold text-white/20 uppercase tracking-[0.2em]">Orders</span>
                 </div>
             </div>
 
-            <!-- Quick Access -->
-            <div class="bg-black-surface border border-white/5 p-8">
-                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-6 pb-4 border-b border-white/5">Intelligence Tools</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <a href="/admin/sales-report" class="bg-white/5 p-4 border border-white/5 hover:border-accent transition-colors group">
-                        <span class="block text-[10px] text-white/40 group-hover:text-accent mb-2">📊</span>
-                        <span class="text-[10px] font-bold text-white uppercase tracking-widest">Ledger Book</span>
-                    </a>
-                    <a href="/admin/marketing/coupons" class="bg-white/5 p-4 border border-white/5 hover:border-accent transition-colors group">
-                        <span class="block text-[10px] text-white/40 group-hover:text-accent mb-2">🎟️</span>
-                        <span class="text-[10px] font-bold text-white uppercase tracking-widest">Promotions</span>
-                    </a>
+            <div class="space-y-4">
+                <% const statuses = [
+                    { label: 'Delivered', key: 'Delivered', color: '#10b981' },
+                    { label: 'Pending', key: 'Pending', color: '#f59e0b' },
+                    { label: 'Cancelled', key: 'Cancelled', color: '#ef4444' },
+                    { label: 'Returned', key: 'Returned', color: '#6366f1' }
+                ] %>
+                <% statuses.forEach(s => { %>
+                    <div class="flex items-center justify-between group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-1 rounded-full" style="background: <%= s.color %>"></span>
+                            <span class="text-[11px] font-bold text-white/40 group-hover:text-white transition-colors"><%= s.label %></span>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-white"><%= stats.orderStatus[s.key] %></span>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Best Categories -->
+        <div class="dashboard-card p-8">
+            <div class="flex justify-between items-center mb-10">
+                <h3 class="text-white font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-status-success"></span>
+                    Best Categories
+                </h3>
+                <a href="/admin/categories" class="text-[10px] font-bold text-accent hover:text-white transition-colors uppercase tracking-widest flex items-center gap-1">
+                    View All
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </a>
+            </div>
+            
+            <div class="space-y-8">
+                <% const maxSold = stats.topCategories.length > 0 ? stats.topCategories[0].totalSold : 1; %>
+                <% stats.topCategories.slice(0, 4).forEach(cat => { %>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-[11px] font-bold uppercase tracking-tight">
+                            <span class="text-white/60"><%= cat.name %></span>
+                            <span class="text-white"><%= cat.totalSold %> sold</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: <%= (cat.totalSold / maxSold) * 100 %>%"></div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+
+        <!-- Inventory Alerts -->
+        <div class="dashboard-card p-8">
+            <h3 class="text-white font-bold flex items-center gap-2 mb-10">
+                <span class="w-2 h-2 rounded-full bg-status-danger animate-pulse"></span>
+                Inventory Alerts
+            </h3>
+
+            <div class="flex gap-6">
+                <div class="alert-card alert-out">
+                    <p class="text-status-danger text-[10px] font-bold uppercase tracking-widest mb-2">Out of Stock</p>
+                    <p class="text-5xl font-black text-status-danger mb-2"><%= stats.inventory.outOfStock %></p>
+                    <p class="text-white/20 text-[9px] font-bold uppercase">variants need restock</p>
                 </div>
+                <div class="alert-card alert-low">
+                    <p class="text-status-warning text-[10px] font-bold uppercase tracking-widest mb-2">Low Stock</p>
+                    <p class="text-5xl font-black text-status-warning mb-2"><%= stats.inventory.lowStock %></p>
+                    <p class="text-white/20 text-[9px] font-bold uppercase">variants running low</p>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <a href="/admin/inventory" class="inline-block px-10 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] hover:bg-accent transition-all">View Inventory</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Sections Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Most Popular Products -->
+        <div class="dashboard-card p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-white font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-accent"></span>
+                    Most Popular Products
+                </h3>
+                <a href="/admin/productManagement" class="text-[10px] font-bold text-accent hover:text-white transition-colors uppercase tracking-widest">View All</a>
+            </div>
+            <div class="space-y-6">
+                <% stats.topProducts.slice(0, 5).forEach(product => { %>
+                    <div class="flex items-center justify-between group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-white/5 rounded-lg overflow-hidden border border-white/5">
+                                <img src="/uploads/<%= product.image %>" class="w-full h-full object-cover" alt="<%= product.name %>">
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-white uppercase truncate max-w-[200px]"><%= product.name %></p>
+                                <span class="text-[9px] font-black text-status-success uppercase tracking-widest px-2 py-0.5 bg-status-success/10 rounded-full">Popular</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-8">
+                            <span class="text-xs font-bold text-white/40"><%= product.totalSold %> sold</span>
+                            <a href="/admin/productManagement" class="p-2 hover:bg-white/5 rounded-full transition-colors text-white/20 hover:text-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            </a>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="dashboard-card p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-white font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-status-success"></span>
+                    Recent Orders
+                </h3>
+                <a href="/admin/orders" class="text-[10px] font-bold text-accent hover:text-white transition-colors uppercase tracking-widest">View All</a>
+            </div>
+            <div class="space-y-6">
+                <% stats.recentOrders.slice(0, 5).forEach(order => { %>
+                    <div class="flex items-center justify-between group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-xs font-bold text-white/40 uppercase">
+                                <%= order.user ? (order.user.firstName[0] + (order.user.lastName ? order.user.lastName[0] : '')) : '?' %>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-white uppercase tracking-tighter">#<%= order.orderId %></p>
+                                <p class="text-[9px] text-white/20 font-bold uppercase"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-white">₹<%= order.totalAmount.toLocaleString() %></p>
+                            <span class="text-[8px] font-black uppercase tracking-widest text-white/30"><%= order.orderStatus %></span>
+                        </div>
+                    </div>
+                <% }) %>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let salesChart;
+    let salesChart, statusChart;
 
-    async function updateChart(url) {
+    async function updateCharts(url) {
         try {
             const response = await fetch(url);
             const result = await response.json();
             
             if (result.success) {
+                // Update Sales Activity Chart
                 const ctx = document.getElementById('salesChart').getContext('2d');
-                
-                if (salesChart) {
-                    salesChart.destroy();
-                }
+                if (salesChart) salesChart.destroy();
+
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(255, 106, 0, 0.1)');
+                gradient.addColorStop(1, 'rgba(255, 106, 0, 0)');
 
                 salesChart = new Chart(ctx, {
                     type: 'line',
@@ -187,61 +346,96 @@
                         datasets: [{
                             label: 'Revenue',
                             data: result.data,
-                            borderColor: '#FF6A00',
+                            borderColor: '#ff6a00',
                             borderWidth: 2,
                             tension: 0.4,
-                            pointBackgroundColor: '#FF6A00',
-                            pointRadius: 4,
+                            pointBackgroundColor: '#ff6a00',
+                            pointBorderColor: '#000',
+                            pointBorderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
                             fill: true,
-                            backgroundColor: 'rgba(255, 106, 0, 0.05)'
+                            backgroundColor: gradient
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        interaction: {
-                            intersect: false,
-                            mode: 'index',
-                        },
+                        interaction: { intersect: false, mode: 'index' },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                grid: { color: 'rgba(255,255,255,0.02)', drawBorder: false },
                                 ticks: { 
-                                    color: 'rgba(255,255,255,0.3)', 
-                                    font: { size: 10, family: 'JetBrains Mono' },
-                                    callback: function(value) { return '₹' + value.toLocaleString(); }
+                                    color: 'rgba(255,255,255,0.2)', 
+                                    font: { size: 9, weight: '500' },
+                                    callback: v => '₹' + v.toLocaleString(),
+                                    maxTicksLimit: 6
                                 }
                             },
                             x: {
                                 grid: { display: false },
-                                ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10, family: 'Inter' } }
+                                ticks: { 
+                                    color: 'rgba(255,255,255,0.2)', 
+                                    font: { size: 9, weight: '500' },
+                                    maxRotation: 0
+                                },
+                                offset: true
                             }
                         },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
                                 backgroundColor: '#111',
-                                titleFont: { family: 'Inter', size: 12 },
-                                bodyFont: { family: 'JetBrains Mono', size: 12 },
                                 padding: 12,
+                                titleFont: { size: 10, weight: 'bold' },
+                                bodyFont: { size: 12, weight: 'black' },
                                 displayColors: false,
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'REVENUE: ₹' + context.raw.toLocaleString();
-                                    }
-                                }
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1
                             }
                         }
                     }
                 });
             }
         } catch (error) {
-            console.error('Chart update error:', error);
+            console.error('Error updating charts:', error);
         }
     }
 
+    function initStatusChart() {
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        const data = {
+            labels: ['Delivered', 'Pending', 'Cancelled', 'Returned'],
+            datasets: [{
+                data: [
+                    <%= stats.orderStatus.Delivered %>, 
+                    <%= stats.orderStatus.Pending %>, 
+                    <%= stats.orderStatus.Cancelled %>, 
+                    <%= stats.orderStatus.Returned %>
+                ],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6366f1'],
+                borderWidth: 0,
+                hoverOffset: 10
+            }]
+        };
+
+        statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '85%',
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        updateChart('/admin/api/dashboard/chart-data?filter=monthly');
+        updateCharts('/admin/api/dashboard/chart-data?filter=monthly');
+        initStatusChart();
     });
 </script>

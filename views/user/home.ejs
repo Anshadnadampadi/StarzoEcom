@@ -1,266 +1,218 @@
-    <!-- Swiper CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
-    <!-- 1. Hero Banner Slider -->
-    <section class="h-screen w-full bg-black relative overflow-hidden">
-        <div class="swiper heroSwiper h-full w-full">
-            <div class="swiper-wrapper">
-                <!-- Slide 1 -->
-                <div class="swiper-slide relative bg-black">
-                    <div class="absolute inset-0 z-0">
-                        <video autoplay muted loop playsinline class="w-full h-full object-cover opacity-60">
-                            <source src="/video/Introducing iPhone 17 Pro and iPhone 17 Pro Max - Vodafone Australia (1080p).mp4" type="video/mp4">
-                        </video>
-                        <div class="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
-                    </div>
-                    
-                    <div class="absolute inset-0 z-10 flex flex-col justify-center px-6 lg:px-24">
-                        <div class="max-w-3xl">
-                            <!-- <span class="text-accent text-[10px] font-black tracking-[0.4em] uppercase mb-6 block animate-fade-in">THE NEW STANDARD</span>
-                            <h1 class="text-white text-display lg:text-hero font-bold leading-tight mb-8 font-display animate-slide-up">
-                                MOBI 15 <br> <span class="text-text-secondary">ULTRA PRO.</span>
-                            </h1>
-                            <p class="text-text-secondary text-lg lg:text-xl font-medium mb-10 max-w-lg leading-relaxed opacity-70">
-                                Experience the world's most powerful imaging system on a mobile device. Engineered for those who demand perfection.
-                            </p> -->
-                            <!-- <div class="flex flex-wrap gap-4">
-                                <a href="/products" class="bg-accent text-black font-black px-12 py-5 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all transform hover:-translate-y-1">EXPLORE NOW</a>
-                            </div> -->
-                        </div>
-                    </div>
-                </div>
+<style>
+    :root {
+        --apple-easing: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .apple-hero {
+        height: 100vh;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: center;
+        padding-top: 12vh;
+    }
+    .apple-text-gradient {
+        background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .apple-link {
+        font-size: 21px;
+        font-weight: 400;
+        letter-spacing: 0.011em;
+        color: #ff6a00;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.3s var(--apple-easing);
+    }
+    .apple-link:hover {
+        text-decoration: underline;
+    }
+    .apple-btn {
+        background: #ff6a00;
+        color: #000;
+        padding: 14px 32px;
+        border-radius: 980px;
+        font-size: 17px;
+        font-weight: 600;
+        transition: all 0.3s var(--apple-easing);
+    }
+    .apple-btn:hover {
+        background: #fff;
+        transform: scale(1.02);
+    }
+    .apple-grid-card {
+        background: #161617;
+        border-radius: 28px;
+        overflow: hidden;
+        position: relative;
+        height: 580px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding-top: 50px;
+        transition: transform 0.5s var(--apple-easing);
+    }
+    .apple-grid-card:hover {
+        transform: scale(1.01);
+    }
+    .video-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        opacity: 0.8;
+    }
+    .apple-section-divider {
+        height: 12px;
+        background: #000;
+    }
+</style>
 
-                <!-- Slide 2 -->
-                <div class="swiper-slide relative bg-black">
-                    <div class="absolute inset-0 z-0">
-                        <video autoplay muted loop playsinline class="w-full h-full object-cover opacity-60">
-                            <source src="/video/YouTube_Meet-Google-Pixel-10-Pro-With-Gemini-The_Media_Z3lqOEM6Zig_001_1080p.mp4" type="video/mp4">
-                        </video>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20"></div>
-                    </div>
-                    
-                    <div class="absolute inset-0 z-10 flex flex-col justify-center items-center text-center px-6">
-                        <div class="max-w-4xl">
-                            
-                            <!-- <div class="flex justify-center gap-4">
-                                <a href="/deals" class="border-2 border-accent text-accent font-black px-12 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-accent hover:text-black transition-all">VIEW DEALS</a>
-                            </div> -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Slide 3 -->
-                <div class="swiper-slide relative bg-black">
-                    <div class="absolute inset-0 z-0">
-                        <video autoplay muted loop playsinline class="w-full h-full object-cover opacity-60">
-                            <source src="/video/Ytmp3.gg_YouTube_Meet-Phone-4a-Pro_Media_p18XWICPF94_001_1080p.mp4" type="video/mp4">
-                        </video>
-                        <div class="absolute inset-0 bg-gradient-to-tr from-black via-transparent to-accent/10"></div>
-                    </div>
-                    
-                    <div class="absolute inset-0 z-10 flex flex-col justify-center px-6 lg:px-24">
-                        <div class="max-w-3xl">
-                           
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            
-
-            <!-- Custom Navigation -->
-            <div class="absolute bottom-12 left-6 lg:left-24 right-6 lg:right-24 z-30 flex items-end justify-between pointer-events-none">
-                <div class="flex gap-4 pointer-events-auto">
-                    <!-- <button class="hero-prev w-12 h-12 flex items-center justify-center border border-white/10 hover:border-accent hover:text-accent text-white/40 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    </button>
-                    <button class="hero-next w-12 h-12 flex items-center justify-center border border-white/10 hover:border-accent hover:text-accent text-white/40 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </button> -->
-                </div>
-                
-                <div class="flex flex-col items-end gap-2">
-                   
-                    <div class="swiper-pagination !static !w-auto flex gap-1"></div>
-                </div>
+<div class="bg-black">
+    <!-- 1. iPhone 17 Pro Hero (Apple Style) -->
+    <section class="apple-hero group">
+        <video autoplay muted loop playsinline class="video-bg opacity-60">
+            <source src="/video/Introducing iPhone 17 Pro and iPhone 17 Pro Max - Vodafone Australia (1080p).mp4" type="video/mp4">
+        </video>
+        <div class="relative z-10 space-y-4">
+            <h1 class="text-5xl md:text-7xl font-bold apple-text-gradient tracking-tight">iPhone 17 Pro</h1>
+            <p class="text-2xl md:text-3xl text-white font-medium">Hello, Apple Intelligence.</p>
+            <div class="flex items-center justify-center gap-8 pt-6">
+                <a href="/products" class="apple-btn">Buy</a>
+                <a href="/catalog" class="apple-link">Learn more <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="3"></path></svg></a>
             </div>
         </div>
     </section>
 
-    <!-- Swiper JS -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const swiper = new Swiper('.heroSwiper', {
-                loop: true,
-                effect: 'fade',
-                fadeEffect: { crossFade: true },
-                speed: 1000,
-                autoplay: {
-                    delay: 12000,
-                    disableOnInteraction: false,
-                },
-                pagination: {
-                    el: '.swiper-pagination',
-                    clickable: true,
-                    renderBullet: function (index, className) {
-                        return `<span class="${className} !w-16 !h-1 !rounded-none !bg-white/20 !opacity-100 [&.swiper-pagination-bullet-active]:!bg-accent !transition-all !duration-700"></span>`;
-                    },
-                },
-                navigation: {
-                    nextEl: '.hero-next',
-                    prevEl: '.hero-prev',
-                },
-            });
-        });
-    </script>
+    <div class="apple-section-divider"></div>
 
-    <style>
-        .heroSwiper .swiper-slide-active h1, 
-        .heroSwiper .swiper-slide-active h2, 
-        .heroSwiper .swiper-slide-active p,
-        .heroSwiper .swiper-slide-active span,
-        .heroSwiper .swiper-slide-active a {
-            animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
+    <!-- 2. Pixel 10 Pro Hero -->
+    <section class="apple-hero group !justify-end !pb-[12vh] !pt-0">
+        <video autoplay muted loop playsinline class="video-bg opacity-50">
+            <source src="/video/YouTube_Meet-Google-Pixel-10-Pro-With-Gemini-The_Media_Z3lqOEM6Zig_001_1080p.mp4" type="video/mp4">
+        </video>
+        <div class="relative z-10 space-y-4">
+            <h2 class="text-5xl md:text-7xl font-bold text-white tracking-tight">Pixel 10 Pro</h2>
+            <p class="text-2xl md:text-3xl text-white font-medium">Built for the Gemini era.</p>
+            <div class="flex items-center justify-center gap-8 pt-6">
+                <a href="/products" class="apple-btn">Pre-order</a>
+                <a href="/catalog" class="apple-link">Learn more <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="3"></path></svg></a>
+            </div>
+        </div>
+    </section>
 
-        @keyframes slideUpFade {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    <div class="apple-section-divider"></div>
+
+    <!-- 3. Apple Style Bento Grid (2x2) -->
+    <section class="max-w-[1260px] mx-auto px-4 py-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- Watch / Accessories -->
+            <div class="apple-grid-card">
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-4xl font-bold text-white">Apple Watch</h3>
+                    <p class="text-xl text-white/80">Thinner. Faster. Smarter.</p>
+                    <div class="flex items-center justify-center gap-6 pt-2">
+                        <a href="/catalog?category=watch" class="apple-link !text-lg">Learn more <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                        <a href="/catalog?category=watch" class="apple-link !text-lg">Buy <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                    </div>
+                </div>
+                <img src="https://images.unsplash.com/photo-1544117518-30dd5bd7a974?q=80&w=1000&auto=format&fit=crop" class="absolute bottom-0 w-[80%] h-auto object-contain opacity-60 group-hover:scale-105 transition-transform duration-700" alt="">
+            </div>
+
+            <!-- Gaming -->
+            <div class="apple-grid-card">
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-4xl font-bold text-white">Gaming</h3>
+                    <p class="text-xl text-white/80">Console-grade performance.</p>
+                    <div class="flex items-center justify-center gap-6 pt-2">
+                        <a href="/catalog?category=gaming" class="apple-link !text-lg">Learn more <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                        <a href="/catalog?category=gaming" class="apple-link !text-lg">Buy <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                    </div>
+                </div>
+                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop" class="absolute bottom-0 w-full h-full object-cover opacity-20" alt="">
+            </div>
+
+            <!-- iPad -->
+            <div class="apple-grid-card !bg-white">
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-4xl font-bold text-black">iPad Pro</h3>
+                    <p class="text-xl text-black/60">Thinpossible.</p>
+                    <div class="flex items-center justify-center gap-6 pt-2">
+                        <a href="/catalog?category=tablets" class="apple-link !text-lg">Learn more <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                        <a href="/catalog?category=tablets" class="apple-link !text-lg">Buy <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                    </div>
+                </div>
+                <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=1000&auto=format&fit=crop" class="absolute bottom-0 w-[70%] h-auto object-contain" alt="">
+            </div>
+
+            <!-- AirPods -->
+            <div class="apple-grid-card">
+                <div class="relative z-10 space-y-2">
+                    <h3 class="text-4xl font-bold text-white">AirPods Pro</h3>
+                    <p class="text-xl text-white/80">Rebuilt from the sound up.</p>
+                    <div class="flex items-center justify-center gap-6 pt-2">
+                        <a href="/catalog?category=audio" class="apple-link !text-lg">Learn more <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                        <a href="/catalog?category=audio" class="apple-link !text-lg">Buy <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2.5"></path></svg></a>
+                    </div>
+                </div>
+                <img src="https://images.unsplash.com/photo-1588423770186-80f3ef0abc39?q=80&w=1000&auto=format&fit=crop" class="absolute bottom-0 w-[60%] h-auto object-contain opacity-80" alt="">
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Carousel for Trending (Apple Style) -->
+    <section class="py-24 overflow-hidden">
+        <div class="max-w-[1260px] mx-auto px-4 mb-12">
+            <h2 class="text-4xl md:text-5xl font-bold text-white tracking-tight">Trending Now.</h2>
+        </div>
         
-        .swiper-pagination-bullet-active {
-            box-shadow: 0 0 15px rgba(255, 106, 0, 0.4);
-        }
-    </style>
-
-
-
-    <!-- 3. Flash Sale -->
-    <section class="py-24 bg-black">
-        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                <div class="fade-up">
-                    <span class="text-accent text-[10px] font-bold tracking-[0.3em] uppercase mb-4 block">Limited
-                        Time</span>
-                    <h2 class="text-white text-3xl lg:text-4xl font-bold tracking-tight uppercase">FLASH SALE.</h2>
-                </div>
-
-                <div class="flex gap-4 items-center mb-1">
-                    <p class="text-white/30 text-[10px] font-bold tracking-widest uppercase">Ends In:</p>
-                    <div class="flex gap-2 font-mono text-xl font-bold text-white">
-                        <span class="bg-black-card border border-white/5 px-2 py-1">04</span>
-                        <span class="text-accent">:</span>
-                        <span class="bg-black-card border border-white/5 px-2 py-1">22</span>
-                        <span class="text-accent">:</span>
-                        <span class="bg-black-card border border-white/5 px-2 py-1">59</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-px bg-black-border border border-black-border">
-                <% if (typeof newArrivals !=='undefined' ) { %>
-                    <% newArrivals.forEach(product=> { %>
-                        <%- include('../partials/product-card', { product }) %>
-                            <% }) %>
-                                <% } else { %>
-                                    <!-- Dummy cards if no data -->
-                                    <div
-                                        class="p-12 text-white/20 text-xs uppercase tracking-widest text-center bg-black">
-                                        No Active Flash Sales</div>
-                                    <% } %>
-            </div>
-        </div>
-    </section>
-
-    <!-- 4. Categories Grid -->
-    <section class="py-24 bg-black-surface">
-        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span class="text-accent text-[10px] font-bold tracking-[0.3em] uppercase mb-4 block">Browse
-                    Collection</span>
-                <h2 class="text-white text-3xl font-bold tracking-tight uppercase">SHOP BY TECH.</h2>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <% const cats=[ { name: 'Flagship Systems' ,
-                    img: 'https://images.unsplash.com/photo-1592890288564-76628a30a657?q=80&w=1000&auto=format&fit=crop'
-                    , link: '/phones/category/flagship' }, { name: 'Imaging Pro' ,
-                    img: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=1000&auto=format&fit=crop'
-                    , link: '/phones/category/pro-camera' }, { name: 'Gaming Rig' ,
-                    img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop' ,
-                    link: '/phones/category/gaming' } ] %>
-                    <% cats.forEach(cat=> { %>
-                        <a href="<%= cat.link %>"
-                            class="group relative aspect-[4/5] bg-black overflow-hidden ring-1 ring-white/10 hover:ring-accent transition-all">
-                            <img src="<%= cat.img %>" alt="<%= cat.name %>"
-                                class="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-700">
-                            <div
-                                class="absolute inset-0 flex flex-col justify-end p-8 bg-gradient-to-t from-black/80 to-transparent">
-                                <h3 class="text-white text-2xl font-bold mb-2">
-                                    <%= cat.name %>
-                                </h3>
-                                <span
-                                    class="text-accent text-[10px] font-bold tracking-widest uppercase flex items-center gap-2">
-                                    Explore <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                                    </svg>
-                                </span>
+        <div class="swiper trendingSwiper !px-[max(24px,calc((100%-1260px)/2))]">
+            <div class="swiper-wrapper">
+                <% if (typeof featuredProducts !== 'undefined') { %>
+                    <% featuredProducts.forEach(product => { %>
+                        <div class="swiper-slide !w-[420px]">
+                            <div class="relative h-[520px] rounded-[28px] overflow-hidden bg-[#161617] group">
+                                <img src="/uploads/<%= product.images[0] %>" class="absolute inset-0 w-full h-full object-contain p-12 group-hover:scale-105 transition-transform duration-700" alt="">
+                                <div class="absolute bottom-0 left-0 right-0 p-10 bg-gradient-to-t from-black via-black/40 to-transparent">
+                                    <p class="text-white font-bold text-2xl mb-1"><%= product.name %></p>
+                                    <p class="text-white/60 text-base mb-6">From ₹<%= product.salePrice.toLocaleString() %></p>
+                                    <a href="/product/<%= product._id %>" class="apple-btn !py-2.5 !text-[14px]">View Details</a>
+                                </div>
                             </div>
-                        </a>
-                        <% }) %>
+                        </div>
+                    <% }) %>
+                <% } %>
             </div>
         </div>
     </section>
 
-    <!-- 5. Featured Section -->
-    <section class="py-24 bg-black">
-        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-            <div class="flex justify-between items-end mb-12">
-                <h2 class="text-white text-3xl font-bold tracking-tight uppercase">TRENDING PHONES.</h2>
-                <a href="/phones"
-                    class="text-accent text-[11px] font-bold tracking-widest uppercase hover:underline">View All</a>
-            </div>
+</div>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px bg-white/5 border border-white/5">
-                <% if (typeof featuredProducts !=='undefined' ) { %>
-                    <% featuredProducts.forEach(product=> { %>
-                        <%- include('../partials/product-card', { product }) %>
-                            <% }) %>
-                                <% } else { %>
-                                    <div class="col-span-full py-20 text-center text-white/20 italic">Loading trending
-                                        products...</div>
-                                    <% } %>
-            </div>
-        </div>
-    </section>
-
-    <!-- 6. Trust Strip -->
-    <section class="py-16 bg-black border-t border-black-border">
-        <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-12">
-                <div class="text-center">
-                    <div class="text-accent text-2xl mb-4">🚚</div>
-                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">Free Delivery</h4>
-                    <p class="text-white/40 text-[10px] uppercase tracking-wide">On orders above ₹15,000</p>
-                </div>
-                <div class="text-center">
-                    <div class="text-accent text-2xl mb-4">🛡️</div>
-                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">Genuine Stock</h4>
-                    <p class="text-white/40 text-[10px] uppercase tracking-wide">100% authentic products</p>
-                </div>
-                <div class="text-center">
-                    <div class="text-accent text-2xl mb-4">🔄</div>
-                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">Easy Returns</h4>
-                    <p class="text-white/40 text-[10px] uppercase tracking-wide">7-day replacement policy</p>
-                </div>
-                <div class="text-center">
-                    <div class="text-accent text-2xl mb-4">💬</div>
-                    <h4 class="text-white text-xs font-bold tracking-widest uppercase mb-2">24/7 Support</h4>
-                    <p class="text-white/40 text-[10px] uppercase tracking-wide">Expert tech assistance</p>
-                </div>
-            </div>
-        </div>
-    </section>
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new Swiper('.trendingSwiper', {
+            slidesPerView: 'auto',
+            spaceBetween: 24,
+            grabCursor: true,
+            freeMode: true,
+            mousewheel: {
+                forceToAxis: true,
+            },
+        });
+    });
+</script>

@@ -67,7 +67,7 @@ export const postAdminLogin = async (req, res) => {
 
 export const getAdminDashboard = async (req, res) => {
     try {
-        const [ordersStats, totalCustomers, topProducts, topCategories, topBrands] = await Promise.all([
+        const [ordersStats, totalCustomers, topProducts, topCategories, topBrands, orderStatusStats, inventoryStats, recentOrders] = await Promise.all([
             Order.aggregate([
                 { $match: { orderStatus: 'Delivered' } },
                 { 
@@ -79,7 +79,7 @@ export const getAdminDashboard = async (req, res) => {
                 }
             ]),
             User.countDocuments({ isAdmin: false }),
-            // Top 10 Best Selling Products
+            // Top 10 Best Selling Products with images
             Order.aggregate([
                 { $match: { orderStatus: 'Delivered' } },
                 { $unwind: "$items" },
@@ -95,7 +95,13 @@ export const getAdminDashboard = async (req, res) => {
                     }
                 },
                 { $unwind: "$productInfo" },
-                { $project: { name: "$productInfo.name", totalSold: 1 } }
+                { 
+                    $project: { 
+                        name: "$productInfo.name", 
+                        image: { $arrayElemAt: ["$productInfo.images", 0] },
+                        totalSold: 1 
+                    } 
+                }
             ]),
             // Top 10 Best Selling Categories
             Order.aggregate([
@@ -141,16 +147,60 @@ export const getAdminDashboard = async (req, res) => {
                 { $sort: { totalSold: -1 } },
                 { $limit: 10 },
                 { $project: { name: "$_id", totalSold: 1 } }
-            ])
+            ]),
+            // Order Status Distribution
+            Order.aggregate([
+                { $group: { _id: "$orderStatus", count: { $sum: 1 } } }
+            ]),
+            // Inventory Alerts
+            Product.aggregate([
+                { $unwind: "$variants" },
+                { $match: { "variants.isDeleted": false } },
+                {
+                    $group: {
+                        _id: null,
+                        outOfStock: { $sum: { $cond: [{ $eq: ["$variants.stock", 0] }, 1, 0] } },
+                        lowStock: { $sum: { $cond: [{ $and: [{ $gt: ["$variants.stock", 0] }, { $lt: ["$variants.stock", 5] }] }, 1, 0] } }
+                    }
+                }
+            ]),
+            // Recent Orders
+            Order.find({})
+                .populate('user', 'firstName lastName email')
+                .sort({ createdAt: -1 })
+                .limit(10)
         ]);
 
+        const totalRevenue = ordersStats.length > 0 ? ordersStats[0].totalRevenue : 0;
+        const totalOrders = ordersStats.length > 0 ? ordersStats[0].totalOrders : 0;
+        const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+        // Process status stats
+        const statusMap = {
+            Delivered: 0,
+            Pending: 0,
+            Cancelled: 0,
+            Returned: 0
+        };
+
+        orderStatusStats.forEach(s => {
+            if (s._id === 'Delivered') statusMap.Delivered += s.count;
+            else if (['Pending', 'Confirmed', 'Processing', 'Shipped'].includes(s._id)) statusMap.Pending += s.count;
+            else if (s._id === 'Cancelled') statusMap.Cancelled += s.count;
+            else if (['Returned', 'Partially Returned', 'Return Approved'].includes(s._id)) statusMap.Returned += s.count;
+        });
+
         const stats = {
-            revenue: { total: ordersStats.length > 0 ? ordersStats[0].totalRevenue : 0 },
-            orders: { total: ordersStats.length > 0 ? ordersStats[0].totalOrders : 0 },
+            revenue: { total: totalRevenue },
+            orders: { total: totalOrders },
             customers: { total: totalCustomers },
+            aov: avgOrderValue,
             topProducts,
             topCategories,
             topBrands,
+            orderStatus: statusMap,
+            inventory: inventoryStats.length > 0 ? inventoryStats[0] : { outOfStock: 0, lowStock: 0 },
+            recentOrders,
             recentActivity: [
                 { title: 'New Order #8829', time: '2 mins ago', desc: 'Iphone 15 Pro Max - ₹1,44,900' },
                 { title: 'Customer Signup', time: '15 mins ago', desc: 'New user joined: sarath@example.com' },

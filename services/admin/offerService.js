@@ -66,17 +66,29 @@ export const createOfferService = async (data) => {
 };
 
 export const getOffersService = async (query = {}) => {
-    const { search = "", page = 1, limit = 10 } = query;
+    const { search = "", page = 1, limit = 6 } = query;
     const filter = {
         name: { $regex: search, $options: "i" }
     };
 
-    return await Offer.find(filter)
-        .populate('productId', 'name')
-        .populate('categoryId', 'name')
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(Number(limit));
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [offers, totalOffers] = await Promise.all([
+        Offer.find(filter)
+            .populate('productId', 'name')
+            .populate('categoryId', 'name')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit)),
+        Offer.countDocuments(filter)
+    ]);
+
+    return {
+        offers,
+        totalPages: Math.ceil(totalOffers / limit),
+        totalOffers,
+        currentPage: Number(page)
+    };
 };
 
 export const updateOfferService = async (id, data) => {

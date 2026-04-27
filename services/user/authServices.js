@@ -1,5 +1,6 @@
 import User from "../../models/user/User.js";
 import Address from "../../models/user/Address.js";
+import Wallet from "../../models/user/Wallet.js";
 import bcrypt from "bcryptjs";
 import { transporter } from "../../config/mailer.js";
 import dotenv from "dotenv"
@@ -88,7 +89,7 @@ export const generateReferralCode = async () => {
 
 //    SEND OTP SERVICE
 
-export const sendOtpService = async ({ firstName, lastName, email, password }) => {
+export const sendOtpService = async ({ firstName, lastName, email, password, referralCode }) => {
     try {
         email = String(email || '').trim().toLowerCase();
 
@@ -110,6 +111,11 @@ export const sendOtpService = async ({ firstName, lastName, email, password }) =
 
 
         let user;
+        let referredByUser = null;
+
+        if (referralCode) {
+            referredByUser = await User.findOne({ referralCode: referralCode.trim().toUpperCase() });
+        }
 
         if (existingUser) {
             // Update existing unverified user
@@ -129,6 +135,7 @@ export const sendOtpService = async ({ firstName, lastName, email, password }) =
                 password: hashedPassword,
                 otp,
                 otpExpiry,
+                referredBy: referredByUser ? referredByUser._id : null,
                 referralCode: await generateReferralCode()
             });
         }
@@ -203,11 +210,60 @@ export const verifyOtpService = async ({ email, otp, context }) => {
 
         await user.save();
 
-        return { success: true, message: "Email verified successfully" };
+        // ── REFERRAL REWARDS ──────────────────────────────────────────────────
+        // Only give rewards during initial verification
+        if (context !== "reset" && user.referredBy) {
+            try {
+                // 1. Reward the new user (Referred User)
+                await creditWallet(user._id, 50, "Signup bonus (Referral)");
+
+                // 2. Reward the referrer
+                const referrer = await User.findById(user.referredBy);
+                if (referrer) {
+                    await creditWallet(referrer._id, 100, `Referral bonus for ${user.firstName}`);
+                    referrer.referralCount = (referrer.referralCount || 0) + 1;
+                    await referrer.save();
+                }
+            } catch (rewardErr) {
+                console.error("Referral Reward Error:", rewardErr);
+                // We don't fail the verification if reward fails, but we log it
+            }
+        }
+
+        return { 
+            success: true, 
+            message: "Email verified successfully",
+            rewarded: !!user.referredBy,
+            rewardAmount: user.referredBy ? 50 : 0
+        };
 
     } catch (error) {
         console.log("Verify OTP Error:", error);
         return { success: false, message: "Verification failed" };
+    }
+};
+
+const creditWallet = async (userId, amount, description) => {
+    try {
+        let wallet = await Wallet.findOne({ user: userId });
+        if (!wallet) {
+            wallet = new Wallet({ user: userId, balance: 0, transactions: [] });
+        }
+        wallet.balance += amount;
+        wallet.transactions.push({
+            amount,
+            type: 'credit',
+            description,
+            txnId: `TXN-REF-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+            status: 'Success',
+            timestamp: new Date()
+        });
+        await wallet.save();
+        
+        // Sync with User model walletBalance
+        await User.findByIdAndUpdate(userId, { $inc: { walletBalance: amount } });
+    } catch (err) {
+        console.error("Credit Wallet Error:", err);
     }
 };
 

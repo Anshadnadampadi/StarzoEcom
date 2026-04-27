@@ -18,7 +18,7 @@
             <%= message || "We encountered an unexpected error while processing your request. Please try again later or return to home." %>
         </p>
 
-        <% if (error && process.env.NODE_ENV !== 'production') { %>
+        <% if (typeof error !== 'undefined' && error && process.env.NODE_ENV !== 'production') { %>
             <div class="bg-black-elevated border border-black-border p-6 mb-12 text-left overflow-auto max-h-60">
                 <h3 class="text-status-danger text-[10px] font-bold uppercase tracking-widest mb-4">Stack Trace</h3>
                 <pre class="text-text-muted text-[10px] font-mono whitespace-pre"><%= error.stack %></pre>

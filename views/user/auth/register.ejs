@@ -67,6 +67,46 @@
                     <p x-show="errors.password" x-text="errors.password" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 ml-1"></p>
                 </div>
 
+                <div class="space-y-2">
+                    <label class="text-label font-bold uppercase text-text-muted ml-1">Confirm Password</label>
+                    <div class="relative group">
+                        <input :type="showPassword ? 'text' : 'password'" x-model="formData.confirmPassword" @input="validateField('confirmPassword')"
+                            class="w-full bg-black-elevated border px-6 py-4 pr-14 text-sm text-white focus:outline-none transition-all placeholder:text-white/5"
+                            :class="errors.confirmPassword ? 'border-status-danger' : 'border-black-border focus:border-accent'"
+                            placeholder="Re-enter password">
+                        <button type="button" @click="showPassword = !showPassword"
+                            class="absolute right-0 top-0 h-full w-14 flex items-center justify-center text-white/20 hover:text-accent transition-colors focus:outline-none"
+                            aria-label="Toggle password visibility">
+                            <span x-show="!showPassword">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                    </path>
+                                </svg>
+                            </span>
+                            <span x-show="showPassword">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.024 10.024 0 014.504-4.825m10.922 8.582A10.012 10.012 0 0021.542 12c-1.274-4.057-5.064-7-9.542-7-1.274 0-2.48.209-3.602.597m4.886 4.886A3 3 0 1111 11.34">
+                                    </path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M1 1l22 22"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                    <p x-show="errors.confirmPassword" x-text="errors.confirmPassword" class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 ml-1"></p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-label font-bold uppercase text-text-muted ml-1">Referral Code (Optional)</label>
+                    <input type="text" x-model="formData.referralCode" 
+                        class="w-full bg-black-elevated border border-black-border px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-all placeholder:text-white/5"
+                        placeholder="PROTOCOL-XXXX">
+                </div>
+
                 <div class="flex items-start gap-3 pt-2">
                     <input type="checkbox" x-model="formData.agree"
                         class="mt-1 w-4 h-4 rounded-sm bg-black-elevated border-black-border border text-accent focus:ring-accent focus:ring-offset-black transition-all">
@@ -117,6 +157,8 @@
                             lastName: '',
                             email: '',
                             password: '',
+                            confirmPassword: '',
+                            referralCode: new URLSearchParams(window.location.search).get('ref') || '',
                             agree: false
                         },
                         errors: {},
@@ -148,6 +190,10 @@
                                     } else {
                                         this.errors.password = '';
                                     }
+                                    if (this.formData.confirmPassword) this.validateField('confirmPassword');
+                                    break;
+                                case 'confirmPassword':
+                                    this.errors.confirmPassword = this.formData.confirmPassword !== this.formData.password ? 'Passwords do not match' : '';
                                     break;
                             }
                         },
@@ -157,6 +203,7 @@
                             this.validateField('lastName');
                             this.validateField('email');
                             this.validateField('password');
+                            this.validateField('confirmPassword');
                             this.errors.agree = !this.formData.agree ? 'You must agree to the terms' : '';
                             
                             return !Object.values(this.errors).some(error => error !== '');

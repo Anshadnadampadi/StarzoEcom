@@ -4,17 +4,28 @@ import ExcelJS from 'exceljs';
 
 export const getSalesReportPage = async (req, res) => {
     try {
-        const { filter = 'daily', startDate, endDate } = req.query;
-        const { orders, stats, period } = await getSalesReportService(filter, startDate, endDate);
+        const { filter = 'daily', startDate, endDate, page = 1 } = req.query;
+        const limit = 10;
+        const { orders, stats, period, totalPages, currentPage, previousRevenue, couponUsage } = await getSalesReportService(filter, startDate, endDate, page, limit);
+
+        // Build query string for pagination links
+        const queryParams = new URLSearchParams({ filter });
+        if (startDate) queryParams.append('startDate', startDate);
+        if (endDate) queryParams.append('endDate', endDate);
 
         res.render('admin/analytics/salesReport', {
             title: 'Sales Report',
             orders,
             stats,
+            previousRevenue,
+            couponUsage,
             filter,
             startDate,
             endDate,
             period,
+            totalPages,
+            currentPage,
+            query: queryParams.toString(),
             breadcrumbs: [
                 { label: 'Dashboard', url: '/admin/dashboard' },
                 { label: 'Sales Report', url: '/admin/sales-report' }

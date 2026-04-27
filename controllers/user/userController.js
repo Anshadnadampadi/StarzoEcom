@@ -44,8 +44,8 @@ export const postSignup = async (req, res) => {
             });
         }
 
-        const { firstName, lastName, email, password } = req.body;
-        const result = await sendOtpService({ firstName, lastName, email, password });
+        const { firstName, lastName, email, password, referralCode } = req.body;
+        const result = await sendOtpService({ firstName, lastName, email, password, referralCode });
 
         if (!result.success) {
             return res.json({
@@ -334,9 +334,14 @@ export const postVerifyOtp = async (req, res) => {
         });
     }
 
+    let redirectUrl = "/auth/login";
+    if (result.rewarded) {
+        redirectUrl += `?msg=${encodeURIComponent(`Welcome! ₹${result.rewardAmount} has been credited to your wallet.`)}&icon=success`;
+    }
+
     return res.json({
         success: true,
-        redirect: "/auth/login"
+        redirect: redirectUrl
     });
 
 };

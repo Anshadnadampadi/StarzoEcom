@@ -6,16 +6,29 @@ import crypto from "crypto";
 export const getWallet = async (req, res) => {
     try {
         const userId = req.session.user;
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5; // Transactions per page
+        const skip = (page - 1) * limit;
+
         const user = await User.findById(userId).lean();
 
         // Find wallet or create a default one if it doesn't exist
         let wallet = await Wallet.findOne({ user: userId }).lean();
+
+        let totalTransactions = 0;
+        let totalPages = 0;
 
         if (!wallet) {
             wallet = { balance: 0, transactions: [] };
         } else {
             // Sort transactions by date descending
             wallet.transactions.sort((a, b) => b.timestamp - a.timestamp);
+            
+            totalTransactions = wallet.transactions.length;
+            totalPages = Math.ceil(totalTransactions / limit);
+            
+            // Slice for pagination
+            wallet.transactions = wallet.transactions.slice(skip, skip + limit);
         }
 
         res.render("user/wallet", {
@@ -23,6 +36,9 @@ export const getWallet = async (req, res) => {
             user,
             wallet,
             activeTab: 'wallet',
+            currentPage: page,
+            totalPages,
+            totalTransactions,
             razorpayKeyId: process.env.RAZORPAY_KEY_ID,
             breadcrumbs: [
                 { label: 'Account', url: '/profile' },

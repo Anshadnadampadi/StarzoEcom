@@ -89,7 +89,7 @@
                 <h2 class="text-xl font-bold tracking-tight uppercase text-white mb-5 pl-10"
                     x-text="isEditing ? 'Edit Coupon' : 'Create Coupon'"></h2>
 
-                <form @submit.prevent="submitForm()" class="space-y-5">
+                <form @submit.prevent="submitForm()" data-no-spa="true" class="space-y-5">
                     <div class="grid grid-cols-2 gap-x-4 gap-y-4">
                         <div class="space-y-1">
                             <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Coupon
@@ -183,7 +183,14 @@
                             class="flex-1 py-3 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-white/5 disabled:opacity-50 transition-all">Cancel</button>
                         <button type="submit" :disabled="isSubmitting"
                             class="flex-1 py-3 bg-accent text-black text-[10px] font-bold tracking-widest uppercase hover:bg-white disabled:opacity-50 transition-all btn-press shadow-[0_0_15px_rgba(255,106,0,0.3)]">
-                            Save Coupon
+                            <span x-show="!isSubmitting">Save Coupon</span>
+                            <span x-show="isSubmitting" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-3 w-3 text-black" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing...
+                            </span>
                         </button>
                     </div>
                 </form>
@@ -345,14 +352,15 @@
                     },
 
                     validateAll() {
-                        const fields = ["code", "discountValue", "expiryDate", "usageLimit"];
+                        const fields = ["code", "discountValue", "minAmount", "maxDiscount", "expiryDate", "usageLimit"];
                         fields.forEach(f => this.validateField(f));
                         return Object.values(this.formErrors).every(e => !e);
                     },
                     async submitForm() {
                         if (this.isSubmitting) return;
                         if (!this.validateAll()) {
-                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Please fix the validation errors in the form.', type: 'error' } }));
+                            const firstError = Object.values(this.formErrors).find(e => e !== '');
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: firstError || 'Please fix the validation errors.', type: 'error' } }));
                             return;
                         }
 
@@ -374,7 +382,7 @@
 
                             const data = await res.json();
 
-                            if (data.success || data.succes) {
+                            if (data.success) {
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Coupon saved successfully!', type: 'success' } }));
                                 this.closeModal();
                                 if (window.SpaNavigation) {
@@ -384,12 +392,11 @@
                                 }
                             } else {
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Failed to save coupon', type: 'error' } }));
-                                this.isSubmitting = false;
                             }
-
                         } catch (err) {
                             console.error(err);
                             window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Unexpected error occurred', type: 'error' } }));
+                        } finally {
                             this.isSubmitting = false;
                         }
                     }
