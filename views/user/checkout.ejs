@@ -596,32 +596,38 @@
                 const val = (this.addressForm[field] || '').toString().trim();
                 switch (field) {
                     case 'name':
-                        this.addressErrors.name = val.length < 3 ? 'Full name is too short' : '';
+                        this.addressErrors.name = !/^[A-Za-z][A-Za-z .'-]{1,79}$/.test(val) 
+                            ? 'Full name must be 2 to 80 characters and start with a letter' : '';
                         break;
                     case 'phone':
-                        // Relaxed validation: allow 7-15 digits, optional +
-                        const phoneRegex = /^\+?[0-9]{7,15}$/;
-                        this.addressErrors.phone = !phoneRegex.test(val.replace(/\s/g, '')) ? 'Enter a valid phone number' : '';
+                        this.addressErrors.phone = !/^\+?[0-9()\-\s]{7,20}$/.test(val) 
+                            ? 'Enter a valid phone number (7-20 digits)' : '';
                         break;
                     case 'addr1':
-                        this.addressErrors.addr1 = val.length < 5 ? 'Address is too short' : '';
+                        this.addressErrors.addr1 = !/^[A-Za-z0-9][A-Za-z0-9\s,./#'()-]{2,119}$/.test(val) 
+                            ? 'Address must be 5 to 120 characters' : '';
                         break;
                     case 'city':
-                        this.addressErrors.city = val.length < 2 ? 'Invalid city name' : '';
+                        this.addressErrors.city = !/^[A-Za-z][A-Za-z .'-]{1,59}$/.test(val) 
+                            ? 'Enter a valid city name' : '';
                         break;
                     case 'state':
-                        this.addressErrors.state = val.length < 2 ? 'Invalid state name' : '';
+                        this.addressErrors.state = !/^[A-Za-z][A-Za-z .'-]{1,59}$/.test(val) 
+                            ? 'Enter a valid state or province' : '';
                         break;
                     case 'zip':
-                        // Relaxed validation: 3-10 characters (alphanumeric for international)
-                        const zipRegex = /^[A-Za-z0-9 -]{3,10}$/;
-                        this.addressErrors.zip = !zipRegex.test(val) ? 'Enter a valid postal code' : '';
+                        this.addressErrors.zip = !/^[A-Za-z0-9][A-Za-z0-9 -]{2,10}$/.test(val) 
+                            ? 'Enter a valid postal code' : '';
+                        break;
+                    case 'country':
+                        this.addressErrors.country = (val.toLowerCase() === 'other' || !val) 
+                            ? 'Please select a supported country' : '';
                         break;
                 }
             },
 
             validateAddressForm() {
-                const fields = ['name', 'phone', 'addr1', 'city', 'state', 'zip'];
+                const fields = ['name', 'phone', 'addr1', 'city', 'state', 'zip', 'country'];
                 fields.forEach(f => this.validateAddressField(f));
                 return !Object.values(this.addressErrors).some(error => error !== '');
             },

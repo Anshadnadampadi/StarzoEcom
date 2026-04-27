@@ -1,49 +1,343 @@
-<!-- views/admin/settings/general.ejs -->
 <%- contentFor('body') %>
 
-<div class="max-w-4xl mx-auto space-y-12">
-    <div>
-        <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">SYSTEM PARAMETERS.</h1>
-        <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Configure global platform behavior</p>
+<div class="max-w-5xl mx-auto space-y-10" x-data="settingsPage()">
+    <script>
+        (() => {
+            const register = () => {
+                if (window._settingsPageRegistered) return;
+                window._settingsPageRegistered = true;
+                Alpine.data('settingsPage', () => ({
+                    activeTab: 'profile',
+                    profileSaving: false,
+                    passwordSaving: false,
+                    profile: {
+                        firstName: '<%= admin.firstName || "" %>',
+                        lastName: '<%= admin.lastName || "" %>',
+                        email: '<%= admin.email || "" %>',
+                        phone: '<%= admin.phone || "" %>'
+                    },
+                    passwords: { current: '', newPass: '', confirm: '' },
+                    showCurrent: false, showNew: false, showConfirm: false,
+                    passwordStrength: 0,
+
+                    checkStrength(val) {
+                        let s = 0;
+                        if (val.length >= 8) s++;
+                        if (/[A-Z]/.test(val)) s++;
+                        if (/[0-9]/.test(val)) s++;
+                        if (/[^A-Za-z0-9]/.test(val)) s++;
+                        this.passwordStrength = s;
+                    },
+
+                    strengthLabel() {
+                        return ['', 'Weak', 'Fair', 'Good', 'Strong'][this.passwordStrength];
+                    },
+                    strengthColor() {
+                        return ['', 'bg-red-500', 'bg-yellow-500', 'bg-blue-400', 'bg-green-500'][this.passwordStrength];
+                    },
+
+                    async saveProfile() {
+                        if (!this.profile.firstName || !this.profile.email) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'First name and email are required.', type: 'error' } }));
+                            return;
+                        }
+                        this.profileSaving = true;
+                        try {
+                            const res = await fetch('/admin/settings/profile', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(this.profile)
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message, type: 'success' } }));
+                            } else {
+                                throw new Error(data.message);
+                            }
+                        } catch (e) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: e.message || 'Update failed.', type: 'error' } }));
+                        } finally { this.profileSaving = false; }
+                    },
+
+                    async savePassword() {
+                        if (this.passwords.newPass !== this.passwords.confirm) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'New passwords do not match.', type: 'error' } }));
+                            return;
+                        }
+                        if (this.passwords.newPass.length < 8) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Password must be at least 8 characters.', type: 'error' } }));
+                            return;
+                        }
+                        this.passwordSaving = true;
+                        try {
+                            const res = await fetch('/admin/settings/password', {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ currentPassword: this.passwords.current, newPassword: this.passwords.newPass, confirmPassword: this.passwords.confirm })
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message, type: 'success' } }));
+                                this.passwords = { current: '', newPass: '', confirm: '' };
+                                this.passwordStrength = 0;
+                            } else {
+                                throw new Error(data.message);
+                            }
+                        } catch (e) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: e.message || 'Password change failed.', type: 'error' } }));
+                        } finally { this.passwordSaving = false; }
+                    }
+                }));
+            };
+            if (window.Alpine) register();
+            else document.addEventListener('alpine:init', register);
+        })();
+    </script>
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/5 pb-8">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">SYSTEM PARAMETERS.</h1>
+            <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Configure admin account & platform behavior</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-black font-bold text-lg uppercase">
+                <%= (admin.firstName || admin.email || 'A')[0] %>
+            </div>
+            <div>
+                <p class="text-white text-sm font-bold uppercase"><%= admin.firstName || 'Admin' %> <%= admin.lastName || '' %></p>
+                <p class="text-white/30 text-[10px] font-mono"><%= admin.email %></p>
+            </div>
+        </div>
     </div>
 
-    <div class="space-y-8">
-        <!-- Site Configuration -->
-        <div class="bg-black-surface border border-white/5 p-10 space-y-10">
-            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Global Identity</h3>
+    <!-- Tab Navigation -->
+    <div class="flex gap-1 border-b border-white/5">
+        <% [['profile', '👤', 'Profile'], ['password', '🔐', 'Security'], ['store', '🏪', 'Store Config']].forEach(([tab, icon, label]) => { %>
+        <button @click="activeTab = '<%= tab %>'"
+            :class="activeTab === '<%= tab %>' ? 'text-white border-b-2 border-accent' : 'text-white/30 hover:text-white'"
+            class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest transition-colors flex items-center gap-2">
+            <span><%= icon %></span> <%= label %>
+        </button>
+        <% }) %>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div x-show="activeTab === 'profile'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="bg-black-surface border border-white/5 p-10 space-y-8">
+            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Account Identity</h3>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-2">
-                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Store Name</label>
-                    <input type="text" value="MOBIVERSE" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">First Name</label>
+                    <input type="text" x-model="profile.firstName" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors" placeholder="Enter first name">
                 </div>
                 <div class="space-y-2">
-                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Support Email</label>
-                    <input type="email" value="ops@mobiverse.com" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Last Name</label>
+                    <input type="text" x-model="profile.lastName" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors" placeholder="Enter last name">
                 </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Email Address</label>
+                    <input type="email" x-model="profile.email" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors font-mono" placeholder="admin@example.com">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Phone Number</label>
+                    <input type="tel" x-model="profile.phone" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors font-mono" placeholder="+91 XXXXX XXXXX">
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button @click="saveProfile()" :disabled="profileSaving"
+                    class="px-12 py-4 bg-accent text-black font-bold text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3">
+                    <template x-if="profileSaving">
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </template>
+                    <span x-text="profileSaving ? 'SAVING...' : 'SAVE PROFILE'"></span>
+                </button>
             </div>
         </div>
 
-        <!-- Order Logic -->
-        <div class="bg-black-surface border border-white/5 p-10 space-y-10">
-            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Logistics Constants</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Free Shipping Threshold</label>
-                    <input type="number" value="15000" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Base GST (%)</label>
-                    <input type="number" value="18" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent">
-                </div>
-                <div class="space-y-2">
-                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 ml-1">Return Window (Days)</label>
-                    <input type="number" value="7" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent">
-                </div>
+        <!-- Account Info Card -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-black-surface border border-white/5 p-8">
+                <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Account Role</h4>
+                <p class="text-accent text-sm font-bold uppercase font-mono">Administrator</p>
+            </div>
+            <div class="bg-black-surface border border-white/5 p-8">
+                <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Member Since</h4>
+                <p class="text-white text-sm font-bold font-mono"><%= new Date(admin.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) %></p>
+            </div>
+            <div class="bg-black-surface border border-white/5 p-8">
+                <h4 class="text-white/20 text-[9px] font-bold tracking-widest uppercase mb-2">Account Status</h4>
+                <p class="text-status-success text-sm font-bold uppercase font-mono flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-status-success inline-block"></span> Active</p>
             </div>
         </div>
+    </div>
 
-        <div class="flex justify-end gap-4">
-             <button class="px-12 py-5 bg-white text-black font-bold text-xs tracking-[0.2em] uppercase hover:bg-accent transition-all btn-press shadow-[0_0_20px_rgba(255,255,255,0.05)]">COMMIT CHANGES</button>
+    <!-- PASSWORD TAB -->
+    <div x-show="activeTab === 'password'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="bg-black-surface border border-white/5 p-10 space-y-8">
+            <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Change Password</h3>
+
+            <!-- Current Password -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Current Password</label>
+                <div class="relative">
+                    <input :type="showCurrent ? 'text' : 'password'" x-model="passwords.current"
+                        class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors pr-14 font-mono" placeholder="Enter current password">
+                    <button type="button" @click="showCurrent = !showCurrent" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <template x-if="!showCurrent"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></template>
+                            <template x-if="showCurrent"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.04m5.667-3.667A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411M3 3l18 18"/></template>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- New Password -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">New Password</label>
+                    <div class="relative">
+                        <input :type="showNew ? 'text' : 'password'" x-model="passwords.newPass" @input="checkStrength($event.target.value)"
+                            class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors pr-14 font-mono" placeholder="Minimum 8 characters">
+                        <button type="button" @click="showNew = !showNew" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <template x-if="!showNew"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></template>
+                                <template x-if="showNew"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.04m5.667-3.667A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411M3 3l18 18"/></template>
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Strength Bar -->
+                    <template x-if="passwords.newPass.length > 0">
+                        <div class="mt-2">
+                            <div class="flex gap-1 mb-1">
+                                <template x-for="i in 4" :key="i">
+                                    <div class="h-1 flex-1 rounded-full transition-all duration-300" :class="i <= passwordStrength ? strengthColor() : 'bg-white/10'"></div>
+                                </template>
+                            </div>
+                            <p class="text-[9px] font-bold uppercase tracking-widest" :class="passwordStrength <= 1 ? 'text-red-400' : passwordStrength === 2 ? 'text-yellow-400' : passwordStrength === 3 ? 'text-blue-400' : 'text-green-400'" x-text="strengthLabel()"></p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Confirm New Password</label>
+                    <div class="relative">
+                        <input :type="showConfirm ? 'text' : 'password'" x-model="passwords.confirm"
+                            class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors pr-14 font-mono"
+                            :class="passwords.confirm && passwords.confirm !== passwords.newPass ? 'border-red-500' : passwords.confirm && passwords.confirm === passwords.newPass ? 'border-green-500' : ''"
+                            placeholder="Repeat new password">
+                        <button type="button" @click="showConfirm = !showConfirm" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <template x-if="!showConfirm"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></template>
+                                <template x-if="showConfirm"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.04m5.667-3.667A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411M3 3l18 18"/></template>
+                            </svg>
+                        </button>
+                    </div>
+                    <template x-if="passwords.confirm && passwords.confirm !== passwords.newPass">
+                        <p class="text-[9px] font-bold uppercase tracking-widest text-red-400">Passwords do not match</p>
+                    </template>
+                    <template x-if="passwords.confirm && passwords.confirm === passwords.newPass && passwords.newPass.length > 0">
+                        <p class="text-[9px] font-bold uppercase tracking-widest text-green-400">✓ Passwords match</p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Requirements -->
+            <div class="bg-white/[0.02] border border-white/5 p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <% [['8+ characters', '8+'], ['Uppercase letter', 'A-Z'], ['Number', '0-9'], ['Special character', '!@#']].forEach(([label, ex]) => { %>
+                <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/20"></span>
+                    <span class="text-[9px] font-bold uppercase tracking-widest text-white/30"><%= label %></span>
+                </div>
+                <% }) %>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button @click="savePassword()" :disabled="passwordSaving"
+                    class="px-12 py-4 bg-white text-black font-bold text-[10px] tracking-[0.2em] uppercase hover:bg-accent transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3">
+                    <template x-if="passwordSaving">
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </template>
+                    <span x-text="passwordSaving ? 'CHANGING...' : 'CHANGE PASSWORD'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STORE CONFIG TAB -->
+    <div x-show="activeTab === 'store'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+        <div class="space-y-8">
+            <!-- Global Identity -->
+            <div class="bg-black-surface border border-white/5 p-10 space-y-8">
+                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Global Identity</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Store Name</label>
+                        <input type="text" value="MOBIVERSE" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Support Email</label>
+                        <input type="email" value="ops@mobiverse.com" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors font-mono">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Support Phone</label>
+                        <input type="tel" value="+91 80000 00000" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors font-mono">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Currency</label>
+                        <select class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white focus:outline-none focus:border-accent transition-colors">
+                            <option value="INR" selected>INR — Indian Rupee (₹)</option>
+                            <option value="USD">USD — US Dollar ($)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logistics Constants -->
+            <div class="bg-black-surface border border-white/5 p-10 space-y-8">
+                <h3 class="text-white text-[11px] font-bold tracking-widest uppercase border-b border-white/5 pb-4">Logistics Constants</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Free Shipping Threshold (₹)</label>
+                        <input type="number" value="15000" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-colors">
+                        <p class="text-[9px] text-white/20 uppercase tracking-widest">Orders above this get free delivery</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Base GST (%)</label>
+                        <input type="number" value="18" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-colors">
+                        <p class="text-[9px] text-white/20 uppercase tracking-widest">Applied to all taxable products</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-bold tracking-widest uppercase text-white/40 block">Return Window (Days)</label>
+                        <input type="number" value="7" class="w-full bg-black border border-white/10 px-6 py-4 text-sm text-white font-mono focus:outline-none focus:border-accent transition-colors">
+                        <p class="text-[9px] text-white/20 uppercase tracking-widest">Days allowed for return requests</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maintenance Mode -->
+            <div class="bg-black-surface border border-white/5 p-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-white text-[11px] font-bold tracking-widest uppercase mb-1">Maintenance Mode</h3>
+                        <p class="text-white/30 text-[10px] uppercase tracking-widest">Temporarily disable customer access to the storefront</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-14 h-7 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-7 after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-accent"></div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Store configuration saved.', type: 'success' } }))"
+                    class="px-12 py-4 bg-white text-black font-bold text-[10px] tracking-[0.2em] uppercase hover:bg-accent transition-all">
+                    COMMIT CHANGES
+                </button>
+            </div>
         </div>
     </div>
 </div>

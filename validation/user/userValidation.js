@@ -218,7 +218,7 @@ export const addressValidate = joi.object({
     addr1: joi.string()
         .min(5)
         .max(120)
-        .pattern(/^[A-Za-z0-9][A-Za-z0-9\s,./#'()-]{2,119}$/)
+        .pattern(/^[A-Za-z0-9][A-Za-z0-9\s,./#'()-]{4,119}$/)
         .required()
         .messages({ 'string.pattern.base': 'Address line 1 must be 5 to 120 characters.' }),
     addr2: joi.string()
@@ -244,8 +244,14 @@ export const addressValidate = joi.object({
         .required()
         .messages({ 'any.invalid': 'Please select a supported country.' }),
     default: joi.boolean()
+        .optional(),
+    id: joi.string()
+        .allow('', null)
+        .optional(),
+    _id: joi.string()
+        .allow('', null)
         .optional()
-});
+}).unknown(true);
 
 export const resetPasswordValidate = joi.object({
     email: joi.string().email({ minDomainSegments: 2, tlds: { allow: false } }).required(),

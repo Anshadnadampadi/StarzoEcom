@@ -59,11 +59,14 @@
             <template x-if="input === 'select'">
                 <div class="ios-select-wrapper">
                     <select x-model="inputValue" class="ios-select">
-                        <option value="" x-text="inputPlaceholder || 'Select Option'"></option>
+                        <option value="" x-text="inputPlaceholder || 'Select Option'" disabled selected class="ios-option-placeholder"></option>
                         <template x-for="(label, val) in inputOptions" :key="val">
-                            <option :value="val" x-text="label"></option>
+                            <option :value="val" x-text="label" class="ios-option"></option>
                         </template>
                     </select>
+                    <div class="ios-select-arrow">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M6 9l6 6 6-6"/></svg>
+                    </div>
                 </div>
             </template>
         </div>
@@ -165,9 +168,32 @@
         border: 0.5px solid rgba(255,255,255,0.1);
         border-radius: 8px;
         padding: 8px 12px;
+        padding-right: 32px;
         color: white;
         font-size: 14px;
         appearance: none;
+        -webkit-appearance: none;
+        outline: none;
+        cursor: pointer;
+        color-scheme: dark; /* Forces browser to use dark native elements */
+    }
+
+    .ios-select-arrow {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.4);
+        pointer-events: none;
+    }
+
+    .ios-option {
+        background-color: #1e1e1e;
+        color: white;
+    }
+
+    .ios-option-placeholder {
+        color: rgba(255,255,255,0.4);
     }
 
     /* Buttons */

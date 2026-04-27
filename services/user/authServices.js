@@ -431,6 +431,11 @@ export const updateUserAddress = async (userId, addrId, addr) => {
         const user = await User.findById(userId);
         if (!user) return { success: false, message: 'User not found' };
 
+        // Ownership check
+        if (!user.addresses.includes(addrId)) {
+            return { success: false, message: 'Unauthorized access to address' };
+        }
+
         const existing = await Address.findById(addrId);
         if (!existing) return { success: false, message: 'Address not found' };
 
@@ -464,6 +469,11 @@ export const deleteUserAddress = async (userId, addrId) => {
         const user = await User.findById(userId);
         if (!user) return { success: false, message: 'User not found' };
 
+        // Ownership check
+        if (!user.addresses.map(id => id.toString()).includes(addrId)) {
+            return { success: false, message: 'Unauthorized access to address' };
+        }
+
         await Address.findByIdAndDelete(addrId);
 
         user.addresses = user.addresses.filter(id => id.toString() !== addrId);
@@ -480,6 +490,12 @@ export const setDefaultAddress = async (userId, addrId) => {
     try {
         const user = await User.findById(userId);
         if (!user) return { success: false, message: 'User not found' };
+
+        // Ownership check
+        if (!user.addresses.map(id => id.toString()).includes(addrId)) {
+            return { success: false, message: 'Unauthorized access to address' };
+        }
+
         // Unset all addresses for this user as default
         await Address.updateMany(
             { _id: { $in: user.addresses } },

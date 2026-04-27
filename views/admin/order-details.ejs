@@ -59,7 +59,7 @@
                         <% } %>
                     <% }) %>
                 </select>
-                <button id="update-status-btn" class="bg-accent text-black font-bold px-8 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all font-display tracking-widest">UPDATE STATUS</button>
+                <button onclick="updateStatus(document.getElementById('statusSelect').value)" class="bg-accent text-black font-bold px-8 py-4 text-[10px] tracking-[0.2em] uppercase hover:bg-white transition-all font-display tracking-widest">UPDATE STATUS</button>
             <% } %>
         </div>
     </div>
@@ -268,13 +268,7 @@
         }
     }
 
-    const updateBtn = document.getElementById('update-status-btn');
-    if (updateBtn) {
-        updateBtn.addEventListener('click', () => {
-            const status = document.getElementById('statusSelect').value;
-            updateStatus(status);
-        });
-    }
+    // UPDATE STATUS button uses inline onclick handler for SPA compatibility
 
     async function updateItemReturn(itemId, status) {
         const orderId = '<%= order._id %>';

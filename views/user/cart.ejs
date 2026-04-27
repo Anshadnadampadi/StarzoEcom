@@ -375,16 +375,19 @@
                     priceEl.textContent = `₹${data.itemTotal.toLocaleString()}`;
 
                     // Update Alpine state
-                    const alpineData = document.querySelector('[x-data]').__x.$data;
-                    alpineData.subtotal = data.cartSubtotal;
-                    
-                    // If coupon was applied, re-validate it
-                    if(alpineData.discount > 0) {
-                        alpineData.applyCoupon();
-                    }
+                    const alpineNode = document.querySelector('[x-data]');
+                    if (alpineNode && window.Alpine) {
+                        const alpineData = Alpine.$data(alpineNode);
+                        alpineData.subtotal = data.cartSubtotal;
+                        
+                        // If coupon was applied, re-validate it
+                        if(alpineData.discount > 0) {
+                            alpineData.applyCoupon();
+                        }
 
-                    alpineData.updateItemBadge(itemId, data.itemStatus);
-                    alpineData.updateCheckoutUI(data.hasIssues);
+                        alpineData.updateItemBadge(itemId, data.itemStatus);
+                        alpineData.updateCheckoutUI(data.hasIssues);
+                    }
                 } 
                 else {
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Error updating quantity', type: 'error' } }));
@@ -418,14 +421,17 @@
                         document.getElementById('item-' + itemId).remove();
                         
                         // Update Alpine state
-                        const alpineData = document.querySelector('[x-data]').__x.$data;
-                        alpineData.subtotal = data.cartSubtotal;
-                        
-                        if(alpineData.discount > 0) {
-                            alpineData.applyCoupon();
-                        }
+                        const alpineNode = document.querySelector('[x-data]');
+                        if (alpineNode && window.Alpine) {
+                            const alpineData = Alpine.$data(alpineNode);
+                            alpineData.subtotal = data.cartSubtotal;
+                            
+                            if(alpineData.discount > 0) {
+                                alpineData.applyCoupon();
+                            }
 
-                        alpineData.updateCheckoutUI(data.hasIssues);
+                            alpineData.updateCheckoutUI(data.hasIssues);
+                        }
                     }
                 } else {
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Error removing item', type: 'error' } }));

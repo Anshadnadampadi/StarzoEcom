@@ -16,17 +16,18 @@ export const getProductManagement = async (req, res) => {
         });
     } catch (error) {
         console.error("Product Management Error:", error);
-        res.redirect("/pageNotFound");
+        res.redirect("/admin/dashboard?msg=Error loading product management&icon=error");
     }
 };
 
 export const getAddProduct = async (req, res) => {
-    const categories = await adminProductServices.getAddProductData();
+    const { categories, brands } = await adminProductServices.getAddProductData();
     try {
         const { msg, icon } = req.query;
         res.render("admin/addProduct", {
             title: 'Add Product',
             categories,
+            brands,
             breadcrumbs: [
                 { label: 'Admin', url: '/admin/dashboard' },
                 { label: 'Products', url: '/admin/productManagement' },

@@ -1,5 +1,6 @@
 import Product from "../../models/product/product.js";
 import Category from "../../models/category/category.js";
+import Brand from "../../models/product/Brand.js";
 
 import { commonCache, CACHE_KEYS } from "../common/cacheService.js";
 
@@ -31,14 +32,15 @@ export const getProductManagementData = async (query) => {
     else if (sortBy === "stock_low") sort = { stock: 1 };
     else if (sortBy === "stock_high") sort = { stock: -1 };
 
-    const [products, totalProducts, categories] = await Promise.all([
+    const [products, totalProducts, categories, brands] = await Promise.all([
         Product.find(filter)
             .sort(sort)
             .skip(skip)
             .limit(limit)
             .populate('category', 'name'),
         Product.countDocuments(filter),
-        Category.find({ isUnlisted: false }).select('name')
+        Category.find({ isUnlisted: false }).select('name'),
+        Product.distinct('brand')
     ]);
 
     const totalPages = Math.ceil(totalProducts / limit);
@@ -46,6 +48,7 @@ export const getProductManagementData = async (query) => {
     return {
         products,
         categories,
+        brands,
         currentPage: page,
         totalPages,
         totalProducts,
@@ -56,7 +59,9 @@ export const getProductManagementData = async (query) => {
 };
 
 export const getAddProductData = async () => {
-    return await Category.find({ isUnlisted: false }).select('name');
+    const categories = await Category.find({ isUnlisted: false }).select('name');
+    const brands = await Product.distinct('brand');
+    return { categories, brands };
 };
 
 export const createProduct = async (productData) => {

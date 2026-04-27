@@ -41,8 +41,15 @@
                         <div class="space-y-2">
                             <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Brand</label>
                             <input type="text" x-model="form.brand" @input="errors.brand = ''"
-                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold"
-                                :class="errors.brand ? 'border-status-danger/50' : ''">
+                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10"
+                                :class="errors.brand ? 'border-status-danger/50' : ''" list="add-brand-list" placeholder="Enter or select brand">
+                            <datalist id="add-brand-list">
+                                <% if (typeof brands !=='undefined' ) { %>
+                                    <% brands.forEach(brand=> { %>
+                                        <option value="<%= brand %>"></option>
+                                    <% }) %>
+                                <% } %>
+                            </datalist>
                             <p x-show="errors.brand"
                                 class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
                                 x-text="errors.brand"></p>
@@ -138,12 +145,8 @@
                             isValid = false;
                         }
                         
-                        const brandVal = this.form.brand ? this.form.brand.trim() : '';
-                        if (!brandVal || brandVal.length < 2) {
-                            this.errors.brand = 'Brand must be at least 2 characters.';
-                            isValid = false;
-                        } else if (!/[a-zA-Z]/.test(brandVal)) {
-                            this.errors.brand = 'Brand must contain letters.';
+                        if (!this.form.brand) {
+                            this.errors.brand = 'Brand is required.';
                             isValid = false;
                         }
                         

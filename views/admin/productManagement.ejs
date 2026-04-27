@@ -184,7 +184,15 @@
                                     <div class="space-y-2">
                                         <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Brand</label>
                                         <input type="text" x-model="form.brand" @input="errors.brand = ''"
-                                            class="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors">
+                                            class="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors"
+                                            list="brand-list" placeholder="Enter or select brand">
+                                        <datalist id="brand-list">
+                                            <% if (typeof brands !=='undefined' ) { %>
+                                                <% brands.forEach(brand=> { %>
+                                                    <option value="<%= brand %>"></option>
+                                                <% }) %>
+                                            <% } %>
+                                        </datalist>
                                     </div>
                                 </div>
 
@@ -313,7 +321,7 @@
                                 this.form = {
                                     id: prod._id,
                                     name: prod.name,
-                                    brand: prod.brand,
+                                    brand: prod.brand?._id || prod.brand || "",
                                     category: prod.category?._id || prod.category || "",
                                     price: prod.price,
                                     stock: prod.stock
@@ -340,12 +348,8 @@
                             isValid = false;
                         }
                         
-                        const brandVal = this.form.brand ? this.form.brand.trim() : '';
-                        if (!brandVal || brandVal.length < 2) {
-                            this.errors.brand = 'Brand must be at least 2 characters.';
-                            isValid = false;
-                        } else if (!/[a-zA-Z]/.test(brandVal)) {
-                            this.errors.brand = 'Brand must contain letters.';
+                        if (!this.form.brand) {
+                            this.errors.brand = 'Brand required.';
                             isValid = false;
                         }
 

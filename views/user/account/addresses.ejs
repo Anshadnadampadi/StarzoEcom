@@ -262,37 +262,42 @@ function addressManager() {
         },
 
         validateField(field) {
+            const val = (this.form[field] || '').toString().trim();
             switch (field) {
                 case 'name':
-                    this.errors.name = this.form.name.trim().length < 3 ? 'Full name is too short (min 3)' : '';
+                    this.errors.name = !/^[A-Za-z][A-Za-z .'-]{1,79}$/.test(val) 
+                        ? 'Full name must be 2 to 80 characters and start with a letter' : '';
                     break;
                 case 'phone':
-                    const phoneRegex = /^[0-9]{10}$/;
-                    this.errors.phone = !phoneRegex.test(this.form.phone) ? 'Enter a valid 10-digit phone number' : '';
+                    this.errors.phone = !/^\+?[0-9()\-\s]{7,20}$/.test(val) 
+                        ? 'Enter a valid phone number (7-20 digits)' : '';
                     break;
                 case 'addr1':
-                    this.errors.addr1 = this.form.addr1.trim().length < 5 ? 'Address is too short' : '';
+                    this.errors.addr1 = !/^[A-Za-z0-9][A-Za-z0-9\s,./#'()-]{2,119}$/.test(val) 
+                        ? 'Address must be 5 to 120 characters' : '';
                     break;
                 case 'city':
-                    this.errors.city = this.form.city.trim().length < 2 ? 'Invalid city name' : '';
+                    this.errors.city = !/^[A-Za-z][A-Za-z .'-]{1,59}$/.test(val) 
+                        ? 'Enter a valid city name' : '';
                     break;
                 case 'state':
-                    this.errors.state = this.form.state.trim().length < 2 ? 'Invalid state name' : '';
+                    this.errors.state = !/^[A-Za-z][A-Za-z .'-]{1,59}$/.test(val) 
+                        ? 'Enter a valid state or province' : '';
                     break;
                 case 'zip':
-                    const zipRegex = /^[0-9]{6}$/;
-                    this.errors.zip = !zipRegex.test(this.form.zip) ? 'Enter a valid 6-digit postal code' : '';
+                    this.errors.zip = !/^[A-Za-z0-9][A-Za-z0-9 -]{2,10}$/.test(val) 
+                        ? 'Enter a valid postal code' : '';
+                    break;
+                case 'country':
+                    this.errors.country = (val.toLowerCase() === 'other' || !val) 
+                        ? 'Please select a supported country' : '';
                     break;
             }
         },
 
         validateForm() {
-            this.validateField('name');
-            this.validateField('phone');
-            this.validateField('addr1');
-            this.validateField('city');
-            this.validateField('state');
-            this.validateField('zip');
+            const fields = ['name', 'phone', 'addr1', 'city', 'state', 'zip', 'country'];
+            fields.forEach(f => this.validateField(f));
             return !Object.values(this.errors).some(error => error !== '');
         },
 

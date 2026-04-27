@@ -136,27 +136,6 @@
     </style>
 
 
-    <!-- 2. Brand Marquee -->
-    <section class="py-12 bg-black-surface border-y border-black-border overflow-hidden">
-        <div
-            class="flex items-center gap-16 animate-marquee whitespace-nowrap opacity-30 hover:opacity-100 transition-opacity">
-            <% ['APPLE', 'SAMSUNG' , 'GOOGLE' , 'ONEPLUS' , 'XIAOMI' , 'VIVO' , 'OPPO' , 'REALME' , 'ASUS' , 'NOTHING'
-                ].forEach(brand=> { %>
-                <span
-                    class="text-white text-xl font-black tracking-tighter uppercase grayscale hover:grayscale-0 transition-all cursor-default">
-                    <%= brand %>
-                </span>
-                <% }) %>
-                    <!-- Duplicate for loop -->
-                    <% ['APPLE', 'SAMSUNG' , 'GOOGLE' , 'ONEPLUS' , 'XIAOMI' , 'VIVO' , 'OPPO' , 'REALME' , 'ASUS'
-                        , 'NOTHING' ].forEach(brand=> { %>
-                        <span
-                            class="text-white text-xl font-black tracking-tighter uppercase grayscale hover:grayscale-0 transition-all cursor-default">
-                            <%= brand %>
-                        </span>
-                        <% }) %>
-        </div>
-    </section>
 
     <!-- 3. Flash Sale -->
     <section class="py-24 bg-black">

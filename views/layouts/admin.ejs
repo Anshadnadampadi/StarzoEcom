@@ -151,9 +151,6 @@
                             <a href="/admin/categories" class="block px-4 py-2 text-[11px] font-medium transition-all <%= typeof title !== 'undefined' && title === 'Category Management' ? 'text-white border-l-2 border-accent -ml-[17px] pl-[15px]' : 'text-white/40 hover:text-white' %>">
                                 Categories
                             </a>
-                            <a href="/admin/brands" class="block px-4 py-2 text-[11px] font-medium transition-all <%= typeof title !== 'undefined' && title === 'Brand Management' ? 'text-white border-l-2 border-accent -ml-[17px] pl-[15px]' : 'text-white/40 hover:text-white' %>">
-                                Brands
-                            </a>
                         </div>
                     </div>
 
@@ -189,7 +186,7 @@
             <div class="px-6">
                 <p class="text-[10px] uppercase tracking-[0.2em] text-white/30 font-semibold mb-4">System</p>
                 <div class="space-y-1">
-                    <a href="/admin/settings/general" class="flex items-center gap-3 px-4 py-2.5 text-sm nav-item rounded-sm">
+                    <a href="/admin/settings/general" class="flex items-center gap-3 px-4 py-2.5 text-sm nav-item rounded-sm <%= typeof title !== 'undefined' && title === 'Settings' ? 'bg-white/10 text-white' : '' %>">
                         <span class="w-4 h-4 opacity-50">⚙️</span>
                         Settings
                     </a>

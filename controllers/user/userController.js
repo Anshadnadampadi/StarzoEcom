@@ -3,7 +3,7 @@ import Address from "../../models/user/Address.js";
 import Order from "../../models/order/order.js";
 import bcrypt from "bcryptjs";
 import Wallet from "../../models/user/Wallet.js";
-import { registerValidate } from "../../validation/user/userValidation.js";
+import { registerValidate, addressValidate } from "../../validation/user/userValidation.js";
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,30}$/;
 import { registerUser, loginUser, updateUserProfile, changeUserPassword, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultAddress, validateAndNormalizeAddress, generateReferralCode } from "../../services/user/authServices.js";
 import { sendOtpService, verifyOtpService, forgotPasswordService, resendOtpService, requestEmailChangeOtpService, verifyEmailChangeOtpService } from "../../services/user/authServices.js";
@@ -525,13 +525,22 @@ export const validateAddress = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Not authenticated' });
         }
 
-        const result = await validateAndNormalizeAddress(req.body);
-        if (!result.success) {
-            const status = result.code === 'ADDRESS_VALIDATION_UNAVAILABLE' ? 503 : 400;
-            return res.status(status).json(result);
+        const { error } = addressValidate.validate(req.body, { abortEarly: false });
+        if (error) {
+            const errors = {};
+            error.details.forEach(detail => {
+                errors[detail.path[0]] = detail.message;
+            });
+            return res.status(400).json({ success: false, message: 'Validation failed', errors });
         }
 
-        return res.json({ success: true });
+        const result = await validateAndNormalizeAddress(req.body);
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
+
+        return res.json({ success: true, address: result.address });
+
     } catch (err) {
         console.error('Validate address error', err);
         return res.status(500).json({ success: false, message: 'Server error' });
@@ -543,12 +552,20 @@ export const postAddress = async (req, res) => {
     try {
         if (!req.session.user) return res.status(401).json({ success: false, message: 'Not authenticated' });
 
-        const validation = await validateAndNormalizeAddress(req.body)
-        if (!validation.success) {
-            const status = validation.code === 'ADDRESS_VALIDATION_UNAVAILABLE' ? 503 : 400;
-            return res.status(status).json(validation);
+        const { error } = addressValidate.validate(req.body, { abortEarly: false });
+        if (error) {
+            const errors = {};
+            error.details.forEach(detail => {
+                errors[detail.path[0]] = detail.message;
+            });
+            return res.status(400).json({ success: false, message: 'Validation failed', errors });
         }
-        const result = await addUserAddress(req.session.user, validation.address);
+
+        const result = await addUserAddress(req.session.user, req.body);
+        
+        if (!result.success) {
+            return res.status(400).json(result);
+        }
 
         return res.json({ success: true, address: result.address });
 
@@ -563,6 +580,16 @@ export const putAddress = async (req, res) => {
     try {
         if (!req.session.user) return res.status(401).json({ success: false, message: 'Not authenticated' });
         const { id } = req.params;
+
+        const { error } = addressValidate.validate(req.body, { abortEarly: false });
+        if (error) {
+            const errors = {};
+            error.details.forEach(detail => {
+                errors[detail.path[0]] = detail.message;
+            });
+            return res.status(400).json({ success: false, message: 'Validation failed', errors });
+        }
+
         const result = await updateUserAddress(req.session.user, id, req.body);
         if (!result.success) {
             const status = result.code === 'ADDRESS_VALIDATION_UNAVAILABLE' ? 503 : 400;
