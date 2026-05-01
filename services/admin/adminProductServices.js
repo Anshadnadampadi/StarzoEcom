@@ -64,15 +64,26 @@ export const getAddProductData = async () => {
     return { categories, brands };
 };
 
+export const checkDuplicateProductName = async (name, excludeId = null) => {
+    const query = { name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } };
+    if (excludeId) query._id = { $ne: excludeId };
+    const product = await Product.findOne(query);
+    return !!product;
+};
+
 export const createProduct = async (productData) => {
-    const { name, brand, category, price, stock } = productData;
-    console.log(category)
+    const { name, brand, category, stock } = productData;
+
+    // Check for duplicate product name (case-insensitive)
+    const existingProduct = await Product.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+    if (existingProduct) {
+        throw new Error("A product with this name already exists.");
+    }
 
     const newProduct = new Product({
         name,
         brand,
         category,
-        price: parseFloat(price),
         stock: parseInt(stock),
         isListed: true,
         isBlocked: false
@@ -141,6 +152,17 @@ export const addVariant = async (productId, variantData, files) => {
         throw new Error("Product not found");
     }
 
+    // Check for duplicate variant within this product
+    const isDuplicate = product.variants.some(v => 
+        !v.isDeleted &&
+        v.color.toLowerCase() === color.toLowerCase() &&
+        v.ram.toLowerCase() === ram.toLowerCase() &&
+        v.storage.toLowerCase() === storage.toLowerCase()
+    );
+    if (isDuplicate) {
+        throw new Error("A variant with this specific combination (Color/RAM/Storage) already exists for this product.");
+    }
+
     const images = files ? files.map(file => file.path) : [];
     if (images.length < 3) {
         throw new Error("At least 3 images are required for a variant.");
@@ -166,6 +188,18 @@ export const updateVariant = async (productId, index, variantData, files) => {
 
     if (!product || !product.variants[index]) {
         throw new Error("Product or Variant not found");
+    }
+
+    // Check for duplicate variant within this product (excluding current variant)
+    const isDuplicate = product.variants.some((v, idx) => 
+        idx !== parseInt(index) &&
+        !v.isDeleted &&
+        v.color.toLowerCase() === color.toLowerCase() &&
+        v.ram.toLowerCase() === ram.toLowerCase() &&
+        v.storage.toLowerCase() === storage.toLowerCase()
+    );
+    if (isDuplicate) {
+        throw new Error("Another variant with this specific combination (Color/RAM/Storage) already exists for this product.");
     }
 
     const variant = product.variants[index];
@@ -258,17 +292,25 @@ export const deleteVariantAsset = async (productId, index, imgIndex) => {
 };
 
 export const updateProduct = async (productId, updateData) => {
-    const { name, brand, category, price, stock } = updateData;
+    const { name, brand, category, stock } = updateData;
     const product = await Product.findById(productId);
     if (!product) {
         throw new Error("Product not found");
+    }
+
+    // Check for duplicate product name (case-insensitive, excluding current product)
+    const existingProduct = await Product.findOne({ 
+        name: { $regex: new RegExp(`^${name}$`, 'i') },
+        _id: { $ne: productId }
+    });
+    if (existingProduct) {
+        throw new Error("Another product with this name already exists.");
     }
 
     const updatedData = {
         name,
         brand,
         category,
-        price: parseFloat(price),
         stock: parseInt(stock)
     };
 

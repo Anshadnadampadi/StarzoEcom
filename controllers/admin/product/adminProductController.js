@@ -20,6 +20,18 @@ export const getProductManagement = async (req, res) => {
     }
 };
 
+export const checkDuplicateProduct = async (req, res) => {
+    try {
+        const { name, excludeId } = req.query;
+        if (!name) return res.json({ exists: false });
+        
+        const exists = await adminProductServices.checkDuplicateProductName(name, excludeId);
+        res.json({ exists });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export const getAddProduct = async (req, res) => {
     const { categories, brands } = await adminProductServices.getAddProductData();
     try {

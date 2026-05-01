@@ -117,32 +117,45 @@
         </form>
     </div>
 
-    <!-- Crop Modal - iOS Styled -->
-    <div x-show="showCropModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-6 select-none" x-cloak>
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-[15px]" 
-             x-transition:enter="opacity-0" x-transition:enter-end="opacity-100"
-             @click="cancelCrop()"></div>
+    <!-- Crop Modal - Premium Design -->
+    <div x-show="showCropModal" 
+         class="fixed inset-0 z-[1000] flex items-center justify-center p-6 select-none" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
         
-        <div class="ios-alert-container !max-w-md !w-full"
-             style="width: 400px; max-width: 90vw;"
-             x-transition:enter="transition cubic-bezier(0.34, 1.56, 0.64, 1) duration-400 transform"
-             x-transition:enter-start="opacity-0 scale-110" x-transition:enter-end="opacity-100 scale-100">
-
-            <div class="ios-alert-content">
-                <h2 class="ios-title">Align Asset</h2>
-                <p class="ios-message">Optimize the asset for catalog synchronization.</p>
-                
-                <div class="mt-6 w-full aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5">
-                    <img x-ref="cropImage" src="" class="max-w-full">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="cancelCrop()"></div>
+        
+        <div class="premium-modal-card-large flex flex-col items-center text-center" 
+             x-show="showCropModal"
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+            
+            <div class="premium-modal-header w-full">
+                <div class="text-left">
+                    <h2 class="premium-modal-title-text">Align Asset</h2>
+                    <p class="premium-modal-subtitle-text">Optimize for catalog synchronization</p>
                 </div>
             </div>
+            
+            <div class="p-10 w-full flex flex-col items-center">
+                <div class="w-full aspect-square bg-gray-50 rounded-3xl overflow-hidden border border-gray-100 mb-8 shadow-inner">
+                    <img x-ref="cropImage" src="" class="max-w-full">
+                </div>
 
-            <div class="ios-button-grid two-buttons">
-                <button @click="cancelCrop()" class="ios-button cancel-btn">Abort</button>
-                <button @click="confirmCrop()" class="ios-button confirm-btn">Optimize</button>
+                <div class="grid grid-cols-2 gap-4 w-full">
+                    <button @click="cancelCrop()" class="py-4 rounded-2xl bg-gray-100 text-gray-600 text-[10px] font-bold tracking-widest uppercase hover:bg-gray-200 transition-all border-none cursor-pointer">Abort</button>
+                    <button @click="confirmCrop()" class="py-4 rounded-2xl bg-accent text-white text-[10px] font-bold tracking-widest uppercase shadow-lg shadow-accent/20 hover:bg-accent-hover transition-all border-none cursor-pointer">Optimize</button>
+                </div>
             </div>
         </div>
     </div>
+v>
 
 </div>
 
@@ -155,6 +168,7 @@
                 Alpine.data('variantManager', () => ({
                     productId: '<%= product._id %>',
                     variantIndex: '<%= variantIndex %>',
+                    existingVariants: <%- JSON.stringify(product.variants.filter(v => !v.isDeleted)) %>,
                     showCropModal: false,
                     isSubmitting: false,
                     cropper: null,
@@ -265,6 +279,21 @@
 
                         if (!this.form.price || parseFloat(this.form.price) <= 0) { this.errors.price = 'Price must be positive.'; isValid = false; }
                         if (this.form.stock === '' || parseInt(this.form.stock) < 0) { this.errors.stock = 'Stock must be non-negative.'; isValid = false; }
+
+                        // Duplicate Variant Check (Excluding self)
+                        if (isValid) {
+                            const isDuplicate = this.existingVariants.some((v, idx) => 
+                                idx !== parseInt(this.variantIndex) &&
+                                v.color.toLowerCase() === colorVal.toLowerCase() &&
+                                v.ram.toLowerCase() === ramVal.toLowerCase() &&
+                                v.storage.toLowerCase() === storageVal.toLowerCase()
+                            );
+                            if (isDuplicate) {
+                                this.errors.color = 'Another variant with this combination already exists.';
+                                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Duplicate variant combination.', type: 'warning' } }));
+                                isValid = false;
+                            }
+                        }
                         return isValid;
                     },
 
@@ -280,11 +309,19 @@
                             const res = await fetch(`/admin/products/variant/update/${this.productId}/${this.variantIndex}`, { method: 'PATCH', body: formData });
                             const result = await res.json();
                             if (result.success) {
+                                this.isSubmitting = false; 
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Variant updated.', type: 'success' } }));
                                 setTimeout(() => { window.location.href = `/admin/products/details/${this.productId}`; }, 1500);
-                            } else { throw new Error(result.message); }
+                            } else { 
+                                if (result.message.toLowerCase().includes('already exists')) {
+                                    this.errors.color = result.message;
+                                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: result.message, type: 'error' } }));
+                                } else {
+                                    throw new Error(result.message); 
+                                }
+                            }
                         } catch (error) {
-                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Error updating variant.', type: 'error' } }));
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: error.message || 'Error occurred.', type: 'error' } }));
                         } finally { this.isSubmitting = false; }
                     }
                 }));
@@ -299,6 +336,64 @@
     </script>
 
 <style>
+    /* Premium Modal Standard CSS */
+    .premium-modal-card-large {
+        background-color: #ffffff;
+        border-radius: 2rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        width: 100%;
+        max-width: 32rem;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .premium-modal-header {
+        padding: 2rem;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f9fafb;
+    }
+
+    .premium-modal-title-text {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .premium-modal-subtitle-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    /* Added missing Label and Input styles for consistency */
+    .premium-modal-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #374151;
+        display: block;
+        margin-bottom: 0.75rem;
+        margin-left: 0.25rem;
+    }
+
+    .premium-modal-input {
+        width: 100%;
+        background-color: #ffffff;
+        border: 2px solid #f3f4f6;
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        font-size: 0.875rem;
+        color: #111827;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
     .cropper-view-box, .cropper-face { border-radius: 0; }
     .cropper-line, .cropper-point { background-color: #ffffff; }
     .cropper-bg { background-image: none; background-color: #000; }

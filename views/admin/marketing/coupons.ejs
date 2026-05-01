@@ -305,11 +305,23 @@
                                 this.formErrors.discountValue = "Must be > 0";
                             } else if (v.discountType === "percentage" && v.discountValue > 100) {
                                 this.formErrors.discountValue = "Max 100%";
+                            } else if (v.discountType === "fixed" && Number(v.discountValue) >= Number(v.minAmount)) {
+                                this.formErrors.discountValue = "Must be < Min. Purchase";
                             }
                         }
 
-                        if (field === "minAmount" && v.minAmount < 0) {
-                            this.formErrors.minAmount = "Cannot be negative";
+                        if (field === "minAmount") {
+                            if (v.minAmount < 0) {
+                                this.formErrors.minAmount = "Cannot be negative";
+                            } else if (v.discountType === "fixed" && Number(v.discountValue) >= Number(v.minAmount)) {
+                                this.formErrors.minAmount = "Must be > Discount";
+                            } else if (v.discountType === "percentage" && v.maxDiscount && Number(v.maxDiscount) >= Number(v.minAmount)) {
+                                this.formErrors.minAmount = "Must be > Max Discount";
+                            }
+                            
+                            // Re-validate related fields to clear their errors if valid now
+                            if (v.discountType === "fixed") this.validateField('discountValue');
+                            if (v.discountType === "percentage") this.validateField('maxDiscount');
                         }
 
                         if (field === "maxDiscount" && v.maxDiscount && v.maxDiscount < 0) {
@@ -347,6 +359,8 @@
 
                             if (v.discountType === "percentage" && !v.maxDiscount) {
                                 this.formErrors.maxDiscount = "Required for % coupons";
+                            } else if (v.discountType === "percentage" && Number(v.maxDiscount) >= Number(v.minAmount)) {
+                                this.formErrors.maxDiscount = "Must be < Min. Purchase";
                             }
                         }
                     },

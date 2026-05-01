@@ -60,8 +60,8 @@
                             <% 
                             const stages = [
                                 { name: 'Confirmed', desc: 'Order received', date: order.createdAt, active: true },
-                                { name: 'Processing', desc: 'Being packed', date: order.orderStatus === 'Processing' || order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus !== 'Pending' },
-                                { name: 'Shipped', desc: 'Out for delivery', date: order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered' },
+                                { name: 'Processing', desc: 'Being packed', date: ['Processing', 'Shipped', 'Delivered'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Processing', 'Shipped', 'Delivered'].includes(order.orderStatus) },
+                                { name: 'Shipped', desc: 'Out for delivery', date: ['Shipped', 'Delivered'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Shipped', 'Delivered'].includes(order.orderStatus) },
                                 { name: 'Delivered', desc: 'Order arrived', date: order.orderStatus === 'Delivered' ? order.updatedAt : null, active: order.orderStatus === 'Delivered' }
                             ];
                             %>
@@ -279,7 +279,7 @@
                 throw new Error(data.message || "Failed to initiate payment");
             }
         } catch (error) {
-            Swal.fire({ title: 'ERROR', text: error.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+            dispatchGlobalToast('error', 'Payment Error', error.message);
         }
     }
 
@@ -295,31 +295,26 @@
             });
             const data = await res.json();
             if(data.success) {
-                await Swal.fire({ title: 'SUCCESS', text: 'Payment verified! Your order is now confirmed.', icon: 'success', background: '#0a0a0a', color: '#fff' });
+                dispatchGlobalToast('success', 'Payment Verified', 'Your order is now confirmed.');
                 window.location.reload();
             } else {
                 throw new Error(data.message || 'Payment verification failed.');
             }
         } catch(error) {
-            Swal.fire({ title: 'ERROR', text: error.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+            dispatchGlobalToast('error', 'Verification Failed', error.message);
         }
     }
 
     async function confirmReturn(orderId) {
-        const { value: reason } = await Swal.fire({
+        const reason = await window.confirmAction({
             title: 'Request Return',
-            input: 'textarea',
+            message: 'Please specify why you want to return this order.',
+            type: 'warning',
+            hasInput: true,
             inputLabel: 'Reason for return',
-            inputPlaceholder: 'Please provide a detailed reason (at least 10 characters)...',
-            inputAttributes: {
-                'aria-label': 'Reason for return'
-            },
-            showCancelButton: true,
-            confirmButtonText: 'Submit Request',
-            confirmButtonColor: '#ff9800',
-            cancelButtonColor: '#1a1a1a',
-            background: '#0a0a0a',
-            color: '#fff',
+            inputPlaceholder: 'Minimum 10 characters required...',
+            confirmText: 'Submit Request',
+            cancelText: 'Cancel',
             inputValidator: (value) => {
                 if (!value || value.trim().length < 10) {
                     return 'Please provide a reason with at least 10 characters';
@@ -336,172 +331,94 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    await Swal.fire({
-                        title: 'Request Submitted',
-                        text: data.message,
-                        icon: 'success',
-                        background: '#0a0a0a',
-                        color: '#fff'
-                    });
-                    window.location.reload();
+                    dispatchGlobalToast('success', 'Request Submitted', data.message);
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
                     throw new Error(data.message);
                 }
             } catch (error) {
-                Swal.fire({
-                    title: 'Error',
-                    text: error.message || 'Could not submit return request. Please try again.',
-                    icon: 'error',
-                    background: '#0a0a0a',
-                    color: '#fff'
-                });
+                dispatchGlobalToast('error', 'Error', error.message || 'Could not submit return request.');
             }
         }
     }
 
     async function confirmCancel(orderId) {
-        const { isConfirmed } = await Swal.fire({
+        const reason = await window.confirmAction({
             title: 'Cancel Order?',
-            text: 'Are you sure you want to cancel this order? This cannot be undone.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#1a1a1a',
-            confirmButtonText: 'Yes, Cancel It',
-            cancelButtonText: 'Keep Order',
-            background: '#0a0a0a',
-            color: '#fff'
+            message: 'Are you sure you want to cancel this order? This cannot be undone. Please specify a reason.',
+            type: 'danger',
+            hasInput: true,
+            inputLabel: 'Reason for cancellation',
+            inputPlaceholder: 'Type your reason here (e.g. changed my mind)...',
+            confirmText: 'Yes, Cancel It',
+            cancelText: 'Keep Order',
+            inputValidator: (value) => {
+                if (!value || value.trim().length < 5) {
+                    return 'Please provide a reason with at least 5 characters';
+                }
+            }
         });
 
-        if (isConfirmed) {
-            const { value: reason } = await Swal.fire({
-                title: 'Reason for Cancellation',
-                input: 'select',
-                inputOptions: {
-                    'Changed my mind': 'Changed my mind',
-                    'Price dropped elsewhere': 'Price dropped elsewhere',
-                    'Delivery taking too long': 'Delivery taking too long',
-                    'Other': 'Other'
-                },
-                inputPlaceholder: 'Select a reason',
-                showCancelButton: true,
-                confirmButtonText: 'Submit',
-                background: '#0a0a0a',
-                color: '#fff',
-                inputValidator: (value) => {
-                    if (!value) return 'Please select a cancellation reason';
+        if (reason) {
+            try {
+                const response = await fetch('/account/orders/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    dispatchGlobalToast('success', 'Order Cancelled', 'Your order has been successfully terminated.');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    throw new Error(data.message);
                 }
-            });
-
-            if (reason) {
-                try {
-                    const response = await fetch('/account/orders/cancel', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId, reason })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        await Swal.fire({
-                            title: 'Order Cancelled',
-                            text: 'Your order has been successfully cancelled.',
-                            icon: 'success',
-                            background: '#0a0a0a',
-                            color: '#fff'
-                        });
-                        window.location.reload();
-                    } else {
-                        throw new Error(data.message);
-                    }
-                } catch (error) {
-                    Swal.fire({
-                        title: 'Error',
-                        text: error.message || 'Could not cancel order. Please try again.',
-                        icon: 'error',
-                        background: '#0a0a0a',
-                        color: '#fff'
-                    });
-                }
+            } catch (error) {
+                dispatchGlobalToast('error', 'Error', error.message || 'Could not cancel order.');
             }
         }
     }
 
     async function confirmCancelItem(orderId, itemId, productName) {
-        const { isConfirmed } = await Swal.fire({
+        const confirmed = await window.confirmAction({
             title: 'Cancel Item?',
-            text: `Are you sure you want to cancel ${productName}? This part of your order will be terminated.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#1a1a1a',
-            confirmButtonText: 'Confirm Cancellation',
-            cancelButtonText: 'Keep Item',
-            background: '#0a0a0a',
-            color: '#fff'
+            message: `Are you sure you want to cancel ${productName}? This part of your order will be terminated.`,
+            type: 'danger',
+            confirmText: 'Confirm Cancellation',
+            cancelText: 'Keep Item'
         });
 
-        if (isConfirmed) {
-            const { value: reason } = await Swal.fire({
-                title: 'Cancellation Reason',
-                input: 'select',
-                inputOptions: {
-                    'Changed my mind': 'Changed my mind',
-                    'Found a better price': 'Found a better price',
-                    'Ordered by mistake': 'Ordered by mistake',
-                    'Other': 'Other'
-                },
-                inputPlaceholder: 'Select a reason',
-                showCancelButton: true,
-                confirmButtonText: 'Submit',
-                background: '#0a0a0a',
-                color: '#fff'
-            });
-
-            if (reason) {
-                try {
-                    const response = await fetch('/account/orders/cancel-item', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId, itemId, reason })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        await Swal.fire({
-                            title: 'Item Cancelled',
-                            text: data.message,
-                            icon: 'success',
-                            background: '#0a0a0a',
-                            color: '#fff'
-                        });
-                        window.location.reload();
-                    } else {
-                        throw new Error(data.message);
-                    }
-                } catch (error) {
-                    Swal.fire({
-                        title: 'Error',
-                        text: error.message || 'Could not cancel item.',
-                        icon: 'error',
-                        background: '#0a0a0a',
-                        color: '#fff'
-                    });
+        if (confirmed) {
+            const reason = 'Item cancelled by user';
+            try {
+                const response = await fetch('/account/orders/cancel-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, itemId, reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    dispatchGlobalToast('success', 'Item Cancelled', data.message);
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    throw new Error(data.message);
                 }
+            } catch (error) {
+                dispatchGlobalToast('error', 'Error', error.message || 'Could not cancel item.');
             }
         }
     }
 
     async function confirmReturnItem(orderId, itemId, productName) {
-        const { value: reason } = await Swal.fire({
+        const reason = await window.confirmAction({
             title: 'Return Item',
-            text: `Reason for returning ${productName}:`,
-            input: 'textarea',
-            inputPlaceholder: 'Please provide a detailed reason (at least 10 characters)...',
-            showCancelButton: true,
-            confirmButtonText: 'Submit Request',
-            confirmButtonColor: '#ff9800',
-            cancelButtonColor: '#1a1a1a',
-            background: '#0a0a0a',
-            color: '#fff',
+            message: `Please specify why you want to return ${productName}.`,
+            type: 'warning',
+            hasInput: true,
+            inputLabel: 'Reason for return',
+            inputPlaceholder: 'Minimum 10 characters required...',
+            confirmText: 'Submit Request',
+            cancelText: 'Cancel',
             inputValidator: (value) => {
                 if (!value || value.trim().length < 10) {
                     return 'Please provide a reason with at least 10 characters';
@@ -518,25 +435,13 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    await Swal.fire({
-                        title: 'Request Submitted',
-                        text: data.message,
-                        icon: 'success',
-                        background: '#0a0a0a',
-                        color: '#fff'
-                    });
-                    window.location.reload();
+                    dispatchGlobalToast('success', 'Request Submitted', data.message);
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
                     throw new Error(data.message);
                 }
             } catch (error) {
-                Swal.fire({
-                    title: 'Error',
-                    text: error.message || 'Could not submit return request.',
-                    icon: 'error',
-                    background: '#0a0a0a',
-                    color: '#fff'
-                });
+                dispatchGlobalToast('error', 'Error', error.message || 'Could not submit return request.');
             }
         }
     }

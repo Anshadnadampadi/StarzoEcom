@@ -1039,12 +1039,21 @@
         <!-- Price -->
         <div style="margin-bottom:20px;" class="fade-up fade-up-d2">
           <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
-            <% if (product.hasOffer) { %>
-              <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%= product.discountedPrice.toLocaleString() %></span>
-              <span class="font-mono" style="font-size:18px;color:var(--t3);text-decoration:line-through;">₹<%= (defaultVariant ? defaultVariant.price : product.price).toLocaleString() %></span>
-            <% } else { %>
-              <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%= (defaultVariant ? defaultVariant.price : product.price).toLocaleString() %></span>
-            <% } %>
+            <% 
+              let initialPrice = (defaultVariant ? defaultVariant.price : product.price);
+              let initialDiscounted = initialPrice;
+              if (product.hasOffer && product.bestOffer) {
+                  let discount = 0;
+                  if (product.bestOffer.discountType === 'percentage') {
+                      discount = (initialPrice * product.bestOffer.discountValue) / 100;
+                  } else {
+                      discount = product.bestOffer.discountValue;
+                  }
+                  initialDiscounted = Math.floor(Math.max(0, initialPrice - discount));
+              }
+            %>
+            <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%= initialDiscounted.toLocaleString() %></span>
+            <span class="font-mono" id="originalPrice" style="font-size:18px;color:var(--t3);text-decoration:line-through; <%= product.hasOffer ? '' : 'display:none;' %>">₹<%= initialPrice.toLocaleString() %></span>
           </div>
           <p style="font-size:11px;color:var(--t3);margin-top:4px;">Incl. 18% GST · Free delivery</p>
         </div>
@@ -1404,8 +1413,12 @@
                   <%= recProduct.category?.name || 'Category' %>
                 </p>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span class="font-mono" style="font-size:17px;font-weight:700;">₹<%= recProduct.price.toLocaleString()
-                      %></span>
+                  <% if (recProduct.hasOffer) { %>
+                    <span class="font-mono" style="font-size:17px;font-weight:700;color:var(--accent);">₹<%= recProduct.discountedPrice.toLocaleString() %></span>
+                    <span class="font-mono" style="font-size:13px;color:var(--t3);text-decoration:line-through;">₹<%= recProduct.price.toLocaleString() %></span>
+                  <% } else { %>
+                    <span class="font-mono" style="font-size:17px;font-weight:700;">₹<%= recProduct.price.toLocaleString() %></span>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -1463,8 +1476,12 @@
                   <%= rvProduct.category?.name || 'Category' %>
                 </p>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span class="font-mono" style="font-size:17px;font-weight:700;">₹<%= rvProduct.price.toLocaleString()
-                      %></span>
+                  <% if (rvProduct.hasOffer) { %>
+                    <span class="font-mono" style="font-size:17px;font-weight:700;color:var(--accent);">₹<%= rvProduct.discountedPrice.toLocaleString() %></span>
+                    <span class="font-mono" style="font-size:13px;color:var(--t3);text-decoration:line-through;">₹<%= rvProduct.price.toLocaleString() %></span>
+                  <% } else { %>
+                    <span class="font-mono" style="font-size:17px;font-weight:700;">₹<%= rvProduct.price.toLocaleString() %></span>
+                  <% } %>
                 </div>
               </div>
             </div>
@@ -1713,13 +1730,43 @@
       });
 
       if (match) {
+        // Calculate discounted price
+        let finalPrice = match.price;
+        let originalPrice = match.price;
+        let hasOffer = false;
+
+        if (product.bestOffer || product.hasOffer) {
+            const offer = product.bestOffer || { discountType: 'percentage', discountValue: 0 }; // fallback
+            hasOffer = true;
+            let discount = 0;
+            if (offer.discountType === 'percentage') {
+                discount = (match.price * offer.discountValue) / 100;
+            } else {
+                discount = offer.discountValue;
+            }
+            finalPrice = Math.floor(Math.max(0, match.price - discount));
+            
+            // If it's a 0% offer but product.hasOffer was true (maybe it was just discountedPrice set), 
+            // we should still respect the discountedPrice if we don't have bestOffer details.
+            // But bestOffer should be there.
+        }
+
         // Update price
-        const formattedPrice = `₹${match.price.toLocaleString()}`;
         const priceEl = document.getElementById('productPrice');
-        if (priceEl) priceEl.textContent = formattedPrice;
+        const originalPriceEl = document.getElementById('originalPrice');
+        
+        if (priceEl) priceEl.textContent = `₹${finalPrice.toLocaleString()}`;
+        if (originalPriceEl) {
+            if (hasOffer) {
+                originalPriceEl.textContent = `₹${originalPrice.toLocaleString()}`;
+                originalPriceEl.style.display = 'inline';
+            } else {
+                originalPriceEl.style.display = 'none';
+            }
+        }
 
         const stickyPriceEl = document.getElementById('stickyPrice');
-        if (stickyPriceEl) stickyPriceEl.textContent = formattedPrice;
+        if (stickyPriceEl) stickyPriceEl.textContent = `₹${finalPrice.toLocaleString()}`;
 
         // Update stock badge
         const badge = document.getElementById('stockStatusBadge');

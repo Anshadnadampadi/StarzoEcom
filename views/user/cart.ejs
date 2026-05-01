@@ -252,8 +252,8 @@
         function cartManager() {
             return {
                 subtotal: <%= cart.subtotal %>,
-                discount: 0,
-                couponCode: '',
+                discount: <%= cart.discount || 0 %>,
+                couponCode: '<%= (cart && cart.coupon) ? cart.coupon.code : '' %>',
                 couponsModalOpen: false,
                 availableCoupons: [],
                 isLoadingCoupons: false,
@@ -380,12 +380,8 @@
                     if (alpineNode && window.Alpine) {
                         const alpineData = Alpine.$data(alpineNode);
                         alpineData.subtotal = data.cartSubtotal || 0;
+                        alpineData.discount = data.cartDiscount || 0;
                         
-                        // If coupon was applied, re-validate it
-                        if(alpineData.discount > 0) {
-                            alpineData.applyCoupon();
-                        }
-
                         alpineData.updateItemBadge(itemId, data.itemStatus);
                         alpineData.updateCheckoutUI(data.hasIssues);
                     }
@@ -428,11 +424,8 @@
                         if (alpineNode && window.Alpine) {
                             const alpineData = Alpine.$data(alpineNode);
                             alpineData.subtotal = data.cartSubtotal;
+                            alpineData.discount = data.cartDiscount || 0;
                             
-                            if(alpineData.discount > 0) {
-                                alpineData.applyCoupon();
-                            }
-
                             alpineData.updateCheckoutUI(data.hasIssues);
                         }
                     }
@@ -456,7 +449,13 @@
   document.getElementById("clearCartBtn").addEventListener("click", async () => {
 
     // confirmation
-    const confirmClear = confirm("Are you sure you want to clear your cart?");
+    const confirmClear = await window.confirmAction({
+        title: 'Clear Cart?',
+        message: 'Are you sure you want to remove all items from your cart?',
+        type: 'danger',
+        confirmText: 'Yes, Clear It',
+        cancelText: 'Keep Items'
+    });
     if (!confirmClear) return;
 
     try {

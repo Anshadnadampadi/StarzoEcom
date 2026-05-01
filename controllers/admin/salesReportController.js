@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 
 export const getSalesReportPage = async (req, res) => {
     try {
-        const { filter = 'daily', startDate, endDate, page = 1, status = 'Delivered' } = req.query;
+        const { filter = 'daily', startDate, endDate, page = 1, status = 'exclude_cancelled' } = req.query;
         const limit = 10;
         const { orders, stats, period, totalPages, currentPage, previousRevenue, couponUsage, topBrands, chartData } = await getSalesReportService(filter, startDate, endDate, page, limit, status);
 
@@ -42,7 +42,7 @@ export const getSalesReportPage = async (req, res) => {
 
 export const downloadSalesReport = async (req, res) => {
     try {
-        const { filter = 'daily', startDate, endDate, format = 'pdf', status = 'Delivered' } = req.query;
+        const { filter = 'daily', startDate, endDate, format = 'pdf', status = 'exclude_cancelled' } = req.query;
         const { orders, stats, period } = await getSalesReportService(filter, startDate, endDate, null, null, status);
 
         if (format === 'pdf') {
@@ -95,9 +95,11 @@ async function generateLedgerBook(res, orders, stats, period, filter) {
     doc.rect(30, tableTop, 535, 20).fill('#f5f5f5');
     doc.fillColor('#333').fontSize(8).font('Helvetica-Bold');
     doc.text('DATE', 40, tableTop + 6);
-    doc.text('PARTICULARS / ORDER ID', 100, tableTop + 6);
-    doc.text('CREDIT (+)', 300, tableTop + 6, { width: 80, align: 'right' });
-    doc.text('DEBIT (-)', 390, tableTop + 6, { width: 80, align: 'right' });
+    doc.text('ORDER ID', 90, tableTop + 6);
+    doc.text('METHOD', 180, tableTop + 6);
+    doc.text('STATUS', 250, tableTop + 6);
+    doc.text('CREDIT (+)', 340, tableTop + 6, { width: 70, align: 'right' });
+    doc.text('DEBIT (-)', 410, tableTop + 6, { width: 70, align: 'right' });
     doc.text('BALANCE', 480, tableTop + 6, { width: 80, align: 'right' });
 
     let currentY = tableTop + 20;
@@ -113,11 +115,13 @@ async function generateLedgerBook(res, orders, stats, period, filter) {
         const balanceBefore = runningBalance;
         runningBalance += (order.totalAmount - order.discount);
 
-        doc.fontSize(8);
+        doc.fontSize(7);
         doc.text(new Date(order.createdAt).toLocaleDateString(), 40, currentY + 6);
-        doc.text(`Sales: #${order.orderId}`, 100, currentY + 6, { width: 180 });
-        doc.text(`₹${order.totalAmount.toLocaleString()}`, 300, currentY + 6, { width: 80, align: 'right' });
-        doc.fillColor('#d32f2f').text(`₹${order.discount.toLocaleString()}`, 390, currentY + 6, { width: 80, align: 'right' });
+        doc.text(`#${order.orderId}`, 90, currentY + 6, { width: 85 });
+        doc.text(order.paymentMethod, 180, currentY + 6, { width: 65 });
+        doc.text(order.orderStatus, 250, currentY + 6, { width: 85 });
+        doc.text(`₹${order.totalAmount.toLocaleString()}`, 340, currentY + 6, { width: 70, align: 'right' });
+        doc.fillColor('#d32f2f').text(`₹${order.discount.toLocaleString()}`, 410, currentY + 6, { width: 70, align: 'right' });
         doc.fillColor('#333').text(`₹${runningBalance.toLocaleString()}`, 480, currentY + 6, { width: 80, align: 'right' });
 
         doc.strokeColor('#eee').lineWidth(0.5).moveTo(30, currentY + 20).lineTo(565, currentY + 20).stroke();
@@ -158,10 +162,12 @@ async function generatePDFReport(res, orders, stats, period, filter) {
     doc.rect(30, tableTop, 535, 20).fill('#333');
     doc.fillColor('#fff').fontSize(9).font('Helvetica-Bold');
     doc.text('Order ID', 40, tableTop + 6);
-    doc.text('Date', 140, tableTop + 6);
-    doc.text('Customer', 240, tableTop + 6);
-    doc.text('Amount', 380, tableTop + 6, { width: 80, align: 'right' });
-    doc.text('Discount', 470, tableTop + 6, { width: 80, align: 'right' });
+    doc.text('Date', 100, tableTop + 6);
+    doc.text('Customer', 170, tableTop + 6);
+    doc.text('Method', 290, tableTop + 6);
+    doc.text('Status', 360, tableTop + 6);
+    doc.text('Amount', 440, tableTop + 6, { width: 60, align: 'right' });
+    doc.text('Discount', 500, tableTop + 6, { width: 60, align: 'right' });
 
     // Table Rows
     let currentY = tableTop + 20;
@@ -179,10 +185,12 @@ async function generatePDFReport(res, orders, stats, period, filter) {
         
         doc.fillColor('#333');
         doc.text(order.orderId, 40, currentY + 6);
-        doc.text(new Date(order.createdAt).toLocaleDateString(), 140, currentY + 6);
-        doc.text(order.user ? `${order.user.firstName} ${order.user.lastName}` : 'N/A', 240, currentY + 6, { width: 130, height: 10, ellipsis: true });
-        doc.text(`₹${order.totalAmount.toLocaleString()}`, 380, currentY + 6, { width: 80, align: 'right' });
-        doc.text(`₹${order.discount.toLocaleString()}`, 470, currentY + 6, { width: 80, align: 'right' });
+        doc.text(new Date(order.createdAt).toLocaleDateString(), 100, currentY + 6);
+        doc.text(order.user ? `${order.user.firstName} ${order.user.lastName}` : 'N/A', 170, currentY + 6, { width: 110, height: 10, ellipsis: true });
+        doc.text(order.paymentMethod, 290, currentY + 6, { width: 65 });
+        doc.text(order.orderStatus, 360, currentY + 6, { width: 75 });
+        doc.text(`₹${order.totalAmount.toLocaleString()}`, 440, currentY + 6, { width: 60, align: 'right' });
+        doc.text(`₹${order.discount.toLocaleString()}`, 500, currentY + 6, { width: 60, align: 'right' });
 
         currentY += 20;
     });
@@ -198,6 +206,7 @@ async function generateExcelReport(res, orders, stats, period, filter) {
         { header: 'Order ID', key: 'orderId', width: 20 },
         { header: 'Date', key: 'date', width: 15 },
         { header: 'Customer', key: 'customer', width: 25 },
+        { header: 'Payment Method', key: 'paymentMethod', width: 20 },
         { header: 'Total Amount', key: 'totalAmount', width: 15 },
         { header: 'Discount', key: 'discount', width: 15 },
         { header: 'Status', key: 'status', width: 15 }
@@ -208,6 +217,7 @@ async function generateExcelReport(res, orders, stats, period, filter) {
             orderId: order.orderId,
             date: new Date(order.createdAt).toLocaleDateString(),
             customer: order.user ? `${order.user.firstName} ${order.user.lastName}` : 'N/A',
+            paymentMethod: order.paymentMethod,
             totalAmount: order.totalAmount,
             discount: order.discount,
             status: order.orderStatus

@@ -188,7 +188,7 @@
                                     throw new Error(data.message || "Failed to initiate payment");
                                 }
                             } catch (error) {
-                                Swal.fire({ title: 'ERROR', text: error.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                dispatchGlobalToast('error', 'Payment Error', error.message);
                             }
                         }
 
@@ -204,34 +204,27 @@
                                 });
                                 const data = await res.json();
                                 if(data.success) {
-                                    await Swal.fire({ title: 'SUCCESS', text: 'Payment verified! Your order is now confirmed.', icon: 'success', background: '#0a0a0a', color: '#fff' });
+                                    dispatchGlobalToast('success', 'Payment Success', 'Your order is now confirmed.');
                                     window.location.reload();
                                 } else {
                                     throw new Error(data.message || 'Payment verification failed.');
                                 }
                             } catch(error) {
-                                Swal.fire({ title: 'ERROR', text: error.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                dispatchGlobalToast('error', 'Payment Error', error.message);
                             }
                         }
 
                         async function requestReturn(orderId) {
-                            const { value: reason } = await Swal.fire({
-                                title: 'INITIATE RETURN',
-                                input: 'textarea',
-                                inputLabel: 'Please provide a valid reason for this request',
-                                inputPlaceholder: 'Minimum 10 characters required...',
-                                background: '#0a0a0a',
-                                color: '#fff',
-                                confirmButtonColor: '#ff6a00',
-                                cancelButtonColor: '#1a1a1a',
-                                showCancelButton: true,
-                                confirmButtonText: 'SUBMIT REQUEST',
-                                inputValidator: (value) => {
-                                    if (!value || value.trim().length < 10) {
-                                        return 'Please provide a detailed reason (min 10 characters)';
-                                    }
-                                }
+                            const confirmed = await window.confirmAction({
+                                title: 'INITIATE RETURN?',
+                                message: 'Are you sure you want to request a return for this order?',
+                                type: 'warning',
+                                confirmText: 'Request Return',
+                                cancelText: 'Cancel'
                             });
+
+                            if (confirmed) {
+                                const reason = 'Return requested by user';
 
                             if (reason) {
                                 try {
@@ -242,42 +235,28 @@
                                     });
                                     const result = await response.json();
                                     if (result.success) {
-                                        await Swal.fire({
-                                            title: 'REQUEST LOGGED',
-                                            text: result.message,
-                                            icon: 'success',
-                                            background: '#0a0a0a',
-                                            color: '#fff'
-                                        });
+                                        dispatchGlobalToast('success', 'Request Logged', result.message);
                                         window.location.reload();
                                     } else {
-                                        Swal.fire({ title: 'ERROR', text: result.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                        dispatchGlobalToast('error', 'Error', result.message);
                                     }
                                 } catch (error) {
-                                    Swal.fire({ title: 'SYSTEM ERROR', text: 'Internal failure, please retry.', icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                    dispatchGlobalToast('error', 'System Error', 'Internal failure, please retry.');
                                 }
                             }
                         }
 
                         async function cancelOrder(orderId) {
-                            const { value: reason } = await Swal.fire({
-                                title: 'TERMINATE ORDER',
-                                input: 'select',
-                                inputOptions: {
-                                    'Change of mind': 'Change of mind',
-                                    'Found better price': 'Found better price',
-                                    'Incorrect item selected': 'Incorrect item selected',
-                                    'Shipping time too long': 'Shipping time too long',
-                                    'Other': 'Other'
-                                },
-                                inputPlaceholder: 'Select cancellation reason',
-                                background: '#0a0a0a',
-                                color: '#fff',
-                                confirmButtonColor: '#ef4444',
-                                cancelButtonColor: '#1a1a1a',
-                                showCancelButton: true,
-                                confirmButtonText: 'CANCEL ORDER'
+                            const confirmed = await window.confirmAction({
+                                title: 'Terminate Order?',
+                                message: 'Are you sure you want to cancel this order? This action cannot be reversed.',
+                                type: 'danger',
+                                confirmText: 'Yes, Cancel It',
+                                cancelText: 'Keep Order'
                             });
+
+                            if (confirmed) {
+                                const reason = 'Cancelled by user';
 
                             if (reason) {
                                 try {
@@ -288,13 +267,13 @@
                                     });
                                     const result = await response.json();
                                     if (result.success) {
-                                        await Swal.fire({ title: 'VOIDED', text: result.message, icon: 'success', background: '#0a0a0a', color: '#fff' });
+                                        dispatchGlobalToast('success', 'Order Voided', result.message);
                                         window.location.reload();
                                     } else {
-                                        Swal.fire({ title: 'ERROR', text: result.message, icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                        dispatchGlobalToast('error', 'Error', result.message);
                                     }
                                 } catch (error) {
-                                    Swal.fire({ title: 'SYSTEM ERROR', text: 'Internal failure, please retry.', icon: 'error', background: '#0a0a0a', color: '#fff' });
+                                    dispatchGlobalToast('error', 'System Error', 'Internal failure, please retry.');
                                 }
                             }
                         }

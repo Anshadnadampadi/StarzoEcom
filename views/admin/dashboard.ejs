@@ -318,7 +318,7 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     let salesChart, statusChart;
 
@@ -431,8 +431,14 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    const initDashboard = () => {
         updateCharts('/admin/api/dashboard/chart-data?filter=monthly');
         initStatusChart();
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    } else {
+        initDashboard();
+    }
 </script>

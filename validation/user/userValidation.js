@@ -5,25 +5,29 @@ const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,30}$/;
 
 export const registerValidate = joi.object({
 
- firstName: joi.string()
+    firstName: joi.string()
         .min(2)
         .max(50)
+        .pattern(/^[a-zA-Z][a-zA-Z\s]*$/)
         .required()
         .messages({
-            'string.empty': 'Please enter your full name.',
-            'any.required': 'Name is a required field.',
-            'string.min': 'Name must be at least 2 characters long.',
-            'string.max': 'Name cannot exceed 50 characters.'
+            'string.empty': 'Please enter your first name.',
+            'any.required': 'First name is a required field.',
+            'string.min': 'First name must be at least 2 characters long.',
+            'string.max': 'First name cannot exceed 50 characters.',
+            'string.pattern.base': 'First name can only contain letters and spaces, and must start with a letter.'
         }),
     lastName: joi.string()
         .min(2)
         .max(50)
+        .pattern(/^[a-zA-Z][a-zA-Z\s]*$/)
         .required()
         .messages({
-            'string.empty': 'Please enter your full name.',
-            'any.required': 'Name is a required field.',
-            'string.min': 'Name must be at least 2 characters long.',
-            'string.max': 'Name cannot exceed 50 characters.'
+            'string.empty': 'Please enter your last name.',
+            'any.required': 'Last name is a required field.',
+            'string.min': 'Last name must be at least 2 characters long.',
+            'string.max': 'Last name cannot exceed 50 characters.',
+            'string.pattern.base': 'Last name can only contain letters and spaces, and must start with a letter.'
         }),
    email: joi.string()
     .pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
@@ -102,20 +106,24 @@ export const profileUpdateValidate = joi.object({
     firstName: joi.string()
         .min(2)
         .max(50)
+        .pattern(/^[a-zA-Z][a-zA-Z\s]*$/)
         .required()
         .messages({
             'string.empty': 'Please enter your first name.',
             'any.required': 'First name is a required field.',
             'string.min': 'First name must be at least 2 characters long.',
-            'string.max': 'First name cannot exceed 50 characters.'
+            'string.max': 'First name cannot exceed 50 characters.',
+            'string.pattern.base': 'First name can only contain letters and spaces, and must start with a letter.'
         }),
     lastName: joi.string()
         .min(1)
         .max(50)
+        .pattern(/^[a-zA-Z][a-zA-Z\s]*$/)
         .allow('', null)
         .optional()
         .messages({
-            'string.max': 'Last name cannot exceed 50 characters.'
+            'string.max': 'Last name cannot exceed 50 characters.',
+            'string.pattern.base': 'Last name can only contain letters and spaces.'
         }),
     phone: joi.string()
         .pattern(/^[0-9]{10}$/)

@@ -1,6 +1,5 @@
 <%- contentFor('body') %>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+
 
     <div class="space-y-10" x-data="productManager">
         <!-- Header -->
@@ -156,36 +155,51 @@
         <% let query=typeof searchQuery !=='undefined' && searchQuery ? `search=${searchQuery}` : '' %>
             <%- include('../partials/pagination', { currentPage, totalPages, query }) %>
 
-
-                <!-- Edit Product Modal - iOS Styled -->
-                <div x-show="showEditModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-6 select-none" x-cloak>
-                    <div class="absolute inset-0 bg-black/40 backdrop-blur-[15px]"
-                         @click="showEditModal = false"></div>
+                <!-- Edit Product Modal - Premium Design -->
+                <div x-show="showEditModal" 
+                     class="fixed inset-0 z-[1000] flex items-center justify-center p-6 select-none" 
+                     x-cloak
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
                     
-                    <div class="ios-alert-container !max-w-xl !w-full"
-                         style="width: 500px; max-width: 95vw;">
+                    <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="showEditModal = false"></div>
+                    
+                    <div class="premium-modal-card-large custom-scrollbar" 
+                         style="max-height: 85vh; overflow-y: auto;"
+                         x-show="showEditModal"
+                         x-transition:enter="transition ease-out duration-500"
+                         x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0">
                         
-                        <div class="ios-alert-content !p-0">
-                            <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                        <div class="p-0">
+                            <div class="premium-modal-header">
                                 <div class="text-left">
-                                    <h2 class="ios-title !text-left">Update Inventory</h2>
-                                    <p class="ios-message !text-left">Catalog Synchronization Protocol</p>
+                                    <h2 class="premium-modal-title-text">Update Inventory</h2>
+                                    <p class="premium-modal-subtitle-text">Catalog Synchronization Protocol</p>
                                 </div>
-                                <button @click="showEditModal = false" class="text-white/20 hover:text-white transition-colors">✕</button>
+                                <button @click="showEditModal = false" class="premium-modal-close-btn">✕</button>
                             </div>
 
-                            <form @submit.prevent="submitForm(true)" data-no-spa="true" class="p-8 space-y-6 text-left">
-                                <div class="grid grid-cols-2 gap-6">
-                                    <div class="space-y-2">
-                                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Product Name</label>
-                                        <input type="text" x-model="form.name" @input="errors.name = ''"
-                                            class="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors">
+                            <form @submit.prevent="submitForm(true)" data-no-spa="true" class="premium-modal-form-container space-y-8 text-left">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div class="space-y-3">
+                                        <label class="premium-modal-label">Product Name</label>
+                                        <input type="text" x-model="form.name" @input="validate()"
+                                            placeholder="e.g. Galaxy S24"
+                                            class="premium-modal-input"
+                                            :class="errors.name ? 'border-red-500/50 bg-red-500/5' : ''">
+                                        <p x-show="errors.name" x-text="errors.name" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
                                     </div>
-                                    <div class="space-y-2">
-                                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Brand</label>
-                                        <input type="text" x-model="form.brand" @input="errors.brand = ''"
-                                            class="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-xs text-white focus:outline-none focus:border-accent transition-colors"
-                                            list="brand-list" placeholder="Enter or select brand">
+                                    <div class="space-y-3">
+                                        <label class="premium-modal-label">Brand</label>
+                                        <input type="text" x-model="form.brand" @input="validate()"
+                                            class="premium-modal-input"
+                                            :class="errors.brand ? 'border-red-500/50 bg-red-500/5' : ''"
+                                            list="brand-list" placeholder="Select brand">
                                         <datalist id="brand-list">
                                             <% if (typeof brands !=='undefined' ) { %>
                                                 <% brands.forEach(brand=> { %>
@@ -193,14 +207,16 @@
                                                 <% }) %>
                                             <% } %>
                                         </datalist>
+                                        <p x-show="errors.brand" x-text="errors.brand" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-3 gap-6">
-                                    <div class="space-y-2">
-                                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Category</label>
-                                        <select x-model="form.category"
-                                            class="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-xs text-white focus:outline-none focus:border-accent appearance-none">
+                                <div class="grid grid-cols-2 gap-8">
+                                    <div class="space-y-3">
+                                        <label class="premium-modal-label">Category</label>
+                                        <select x-model="form.category" @change="validate()"
+                                            class="premium-modal-input premium-modal-select cursor-pointer"
+                                            :class="errors.category ? 'border-red-500/50 bg-red-500/5' : ''">
                                             <option value="">Select Category</option>
                                             <% if (typeof categories !=='undefined' ) { %>
                                                 <% categories.forEach(cat=> { %>
@@ -208,56 +224,175 @@
                                                 <% }) %>
                                             <% } %>
                                         </select>
+                                        <p x-show="errors.category" x-text="errors.category" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
                                     </div>
-                                    <div class="space-y-2">
-                                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Price (INR)</label>
-                                        <input type="number" x-model="form.price" onwheel="this.blur()"
-                                            class="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-xs text-white focus:outline-none focus:border-accent">
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Stock Level</label>
-                                        <input type="number" x-model="form.stock" onwheel="this.blur()"
-                                            class="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-xs text-white focus:outline-none focus:border-accent">
+                                    <div class="space-y-3">
+                                        <label class="premium-modal-label">Stock Level</label>
+                                        <input type="number" x-model="form.stock" @input="validate()" onwheel="this.blur()"
+                                            placeholder="0"
+                                            class="premium-modal-input"
+                                            :class="errors.stock ? 'border-red-500/50 bg-red-500/5' : ''">
+                                        <p x-show="errors.stock" x-text="errors.stock" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
                                     </div>
                                 </div>
 
-                                <div class="pt-4">
+                                <div class="pt-6">
                                     <button type="submit" :disabled="isSubmitting"
-                                        class="w-full bg-white text-black font-bold py-4 rounded-xl text-[11px] tracking-widest uppercase hover:bg-accent disabled:opacity-50 transition-all btn-press">
-                                        <span x-show="!isSubmitting">Apply Modifications</span>
-                                        <span x-show="isSubmitting">Updating...</span>
+                                        class="premium-modal-submit-btn"
+                                        :class="isSubmitting ? 'opacity-50 cursor-not-allowed' : ''"
+                                        x-text="isSubmitting ? 'Syncing Data...' : 'Apply Modifications'">
                                     </button>
                                 </div>
                             </form>
                         </div>
                     </div>
-                </div>
-
-
-                <!-- Crop Modal - iOS Styled -->
-                <div x-show="showCropModal" class="fixed inset-0 z-[1100] flex items-center justify-center p-6 select-none" x-cloak>
-                    <div class="absolute inset-0 bg-black/40 backdrop-blur-[15px]" @click="cancelCrop()"></div>
-                    
-                    <div class="ios-alert-container !max-w-md !w-full" style="width: 400px; max-width: 90vw;">
-                        <div class="ios-alert-content">
-                            <h2 class="ios-title">Align Asset</h2>
-                            <p class="ios-message">Optimize the asset for high-fidelity catalog display.</p>
-                            
-                            <div class="mt-6 w-full aspect-square bg-black/40 rounded-lg overflow-hidden border border-white/5">
-                                <img x-ref="cropImage" src="" class="max-w-full">
-                            </div>
-                        </div>
-
-                        <div class="ios-button-grid two-buttons">
-                            <button type="button" @click="cancelCrop()" class="ios-button cancel-btn">Abort</button>
-                            <button type="button" @click="confirmCrop()" class="ios-button confirm-btn">Optimize</button>
-                        </div>
-                    </div>
-                </div>
+                      </div>
 
     </div>
 
     <style>
+        /* Premium Modal Standard CSS */
+        .premium-modal-card-large {
+            background-color: #0c0c0c;
+            border-radius: 1.5rem;
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+            width: 100%;
+            max-width: 32rem;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .premium-modal-header {
+            padding: 3.5rem 2.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background-color: #0c0c0c;
+            z-index: 10;
+        }
+
+        .premium-modal-title-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+
+        .premium-modal-subtitle-text {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #ff6a00;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-top: 0.25rem;
+            opacity: 0.8;
+        }
+
+        .premium-modal-form-container {
+            padding: 1.5rem 2.5rem 2.5rem;
+        }
+
+        .premium-modal-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.3);
+            display: block;
+            margin-bottom: 0.75rem;
+            margin-left: 0.1rem;
+        }
+
+        .premium-modal-input {
+            width: 100%;
+            height: 3.5rem;
+            background-color: #121212 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            padding: 0 1.25rem;
+            font-size: 0.875rem;
+            color: #ffffff !important;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+        }
+
+        .premium-modal-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.2)' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1.25rem center;
+            background-size: 1rem;
+        }
+
+        .premium-modal-select:hover {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        }
+
+        .premium-modal-input option {
+            background-color: #121212;
+            color: #ffffff;
+            padding: 1rem;
+        }
+
+        .premium-modal-input:focus {
+            outline: none;
+            border-color: #ff6a00;
+            background-color: #1a1a1a !important;
+            box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.1);
+        }
+
+        .premium-modal-submit-btn {
+            width: 100%;
+            background-color: #ffffff;
+            color: #000000 !important;
+            font-weight: 900;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.1);
+        }
+
+        .premium-modal-submit-btn:hover {
+            background-color: #ff6a00;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(255, 106, 0, 0.3);
+        }
+
+        .premium-modal-close-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            background-color: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .premium-modal-close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
         /* Custom Scrollbar for Modals */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
@@ -303,12 +438,8 @@
                 Alpine.data('productManager', () => ({
                     showEditModal: false,
                     isSubmitting: false,
-                    showCropModal: false,
-                    cropper: null,
-                    fileQueue: [],
-                    isEditMode: false,
-                    form: { id: '', name: '', brand: '', category: '', price: '', stock: '' },
-                    errors: { name: '', brand: '', category: '', price: '', stock: '' },
+                    form: { id: '', name: '', brand: '', category: '', stock: '' },
+                    errors: { name: '', brand: '', category: '', stock: '' },
 
                     async openEdit(id) {
                         this.isEditMode = true;
@@ -323,7 +454,6 @@
                                     name: prod.name,
                                     brand: prod.brand?._id || prod.brand || "",
                                     category: prod.category?._id || prod.category || "",
-                                    price: prod.price,
                                     stock: prod.stock
                                 };
                                 this.showEditModal = true;
@@ -336,26 +466,35 @@
                     },
 
                     validate() {
-                        Object.keys(this.errors).forEach(key => this.errors[key] = '');
+                        this.errors = { name: '', brand: '', category: '', stock: '' };
                         let isValid = true;
                         
-                        const nameVal = this.form.name ? this.form.name.trim() : '';
-                        if (!nameVal || nameVal.length < 3) {
+                        const nameVal = (this.form.name || '').trim();
+                        if (!nameVal) {
+                            this.errors.name = 'Product name is required.';
+                            isValid = false;
+                        } else if (nameVal.length < 3) {
                             this.errors.name = 'Name must be at least 3 characters.';
                             isValid = false;
-                        } else if (!/[a-zA-Z]/.test(nameVal)) {
-                            this.errors.name = 'Name must contain letters.';
+                        } else if (/^\d+$/.test(nameVal)) {
+                            this.errors.name = 'Name cannot be only numbers.';
                             isValid = false;
                         }
                         
-                        if (!this.form.brand) {
-                            this.errors.brand = 'Brand required.';
+                        if (!(this.form.brand || '').trim()) {
+                            this.errors.brand = 'Brand is required.';
                             isValid = false;
                         }
 
-                        if (!this.form.category) { this.errors.category = 'Category required.'; isValid = false; }
-                        if (!this.form.price || parseFloat(this.form.price) <= 0) { this.errors.price = 'Price must be positive.'; isValid = false; }
-                        if (this.form.stock === '' || parseInt(this.form.stock) < 0) { this.errors.stock = 'Stock must be non-negative.'; isValid = false; }
+                        if (!this.form.category) {
+                            this.errors.category = 'Category selection is required.';
+                            isValid = false;
+                        }
+
+                        if (this.form.stock === '' || parseInt(this.form.stock) < 0) {
+                            this.errors.stock = 'Stock must be 0 or greater.';
+                            isValid = false;
+                        }
                         return isValid;
                     },
 
@@ -378,12 +517,18 @@
                             const result = await res.json();
 
                             if (result.success) {
+                                this.showEditModal = false;
                                 this.showSuccess(result.message);
                             } else {
-                                this.showError(result.message);
+                                const msg = result.message || 'Error syncing data';
+                                if (msg.toLowerCase().includes('name')) this.errors.name = msg;
+                                else if (msg.toLowerCase().includes('brand')) this.errors.brand = msg;
+                                else if (msg.toLowerCase().includes('category')) this.errors.category = msg;
+                                else if (msg.toLowerCase().includes('stock')) this.errors.stock = msg;
+                                else this.showError(msg);
                             }
                         } catch (err) {
-                            this.showError("Synchronization error.");
+                            this.showError("Synchronization failure.");
                         } finally {
                             this.isSubmitting = false;
                         }

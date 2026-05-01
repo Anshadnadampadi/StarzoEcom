@@ -3,10 +3,48 @@ import Product from "../../models/product/Product.js";
 import Wishlist from "../../models/wishlist/wishlist.js";
 import { isSameVariant, findMatchingVariant, getVariantDisplayString } from "../../utils/productHelpers.js";
 import * as offerService from "../common/offerService.js";
+import { applyCouponService } from "./couponService.js";
 
 /**
  * Service to handle cart operations
  */
+/**
+ * Helper to recalculate cart totals and validate applied coupon
+ */
+const _recalculateTotals = async (userId, cart) => {
+    if (!cart || cart.items.length === 0) {
+        return { subtotal: 0, originalSubtotal: 0, discount: 0, finalAmount: 0 };
+    }
+
+    // ── Recalculate Subtotals ──
+    const originalSubtotal = cart.items.reduce((total, item) => {
+        const originalPrice = item.product?.variants?.length > 0 && item.variant 
+            ? (findMatchingVariant(item.product.variants, item.variant)?.price || item.product.price)
+            : (item.product?.price || 0);
+        return total + (originalPrice * item.qty);
+    }, 0);
+    const subtotal = cart.items.reduce((total, item) => total + (item.price * item.qty), 0);
+
+    let discount = 0;
+    let finalAmount = subtotal;
+
+    // ── Recalculate Coupon ──
+    if (cart.coupon) {
+        try {
+            const couponResult = await applyCouponService(userId, cart.coupon.code || cart.coupon);
+            discount = couponResult.discount;
+            finalAmount = couponResult.finalAmount;
+        } catch (couponErr) {
+            // Remove invalid coupon
+            const CartModel = await import("../../models/cart/Cart.js").then(m => m.default);
+            await CartModel.updateOne({ userId }, { $set: { coupon: null, discount: 0, finalAmount: subtotal } });
+            cart.coupon = null;
+        }
+    }
+
+    return { subtotal, originalSubtotal, discount, finalAmount };
+};
+
 export const getCartData = async (userId) => {
     let cart = await Cart.findOne({ userId }).populate("items.product").populate("coupon").lean();
 
@@ -30,7 +68,6 @@ export const getCartData = async (userId) => {
             let currentStock = product.stock || 0;
 
             if (product.variants?.length > 0 && item.variant) {
-                // Check if the specific variant stored in cart is soft-deleted
                 const specificVariant = product.variants.find(v => isSameVariant(v, item.variant));
                 if (!specificVariant || specificVariant.isDeleted) {
                     isVariantUnavailable = true;
@@ -42,7 +79,6 @@ export const getCartData = async (userId) => {
             let displayImage = '/images/placeholder.jpg';
             const currentVariant = item.variant;
 
-            // Use first non-deleted variant image as default
             if (product.variants?.length > 0) {
                 const defaultVariant = product.variants.find(v => !v.isDeleted) || product.variants[0];
                 if (defaultVariant?.images?.length > 0) {
@@ -50,7 +86,6 @@ export const getCartData = async (userId) => {
                 }
             }
 
-            // If item has a specific variant, try to match it for the correct image
             if (currentVariant && product.variants?.length > 0) {
                 const matchedVariant = findMatchingVariant(product.variants, currentVariant);
                 if (matchedVariant?.images?.length > 0) {
@@ -58,7 +93,6 @@ export const getCartData = async (userId) => {
                 }
             }
 
-            // ── Base Price Extraction ──
             let basePrice = product.price || 0;
             if (product.variants?.length > 0 && item.variant) {
                 const matched = findMatchingVariant(product.variants, item.variant);
@@ -67,10 +101,9 @@ export const getCartData = async (userId) => {
                 }
             }
 
-            // ── Offer Calculation ──
             const { discountedPrice } = await offerService.getBestOfferForProduct({
                 ...product,
-                price: basePrice // Use the true base price
+                price: basePrice
             });
 
             updatedItems.push({ 
@@ -81,21 +114,17 @@ export const getCartData = async (userId) => {
                 isOutOfStock: currentStock <= 0,
                 insufficientStock: item.qty > currentStock,
                 availableStock: currentStock,
-                price: discountedPrice, // Use discounted price
+                price: discountedPrice,
                 originalPrice: basePrice
             });
         }
         cart.items = updatedItems;
-        // Recalculate subtotals
-        cart.originalSubtotal = updatedItems.reduce((total, item) => {
-            const originalPrice = item.product?.variants?.length > 0 && item.variant 
-                ? (findMatchingVariant(item.product.variants, item.variant)?.price || item.product.price)
-                : (item.product?.price || 0);
-            return total + (originalPrice * item.qty);
-        }, 0);
-        cart.subtotal = updatedItems.reduce((total, item) => total + (item.price * item.qty), 0);
+        
+        // Recalculate totals using helper
+        const totals = await _recalculateTotals(userId, cart);
+        Object.assign(cart, totals);
     } else if (!cart) {
-        cart = { items: [], subtotal: 0, originalSubtotal: 0 };
+        cart = { items: [], subtotal: 0, originalSubtotal: 0, finalAmount: 0, discount: 0 };
     }
 
     return cart;
@@ -290,9 +319,12 @@ export const updateItemQty = async (userId, { itemId, change }) => {
     }
 
     item.qty = newQty;
-    item.price = discountedPrice || basePrice; // Update price in cart to reflect current offer
+    item.price = discountedPrice || basePrice;
     item.originalPrice = basePrice;
     await cart.save();
+
+    // Recalculate totals including coupon
+    const totals = await _recalculateTotals(userId, cart);
 
     // Verify issues after update
     const hasIssues = cart.items.some(i => {
@@ -311,7 +343,9 @@ export const updateItemQty = async (userId, { itemId, change }) => {
     return {
         newQty: item.qty,
         itemTotal: item.qty * (item.price || 0),
-        cartSubtotal: cart.subtotal || 0,
+        cartSubtotal: totals.subtotal,
+        cartDiscount: totals.discount,
+        cartFinalAmount: totals.finalAmount,
         hasIssues,
         itemStatus: {
             isUnavailable: !item.product || item.product.isBlocked || !item.product.isListed,
@@ -347,8 +381,13 @@ export const removeItem = async (userId, itemId) => {
         return i.qty > s || s <= 0;
     });
 
+    // Recalculate totals including coupon
+    const totals = await _recalculateTotals(userId, cart);
+
     return {
-        cartSubtotal: cart.subtotal || 0,
+        cartSubtotal: totals.subtotal,
+        cartDiscount: totals.discount,
+        cartFinalAmount: totals.finalAmount,
         isEmpty: cart.items.length === 0,
         hasIssues
     };

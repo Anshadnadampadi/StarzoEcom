@@ -206,5 +206,8 @@ export const getRecentlyViewedProducts = async (productIds, excludeId) => {
     const idOrder = filteredIds.map(id => id.toString());
     products.sort((a, b) => idOrder.indexOf(a._id.toString()) - idOrder.indexOf(b._id.toString()));
 
-    return products;
+    // Apply offers
+    const productsWithOffers = await offerService.applyOffersToProducts(products);
+
+    return productsWithOffers;
 };

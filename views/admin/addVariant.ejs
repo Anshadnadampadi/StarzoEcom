@@ -140,6 +140,7 @@
                 if (Alpine.data('variantManager')) return;
                 Alpine.data('variantManager', () => ({
                     productId: '<%= product._id %>',
+                    existingVariants: <%- JSON.stringify(product.variants.filter(v => !v.isDeleted)) %>,
                     showCropModal: false,
                     isSubmitting: false,
                     cropper: null,
@@ -228,6 +229,20 @@
                         if (!this.form.price || parseFloat(this.form.price) <= 0) { this.errors.price = 'Price must be positive.'; isValid = false; }
                         if (this.form.stock === '' || parseInt(this.form.stock) < 0) { this.errors.stock = 'Stock must be non-negative.'; isValid = false; }
                         
+                        // Duplicate Variant Check
+                        if (isValid) {
+                            const isDuplicate = this.existingVariants.some(v => 
+                                v.color.toLowerCase() === colorVal.toLowerCase() &&
+                                v.ram.toLowerCase() === ramVal.toLowerCase() &&
+                                v.storage.toLowerCase() === storageVal.toLowerCase()
+                            );
+                            if (isDuplicate) {
+                                this.errors.color = 'This specific combination (Color/RAM/Storage) already exists.';
+                                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Duplicate variant detected.', type: 'warning' } }));
+                                isValid = false;
+                            }
+                        }
+
                         if (this.previews.length < 3) {
                             this.errors.images = 'Please upload at least 3 images.';
                             isValid = false;
@@ -251,7 +266,14 @@
                             if (result.success) {
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Variant initialized.', type: 'success' } }));
                                 setTimeout(() => { window.location.href = `/admin/products/details/${this.productId}`; }, 1500);
-                            } else { throw new Error(result.message); }
+                            } else { 
+                                if (result.message.toLowerCase().includes('already exists')) {
+                                    this.errors.color = result.message;
+                                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: result.message, type: 'error' } }));
+                                } else {
+                                    throw new Error(result.message); 
+                                }
+                            }
                         } catch (error) {
                             window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: error.message || 'Error occurred.', type: 'error' } }));
                         } finally { this.isSubmitting = false; }

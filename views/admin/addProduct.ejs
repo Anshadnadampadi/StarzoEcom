@@ -31,7 +31,8 @@
                         <div class="space-y-2">
                             <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Product
                                 Name</label>
-                            <input type="text" x-model="form.name" @input="errors.name = ''"
+                            <input type="text" x-model="form.name" 
+                                @input="debouncedCheckDuplicate()"
                                 class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 uppercase font-bold"
                                 :class="errors.name ? 'border-status-danger/50' : ''">
                             <p x-show="errors.name"
@@ -56,7 +57,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-2">
                             <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Category</label>
                             <select x-model="form.category" @change="errors.category = ''"
@@ -74,16 +75,6 @@
                             <p x-show="errors.category"
                                 class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
                                 x-text="errors.category"></p>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Base Price
-                                (INR)</label>
-                            <input type="number" x-model="form.price" @input="errors.price = ''" onwheel="this.blur()"
-                                class="w-full bg-black border border-white/5 py-4 px-6 text-xs text-white focus:outline-none focus:border-accent transition-colors placeholder:text-white/10 font-mono"
-                                :class="errors.price ? 'border-status-danger/50' : ''">
-                            <p x-show="errors.price"
-                                class="text-[9px] font-bold text-status-danger uppercase tracking-widest mt-1"
-                                x-text="errors.price"></p>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[9px] font-bold uppercase tracking-widest text-white/40">Initial
@@ -129,8 +120,8 @@
                 if (Alpine.data('addProductManager')) return;
                 Alpine.data('addProductManager', () => ({
                     isSubmitting: false,
-                    form: { name: '', brand: '', category: '', price: '', stock: '' },
-                    errors: { name: '', brand: '', category: '', price: '', stock: '' },
+                    form: { name: '', brand: '', category: '', stock: '' },
+                    errors: { name: '', brand: '', category: '', stock: '' },
 
                     validate() {
                         Object.keys(this.errors).forEach(key => this.errors[key] = '');
@@ -154,15 +145,34 @@
                             this.errors.category = 'Category is required.';
                             isValid = false;
                         }
-                        if (!this.form.price || parseFloat(this.form.price) <= 0) {
-                            this.errors.price = 'Price must be a positive number.';
-                            isValid = false;
-                        }
                         if (this.form.stock === '' || parseInt(this.form.stock) < 0) {
                             this.errors.stock = 'Stock must be non-negative.';
                             isValid = false;
                         }
                         return isValid;
+                    },
+
+                    async checkDuplicate() {
+                        const name = this.form.name.trim();
+                        if (name.length < 3) return;
+
+                        try {
+                            const res = await fetch(`/admin/products/check-duplicate?name=${encodeURIComponent(name)}`);
+                            const data = await res.json();
+                            if (data.exists) {
+                                this.errors.name = 'This product name already exists.';
+                            } else {
+                                this.errors.name = '';
+                            }
+                        } catch (err) {
+                            console.error('Duplicate check failure:', err);
+                        }
+                    },
+
+                    debouncedCheckDuplicate() {
+                        this.errors.name = '';
+                        clearTimeout(this.duplicateTimeout);
+                        this.duplicateTimeout = setTimeout(() => this.checkDuplicate(), 500);
                     },
 
                     async submitForm() {
@@ -183,7 +193,15 @@
                             if (result.success) {
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Product initialized.', type: 'success' } }));
                                 setTimeout(() => { window.location.href = '/admin/productManagement'; }, 1500);
-                            } else { throw new Error(result.message); }
+                            } else { 
+                                // Map backend error to field if it's a duplicate name error
+                                if (result.message && result.message.toLowerCase().includes('name')) {
+                                    this.errors.name = result.message;
+                                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: result.message, type: 'error' } }));
+                                } else {
+                                    throw new Error(result.message); 
+                                }
+                            }
                         } catch (error) {
                             window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: error.message || 'Error occurred.', type: 'error' } }));
                         } finally { this.isSubmitting = false; }

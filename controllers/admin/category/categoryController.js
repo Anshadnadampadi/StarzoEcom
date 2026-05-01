@@ -97,6 +97,19 @@ export const toggleCategoryStatus = async (req, res) => {
     }
 };
 
+export const deleteCategory = async (req, res) => {
+    try {
+        await adminCategoryServices.deleteCategory(req.params.id);
+        res.json({ success: true, message: "Category deleted successfully!" });
+    } catch (error) {
+        console.error("Delete Error:", error);
+        res.status(400).json({ 
+            success: false, 
+            message: error.message || "Error deleting category" 
+        });
+    }
+};
+
 // let search = req.query.search||"" 
 // const filter = { name:{regex:search , $option:"i"}}
 

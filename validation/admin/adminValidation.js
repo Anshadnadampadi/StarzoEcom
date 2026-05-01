@@ -50,14 +50,6 @@ export const categoryValidate = joi.object({
         .messages({
             'number.base': 'Display order must be a number.',
             'number.min': 'Display order cannot be negative.'
-        }),
-    metaDescription: joi.string()
-        .trim()
-        .max(500)
-        .allow('', null)
-        .optional()
-        .messages({
-            'string.max': 'Meta description cannot exceed 500 characters.'
         })
 });
 

@@ -144,9 +144,11 @@
                      </h2>
                      
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label class="cursor-pointer group">
-                            <input type="radio" x-model="orderData.paymentMethod" value="CASH ON DELIVERY" class="peer sr-only">
-                            <div class="flex flex-col border border-white/10 p-6 peer-checked:border-accent peer-checked:bg-accent/[0.05] transition-all bg-black/40 h-full relative overflow-hidden group-hover:border-white/30">
+                        <!-- Cash on Delivery -->
+                        <label class="cursor-pointer group" @click="orderData.paymentMethod = 'CASH ON DELIVERY'">
+                            <input type="radio" x-model="orderData.paymentMethod" value="CASH ON DELIVERY" class="sr-only">
+                            <div :class="orderData.paymentMethod === 'CASH ON DELIVERY' ? 'border-accent bg-accent/[0.05]' : 'border-white/10 bg-black/40'"
+                                 class="flex flex-col border p-6 transition-all h-full relative overflow-hidden hover:border-white/30">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded-sm bg-white/5 border border-white/10 flex items-center justify-center">
@@ -154,18 +156,21 @@
                                         </div>
                                         <span class="text-white text-xs font-black uppercase tracking-widest">Cash on Delivery</span>
                                     </div>
-                                    <div class="w-4 h-4 rounded-full border border-white/30 peer-checked:border-accent flex items-center justify-center transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-accent scale-0 peer-checked:scale-100 transition-transform"></div>
+                                    <div :class="orderData.paymentMethod === 'CASH ON DELIVERY' ? 'border-accent' : 'border-white/30'"
+                                         class="w-4 h-4 rounded-full border flex items-center justify-center transition-colors">
+                                        <div :class="orderData.paymentMethod === 'CASH ON DELIVERY' ? 'scale-100' : 'scale-0'"
+                                             class="w-2 h-2 rounded-full bg-accent transition-transform duration-300"></div>
                                     </div>
                                 </div>
                                 <p class="text-white/40 text-[9px] font-mono leading-relaxed mt-auto uppercase tracking-wide">Pay securely with cash upon delivery.</p>
                             </div>
                         </label>
 
-                        <label class="cursor-pointer group">
-                            <input type="radio" x-model="orderData.paymentMethod" value="ONLINE PAYMENT" class="peer sr-only">
-
-                            <div class="flex flex-col border border-white/10 p-6 peer-checked:border-accent peer-checked:bg-accent/[0.05] transition-all bg-black/40 h-full relative overflow-hidden group-hover:border-white/30">
+                        <!-- Online Payment -->
+                        <label class="cursor-pointer group" @click="orderData.paymentMethod = 'ONLINE PAYMENT'">
+                            <input type="radio" x-model="orderData.paymentMethod" value="ONLINE PAYMENT" class="sr-only">
+                            <div :class="orderData.paymentMethod === 'ONLINE PAYMENT' ? 'border-accent bg-accent/[0.05]' : 'border-white/10 bg-black/40'"
+                                 class="flex flex-col border p-6 transition-all h-full relative overflow-hidden hover:border-white/30">
                                 <div class="absolute -right-10 -top-10 w-24 h-24 bg-blue-500/10 rounded-full blur-xl filter"></div>
                                 <div class="flex items-center justify-between mb-4 relative z-10">
                                     <div class="flex items-center gap-3">
@@ -174,19 +179,22 @@
                                         </div>
                                         <span class="text-white text-xs font-black uppercase tracking-widest">Online Payment</span>
                                     </div>
-                                    <div class="w-4 h-4 rounded-full border border-white/30 peer-checked:border-accent flex items-center justify-center transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-accent scale-0 peer-checked:scale-100 transition-transform"></div>
+                                    <div :class="orderData.paymentMethod === 'ONLINE PAYMENT' ? 'border-accent' : 'border-white/30'"
+                                         class="w-4 h-4 rounded-full border flex items-center justify-center transition-colors">
+                                        <div :class="orderData.paymentMethod === 'ONLINE PAYMENT' ? 'scale-100' : 'scale-0'"
+                                             class="w-2 h-2 rounded-full bg-accent transition-transform duration-300"></div>
                                     </div>
                                 </div>
                                 <p class="text-white/40 text-[9px] font-mono leading-relaxed mt-auto uppercase tracking-wide">Pay instantly via UPI, Credit Card, and other secure digital gateways.</p>
                             </div>
                         </label>
 
-                        <label class="cursor-pointer group">
-                            <input type="radio" x-model="orderData.paymentMethod" value="WALLET" class="peer sr-only" :disabled="walletBalance < totalAmount">
-
-                            <div class="flex flex-col border border-white/10 p-6 peer-checked:border-accent peer-checked:bg-accent/[0.05] transition-all bg-black/40 h-full relative overflow-hidden group-hover:border-white/30"
-                                :class="walletBalance < totalAmount ? 'opacity-50 cursor-not-allowed' : ''">
+                        <!-- Wallet Payment -->
+                        <label class="cursor-pointer group" @click="if(walletBalance >= totalAmount) orderData.paymentMethod = 'WALLET'">
+                            <input type="radio" x-model="orderData.paymentMethod" value="WALLET" class="sr-only" :disabled="walletBalance < totalAmount">
+                            <div :class="orderData.paymentMethod === 'WALLET' ? 'border-accent bg-accent/[0.05]' : 'border-white/10 bg-black/40'"
+                                 class="flex flex-col border p-6 transition-all h-full relative overflow-hidden hover:border-white/30"
+                                 :class="walletBalance < totalAmount ? 'opacity-50 cursor-not-allowed' : ''">
                                 <div class="absolute -right-10 -top-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl filter"></div>
                                 <div class="flex items-center justify-between mb-4 relative z-10">
                                     <div class="flex items-center gap-3">
@@ -198,8 +206,10 @@
                                             <span class="text-emerald-400/80 text-[8px] font-black uppercase tracking-widest" x-text="'Balance: ₹' + walletBalance.toLocaleString()"></span>
                                         </div>
                                     </div>
-                                    <div class="w-4 h-4 rounded-full border border-white/30 peer-checked:border-accent flex items-center justify-center transition-colors">
-                                        <div class="w-2 h-2 rounded-full bg-accent scale-0 peer-checked:scale-100 transition-transform"></div>
+                                    <div :class="orderData.paymentMethod === 'WALLET' ? 'border-accent' : 'border-white/30'"
+                                         class="w-4 h-4 rounded-full border flex items-center justify-center transition-colors">
+                                        <div :class="orderData.paymentMethod === 'WALLET' ? 'scale-100' : 'scale-0'"
+                                             class="w-2 h-2 rounded-full bg-accent transition-transform duration-300"></div>
                                     </div>
                                 </div>
                                 <p class="text-white/40 text-[9px] font-mono leading-relaxed mt-auto uppercase tracking-wide">Pay using your Starzo Wallet balance.</p>
@@ -484,6 +494,8 @@
 <script>
     const userAddresses = <%- JSON.stringify(addresses || []) %>;
     const baseSubtotal = <%= typeof cart !== 'undefined' ? cart.subtotal : 0 %>;
+    const baseDiscount = <%= typeof cart !== 'undefined' ? cart.discount || 0 : 0 %>;
+    const baseCouponCode = "<%= (cart && cart.coupon) ? cart.coupon.code : '' %>";
     const availableCoupons = <%- JSON.stringify(availableCoupons || []) %>;
     const hasCartIssues = <%= cart.items.some(item => item.isUnavailable || item.isOutOfStock || item.insufficientStock) %>;
     const userEmail = "<%= user.email %>";
@@ -500,13 +512,17 @@
             
             // Financials logic
             subtotal: baseSubtotal,
-            shippingFee: baseSubtotal > 500 ? 0 : 50,
-            tax: Math.floor(baseSubtotal * 0.18),
-            discount: 0,
-            
+            discount: baseDiscount,
+
             get totalAmount() {
-                return Math.max(0, this.subtotal + this.tax + this.shippingFee - this.discount);
+                const sub = this.subtotal || 0;
+                const tx = Math.floor(sub * 0.18);
+                const ship = sub > 500 ? 0 : 50;
+                return Math.max(0, sub + tx + ship - (this.discount || 0));
             },
+            
+            get tax() { return Math.floor(this.subtotal * 0.18); },
+            get shippingFee() { return this.subtotal > 500 ? 0 : 50; },
             
             async applyCoupon() {
                 const code = this.orderData.couponCode ? this.orderData.couponCode.trim().toUpperCase() : '';
@@ -554,7 +570,7 @@
             orderData: {
                 addressId: userAddresses.length > 0 ? (userAddresses.find(a => a.default) ? userAddresses.find(a => a.default)._id : userAddresses[0]._id) : '',
                 paymentMethod: 'CASH ON DELIVERY',
-                couponCode: ''
+                couponCode: baseCouponCode
             },
 
             // Address overlay functionality

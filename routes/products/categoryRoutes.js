@@ -6,7 +6,8 @@ import {
     getCategoryById,
     addCategory, 
     updateCategory, 
-    toggleCategoryStatus
+    toggleCategoryStatus,
+    deleteCategory
 } from "../../controllers/admin/category/categoryController.js";
 
 
@@ -22,5 +23,6 @@ router.get("/categories/api/:id", adminAuth, getCategoryById);
 router.post("/categories/add", adminAuth, uploadCategoryIcon.single('icon'), addCategory);           // Create
 router.put("/categories/edit/:id", adminAuth, uploadCategoryIcon.single('icon'), updateCategory);    // Update
 router.patch("/categories/delete/:id", adminAuth, toggleCategoryStatus);// Toggle Visibility
+router.delete("/categories/:id", adminAuth, deleteCategory);
 
 export default router;

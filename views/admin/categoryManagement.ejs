@@ -1,7 +1,6 @@
 <%- contentFor('body') %>
 <!-- views/admin/categories.ejs -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css">
-<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+
 
 <div class="space-y-10" x-data="categoryManager">
     <script>
@@ -11,27 +10,30 @@
                 Alpine.data('categoryManager', () => ({
                     showModal: false, 
                     isEdit: false,
-                    previewUrl: null,
-                    form: { id: '', name: '', slug: '', displayOrder: 0, metaDescription: '' },
-                    errors: { name: '', slug: '', displayOrder: '', metaDescription: '' },
-                    cropper: null,
-                    croppedBlob: null,
-                    isCropping: false,
+                    form: { id: '', name: '', slug: '', displayOrder: 0 },
+                    errors: { name: '', slug: '', displayOrder: '' },
+                    isSubmitting: false,
+                    slugManuallyEdited: false,
+
+                    init() {
+                        this.$watch('form.name', (val) => {
+                            if (!this.slugManuallyEdited && !this.isEdit) {
+                                this.form.slug = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                            }
+                        });
+                    },
 
                     openAdd() {
                         this.isEdit = false;
-                        this.form = { id: '', name: '', slug: '', displayOrder: 0, metaDescription: '' };
-                        this.errors = { name: '', slug: '', displayOrder: '', metaDescription: '' };
-                        this.previewUrl = null;
-                        this.croppedBlob = null;
+                        this.slugManuallyEdited = false;
+                        this.form = { id: '', name: '', slug: '', displayOrder: 0 };
+                        this.errors = { name: '', slug: '', displayOrder: '' };
                         this.showModal = true;
-                        this.isCropping = false;
-                        if (this.$refs.iconInput) this.$refs.iconInput.value = '';
                     },
 
                     async openEdit(id) {
                         this.isEdit = true;
-                        this.errors = { name: '', slug: '', displayOrder: '', metaDescription: '' };
+                        this.errors = { name: '', slug: '', displayOrder: '' };
                         try {
                             const res = await fetch(`/admin/categories/api/${id}`);
                             const data = await res.json();
@@ -39,60 +41,49 @@
                                 id: data._id, 
                                 name: data.name, 
                                 slug: data.slug, 
-                                displayOrder: data.displayOrder || 0,
-                                metaDescription: data.metaDescription || ''
+                                displayOrder: data.displayOrder || 0
                             };
-                            this.previewUrl = data.icon;
                             this.showModal = true;
-                            this.isCropping = false;
-                            if (this.$refs.iconInput) this.$refs.iconInput.value = '';
                         } catch (error) {
                             window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Fetch error.', type: 'error' } }));
                         }
                     },
 
-                    handleFileChange(e) {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                            this.isCropping = true;
-                            this.$nextTick(() => {
-                                const img = this.$refs.cropperImage;
-                                img.onload = () => {
-                                    if (this.cropper) this.cropper.destroy();
-                                    this.cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, background: false, autoCropArea: 1 });
-                                };
-                                img.src = event.target.result;
-                            });
-                        };
-                        reader.readAsDataURL(file);
-                    },
 
-                    async commitCrop() {
-                        if (!this.cropper) return;
-                        try {
-                            const canvas = this.cropper.getCroppedCanvas();
-                            canvas.toBlob((blob) => {
-                                this.croppedBlob = blob;
-                                this.previewUrl = URL.createObjectURL(blob);
-                                this.closeCropper();
-                            }, 'image/jpeg', 0.9);
-                        } catch (err) { this.closeCropper(); }
-                    },
-
-                    cancelCrop() { this.closeCropper(); if (this.$refs.iconInput) this.$refs.iconInput.value = ''; },
-                    closeCropper() {
-                        if (this.cropper) { this.cropper.destroy(); this.cropper = null; }
-                        this.isCropping = false;
-                    },
 
                     validate() {
-                        Object.keys(this.errors).forEach(key => this.errors[key] = '');
+                        this.errors = { name: '', slug: '', displayOrder: '' };
                         let isValid = true;
-                        if (!this.form.name || this.form.name.trim().length < 3) { this.errors.name = 'Name too short.'; isValid = false; }
-                        const slugRegex = /^[a-z0-9-]+$/;
-                        if (!this.form.slug || !slugRegex.test(this.form.slug)) { this.errors.slug = 'Invalid slug.'; isValid = false; }
+
+                        const name = (this.form.name || '').trim();
+                        if (!name) {
+                            this.errors.name = 'Category name is required.';
+                            isValid = false;
+                        } else if (name.length < 3) {
+                            this.errors.name = 'Name must be at least 3 characters.';
+                            isValid = false;
+                        } else if (/^\d+$/.test(name)) {
+                            this.errors.name = 'Name cannot be only numbers.';
+                            isValid = false;
+                        } else if (!/^[a-zA-Z0-9\s&'-]+$/.test(name)) {
+                            this.errors.name = 'Name contains invalid characters.';
+                            isValid = false;
+                        }
+
+                        const slug = (this.form.slug || '').trim();
+                        if (!slug) {
+                            this.errors.slug = 'URL path (slug) is required.';
+                            isValid = false;
+                        } else if (!/^[a-z0-9-]+$/.test(slug)) {
+                            this.errors.slug = 'Slug must be lowercase alphanumeric with hyphens.';
+                            isValid = false;
+                        }
+
+                        if (this.form.displayOrder < 0) {
+                            this.errors.displayOrder = 'Display order cannot be negative.';
+                            isValid = false;
+                        }
+
                         return isValid;
                     },
 
@@ -103,16 +94,23 @@
                         const method = this.isEdit ? 'PUT' : 'POST';
                         const formData = new FormData();
                         Object.keys(this.form).forEach(key => formData.append(key, this.form[key]));
-                        if (this.croppedBlob) formData.append('icon', this.croppedBlob, 'icon.jpg');
                         try {
                             const res = await fetch(url, { method, body: formData });
                             const result = await res.json();
                             if (result.success) {
+                                this.showModal = false; // Close modal immediately
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Success', type: 'success' } }));
                                 setTimeout(() => window.location.reload(), 1000);
                             } else { throw new Error(result.message); }
                         } catch (error) {
-                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: error.message || 'Error', type: 'error' } }));
+                            const msg = error.message || 'Internal Server Error';
+                            if (msg.toLowerCase().includes('name')) {
+                                this.errors.name = msg;
+                            } else if (msg.toLowerCase().includes('slug') || msg.toLowerCase().includes('url')) {
+                                this.errors.slug = msg;
+                            } else {
+                                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: msg, type: 'error' } }));
+                            }
                         } finally { this.isSubmitting = false; }
                     },
 
@@ -125,6 +123,29 @@
                             if (result.success) {
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Updated', type: 'success' } }));
                                 setTimeout(() => window.location.reload(), 1000);
+                            }
+                        }
+                    },
+
+                    async deleteCategory(id) {
+                        const confirmed = await window.confirmAction({ 
+                            title: 'DELETE CATEGORY?', 
+                            message: 'This will permanently remove the category. This action cannot be undone.', 
+                            type: 'error' 
+                        });
+                        
+                        if (confirmed) {
+                            try {
+                                const res = await fetch(`/admin/categories/${id}`, { method: 'DELETE' });
+                                const result = await res.json();
+                                if (result.success) {
+                                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Category deleted successfully!', type: 'success' } }));
+                                    setTimeout(() => window.location.reload(), 1000);
+                                } else {
+                                    throw new Error(result.message);
+                                }
+                            } catch (error) {
+                                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: error.message || 'Error deleting category', type: 'error' } }));
                             }
                         }
                     }
@@ -194,16 +215,7 @@
                         <tr class="hover:bg-white/[0.01] transition-colors group">
                             <td class="px-8 py-6 text-white/20 font-mono text-center text-sm"><%= cat.displayOrder %></td>
                             <td class="px-8 py-6">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 bg-white/5 rounded-sm border border-white/5 flex items-center justify-center overflow-hidden">
-                                        <% if (cat.icon && cat.icon.startsWith('/uploads/')) { %>
-                                            <img src="<%= cat.icon %>" alt="<%= cat.name %>" class="w-full h-full object-cover">
-                                        <% } else { %>
-                                            <span class="text-xl"><%= cat.icon || '📁' %></span>
-                                        <% } %>
-                                    </div>
-                                    <span class="text-white font-bold uppercase tracking-tight text-xs"><%= cat.name %></span>
-                                </div>
+                                <span class="text-white font-bold uppercase tracking-tight text-xs"><%= cat.name %></span>
                             </td>
                             <td class="px-8 py-6 text-white/40 font-mono tracking-tighter">/<%= cat.slug %></td>
                             <td class="px-8 py-6">
@@ -217,6 +229,11 @@
                                     <button @click="openEdit('<%= cat._id %>')" class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-white hover:border-white transition-all">✎</button>
                                     <button @click="toggleStatus('<%= cat._id %>', <%= cat.isUnlisted %>)" class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-accent hover:border-accent transition-all">
                                         <%- cat.isUnlisted ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.04m2.944-2.346A9.956 9.956 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21m-4.223-4.223L3 3m7.243 7.243a3 3 0 014.242 4.242M9.88 9.88l4.242 4.242"/></svg>' %>
+                                    </button>
+                                    <button @click="deleteCategory('<%= cat._id %>')" class="w-8 h-8 flex items-center justify-center border border-white/10 text-white/40 hover:text-red-500 hover:border-red-500 transition-all">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
                                     </button>
                                 </div>
                             </td>
@@ -237,86 +254,76 @@
     <% let query = typeof searchQuery !== 'undefined' && searchQuery ? `search=${searchQuery}` : '' %>
     <%- include('../partials/pagination', { currentPage, totalPages, query }) %>
 
-    <!-- Category Modal - iOS Styled -->
-    <div x-show="showModal" class="fixed inset-0 z-[1000] flex items-center justify-center p-6 select-none" x-cloak>
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-[15px]" @click="showModal = false"></div>
+    <!-- Category Modal - Premium Design -->
+    <div x-show="showModal" 
+         class="fixed inset-0 z-[1000] flex items-center justify-center p-6 select-none" 
+         x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
         
-        <div class="ios-alert-container !max-w-lg !w-full" style="width: 500px; max-width: 95vw;">
-            <div x-show="!isCropping" class="ios-alert-content !p-0">
-                <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="showModal = false"></div>
+        
+        <div class="premium-modal-card-large custom-scrollbar" 
+             style="max-height: 85vh; overflow-y: auto;"
+             x-show="showModal"
+             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+            
+            <div class="p-0">
+                <div class="premium-modal-header">
                     <div class="text-left">
-                        <h2 class="ios-title !text-left" x-text="isEdit ? 'Update Category' : 'New Category'"></h2>
-                        <p class="ios-message !text-left">Enterprise Taxonomy Manager</p>
+                        <h2 class="premium-modal-title-text" x-text="isEdit ? 'Update Category' : 'New Category'"></h2>
+                        <p class="premium-modal-subtitle-text">Enterprise Taxonomy Manager</p>
                     </div>
-                    <button @click="showModal = false" class="text-white/20 hover:text-white transition-colors">✕</button>
+                    <button @click="showModal = false" class="premium-modal-close-btn">✕</button>
                 </div>
 
-                <form @submit.prevent="submitForm()" data-no-spa="true" class="p-8 space-y-8 text-left">
-                    <div class="grid grid-cols-2 gap-8">
-                        <div class="space-y-3">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Name</label>
-                            <input type="text" x-model="form.name" @input="errors.name = ''" 
-                                   class="w-full bg-black/40 border border-white/10 rounded-lg py-4 px-6 text-xs text-white focus:outline-none focus:border-accent">
-                            <p x-show="errors.name" x-text="errors.name" class="text-red-500 text-xs mt-1" style="color:#ef4444; font-size:12px; font-weight:500;"></p>
-                        </div>
-                        <div class="space-y-3">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">URL Path</label>
-                            <input type="text" x-model="form.slug" @input="errors.slug = ''" 
-                                   class="w-full bg-black/40 border border-white/10 rounded-lg py-4 px-6 text-xs text-white focus:outline-none focus:border-accent">
-                            <p x-show="errors.slug" x-text="errors.slug" class="text-red-500 text-xs mt-1" style="color:#ef4444; font-size:12px; font-weight:500;"></p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-8">
-                        <div class="space-y-3">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Icon Graphic</label>
-                            <div class="flex items-center gap-6">
-                                <div class="w-16 h-16 bg-black/40 border border-white/10 rounded-lg flex items-center justify-center overflow-hidden">
-                                    <template x-if="previewUrl">
-                                        <img :src="previewUrl" class="w-full h-full object-cover">
-                                    </template>
-                                    <template x-if="!previewUrl">
-                                        <span class="text-2xl text-white/10">📁</span>
-                                    </template>
-                                </div>
-                                <div class="flex-1">
-                                    <input type="file" x-ref="iconInput" @change="handleFileChange" accept="image/*" class="hidden">
-                                    <button type="button" @click="$refs.iconInput.click()" 
-                                            class="text-[10px] font-bold uppercase tracking-widest text-accent hover:text-white transition-colors">Upload Icon</button>
-                                </div>
+                <form @submit.prevent="submitForm()" data-no-spa="true" class="premium-modal-form-container space-y-8 text-left">
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="space-y-3">
+                                <label class="premium-modal-label">Name</label>
+                                <input type="text" x-model="form.name" @input="validate()" 
+                                       placeholder="e.g. Smart Devices"
+                                       class="premium-modal-input"
+                                       :class="errors.name ? 'border-red-500/50 bg-red-500/5' : ''">
+                                <p x-show="errors.name" x-text="errors.name" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
+                            </div>
+                            <div class="space-y-3">
+                                <label class="premium-modal-label">URL Path</label>
+                                <input type="text" x-model="form.slug" @input="validate(); slugManuallyEdited = true" 
+                                       placeholder="e.g. smart-devices"
+                                       class="premium-modal-input"
+                                       :class="errors.slug ? 'border-red-500/50 bg-red-500/5' : ''">
+                                <p x-show="errors.slug" x-text="errors.slug" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
                             </div>
                         </div>
-                        <div class="space-y-3">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-white/40 block">Order</label>
-                            <input type="number" x-model="form.displayOrder" onwheel="this.blur()"
-                                   class="w-full bg-black/40 border border-white/10 rounded-lg py-4 px-6 text-xs text-white focus:outline-none focus:border-accent">
+
+                        <div class="space-y-6">
+                            <div class="space-y-3">
+                                <label class="premium-modal-label">Display Order</label>
+                                <input type="number" x-model="form.displayOrder" @input="validate()" onwheel="this.blur()"
+                                       class="premium-modal-input" placeholder="0"
+                                       :class="errors.displayOrder ? 'border-red-500/50 bg-red-500/5' : ''">
+                                <p x-show="errors.displayOrder" x-text="errors.displayOrder" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
+                            </div>
                         </div>
                     </div>
 
                     <div class="pt-6">
-                        <button type="submit" class="w-full bg-white text-black font-bold py-5 rounded-xl text-[11px] tracking-widest uppercase hover:bg-accent transition-all btn-press" 
-                                x-text="isEdit ? 'Commit Changes' : 'Initialize Category'"></button>
+                        <button type="submit" class="premium-modal-submit-btn" 
+                                :disabled="isSubmitting"
+                                :class="isSubmitting ? 'opacity-50 cursor-not-allowed' : ''">
+                            <span x-show="!isSubmitting" x-text="isEdit ? 'Commit Changes' : 'Initialize Category'"></span>
+                            <span x-show="isSubmitting">Processing...</span>
+                        </button>
                     </div>
                 </form>
-            </div>
-
-            <!-- Integrated Cropper Layout - iOS Styled -->
-            <div x-show="isCropping" class="ios-alert-content !p-0">
-                <div class="p-8">
-                    <div class="mb-6">
-                        <h2 class="ios-title !text-left">Align Icon</h2>
-                        <p class="ios-message !text-left">1:1 Aspect Ratio Optimization</p>
-                    </div>
-
-                    <div class="aspect-square bg-black/40 border border-white/10 rounded-lg overflow-hidden mb-6">
-                        <img x-ref="cropperImage" src="" class="max-w-full">
-                    </div>
-
-                    <div class="ios-button-grid two-buttons">
-                        <button type="button" @click="cancelCrop()" class="ios-button cancel-btn">Abort</button>
-                        <button type="button" @click.prevent.stop="commitCrop()" class="ios-button confirm-btn">Optimize</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -324,10 +331,128 @@
 
 
 <style>
-    /* Cropper Customization */
-    .cropper-view-box, .cropper-face { border-radius: 0; }
-    .cropper-line, .cropper-point { background-color: #ffffff; }
-    .cropper-bg { background-image: none; background-color: #000; }
+    /* Category Modal Standard CSS */
+    .premium-modal-card-large {
+        background-color: #0c0c0c;
+        border-radius: 1.5rem;
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.8);
+        width: 100%;
+        max-width: 32rem;
+        overflow: hidden;
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .premium-modal-header {
+        padding: 3.5rem 2.5rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        background-color: #0c0c0c;
+        z-index: 10;
+    }
+
+    .premium-modal-title-text {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: -0.02em;
+    }
+
+    .premium-modal-subtitle-text {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #ff6a00;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        margin-top: 0.25rem;
+        opacity: 0.8;
+    }
+
+    .premium-modal-form-container {
+        padding: 1.5rem 2.5rem 2.5rem;
+    }
+
+    .premium-modal-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: rgba(255, 255, 255, 0.3);
+        display: block;
+        margin-bottom: 0.75rem;
+        margin-left: 0.1rem;
+    }
+
+    .premium-modal-input {
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        font-size: 0.875rem;
+        color: #ffffff;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .premium-modal-input:focus {
+        outline: none;
+        border-color: #ff6a00;
+        background-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 0 0 4px rgba(255, 106, 0, 0.1);
+    }
+
+    .premium-modal-submit-btn {
+        width: 100%;
+        background-color: #ffffff;
+        color: #000000;
+        font-weight: 900;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        font-size: 0.7rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.1);
+    }
+
+    .premium-modal-submit-btn:hover {
+        background-color: #ff6a00;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px -5px rgba(255, 106, 0, 0.3);
+    }
+
+    .premium-modal-close-btn {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background-color: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .premium-modal-close-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    .cropper-modal { background-color: rgba(0, 0, 0, 0.8); }
 </style>
 
 

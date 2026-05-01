@@ -1,6 +1,6 @@
 import Order from '../../models/order/order.js';
 
-export const getSalesReportService = async (filter, startDate, endDate, page = null, limit = null, status = 'Delivered') => {
+export const getSalesReportService = async (filter, startDate, endDate, page = null, limit = null, status = 'exclude_cancelled') => {
     let matchCondition = {};
     
     if (status === 'Delivered') {
@@ -156,8 +156,17 @@ export const getSalesReportService = async (filter, startDate, endDate, page = n
         chartValues = new Array(12).fill(0);
         chartAggregation.forEach(d => { chartValues[d._id - 1] = d.total; });
     } else {
-        chartLabels = chartAggregation.map(d => d._id);
-        chartValues = chartAggregation.map(d => d.total);
+        // Fill missing days for weekly, monthly, and custom
+        const dayDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        for (let i = 0; i <= dayDiff; i++) {
+            const current = new Date(start);
+            current.setDate(start.getDate() + i);
+            const dateStr = current.toISOString().split('T')[0];
+            
+            chartLabels.push(dateStr);
+            const found = chartAggregation.find(d => d._id === dateStr);
+            chartValues.push(found ? found.total : 0);
+        }
     }
 
     const reportStats = stats.length > 0 ? stats[0] : { totalSales: 0, totalRevenue: 0, totalDiscount: 0, totalProductsSold: 0 };

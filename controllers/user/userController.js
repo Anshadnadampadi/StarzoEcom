@@ -3,7 +3,7 @@ import Address from "../../models/user/Address.js";
 import Order from "../../models/order/order.js";
 import bcrypt from "bcryptjs";
 import Wallet from "../../models/user/Wallet.js";
-import { registerValidate, addressValidate } from "../../validation/user/userValidation.js";
+import { registerValidate, addressValidate, profileUpdateValidate } from "../../validation/user/userValidation.js";
 const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,30}$/;
 import { registerUser, loginUser, updateUserProfile, changeUserPassword, addUserAddress, updateUserAddress, deleteUserAddress, setDefaultAddress, validateAndNormalizeAddress, generateReferralCode } from "../../services/user/authServices.js";
 import { sendOtpService, verifyOtpService, forgotPasswordService, resendOtpService, requestEmailChangeOtpService, verifyEmailChangeOtpService } from "../../services/user/authServices.js";
@@ -450,6 +450,14 @@ export const postUpdateProfile = async (req, res) => {
     try {
         if (!req.session.user) {
             return res.status(401).json({ success: false, message: 'Not authenticated' });
+        }
+
+        const { error } = profileUpdateValidate.validate({ ...req.body, id: req.session.user });
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.details[0].message
+            });
         }
 
         const result = await updateUserProfile(req.session.user, req.body);

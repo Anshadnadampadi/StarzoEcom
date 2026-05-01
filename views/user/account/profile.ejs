@@ -117,7 +117,7 @@
                                             class="bg-black border border-black-border px-8 py-6 backdrop-blur-md flex flex-col items-center group-hover:border-accent/40 transition-colors">
                                             <span
                                                 class="text-white/30 text-[9px] font-black tracking-[0.3em] uppercase mb-4">Your
-                                                Protocol Code</span>
+                                                Code</span>
                                             <div class="flex items-center gap-6 mb-6">
                                                 <span
                                                     class="text-white text-4xl font-mono font-black tracking-[0.1em] selection:bg-accent selection:text-black">
@@ -274,7 +274,7 @@
                         </button>
                     </div>
 
-                    <form id="editProfileForm" @submit.prevent="submitProfileUpdate" data-no-spa class="space-y-6">
+                    <form id="editProfileForm" @submit.prevent="submitProfileUpdate" novalidate data-no-spa class="space-y-6">
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-2">
                                 <label
@@ -350,13 +350,17 @@
                     </div>
 
                     <!-- Step 1: Request OTP -->
-                    <form x-show="emailStep === 1" @submit.prevent="requestEmailOtp" data-no-spa class="space-y-6">
+                    <form x-show="emailStep === 1" @submit.prevent="requestEmailOtp" novalidate data-no-spa class="space-y-6">
                         <div class="space-y-2">
                             <label class="text-[9px] font-black uppercase tracking-widest text-white/30">New Identity
                                 Endpoint</label>
                             <input type="email" x-model="newEmail"
+                                @input="validateEmail()"
+                                :class="emailError ? 'border-status-danger' : 'border-white/10'"
                                 class="w-full bg-black border border-white/10 text-white px-4 py-3 focus:border-accent outline-none transition-all placeholder:text-white/10 text-sm"
                                 placeholder="target@mobiverse.com">
+                            <span x-show="emailError" x-text="emailError"
+                                class="text-status-danger text-[9px] font-bold uppercase tracking-widest mt-1 block"></span>
                         </div>
                         <button type="submit"
                             class="w-full bg-accent text-black py-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:bg-white btn-press">
@@ -499,6 +503,7 @@
                 },
                 emailStep: 1,
                 newEmail: '',
+                emailError: '',
                 otpValue: ['', '', '', '', '', ''],
                 isSubmitting: false,
                 isUploading: false,
@@ -528,6 +533,7 @@
                     if (name === 'editEmail') {
                         this.emailStep = 1;
                         this.newEmail = '';
+                        this.emailError = '';
                         this.otpValue = ['', '', '', '', '', ''];
                     }
                     if (name === 'changePassword') {
@@ -646,6 +652,14 @@
                 },
 
                 async requestEmailOtp() {
+                    this.validateEmail();
+                    if (this.emailError) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { message: 'Identity endpoint invalid.', type: 'error' }
+                        }));
+                        return;
+                    }
+
                     this.isSubmitting = true;
                     try {
                         const res = await fetch('/change-email/request', {
@@ -739,6 +753,20 @@
                         this.passwordErrors.confirm = this.passwordForm.confirm !== this.passwordForm.new ? 'Protocols do not match' : '';
                     }
                 },
+                
+                validateEmail() {
+                    const email = this.newEmail.trim();
+                    const currentEmail = <%- JSON.stringify(user.email) %>;
+                    if (!email) {
+                        this.emailError = 'Email address is required';
+                    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        this.emailError = 'Enter a valid identity endpoint (email)';
+                    } else if (email.toLowerCase() === currentEmail.toLowerCase()) {
+                        this.emailError = 'This is already your current primary access';
+                    } else {
+                        this.emailError = '';
+                    }
+                },
 
                 validatePasswordForm() {
                     this.validatePassword('current');
@@ -749,10 +777,24 @@
 
                 validateProfileField(field) {
                     if (field === 'firstName') {
-                        this.profileErrors.firstName = this.profileForm.firstName.trim().length < 2 ? 'Required (Min 2)' : '';
+                        const val = this.profileForm.firstName.trim();
+                        if (val.length < 2) {
+                            this.profileErrors.firstName = 'First name must be at least 2 segments';
+                        } else if (!/^[a-zA-Z][a-zA-Z\s]*$/.test(val)) {
+                            this.profileErrors.firstName = 'Letters and spaces only, must start with letter';
+                        } else {
+                            this.profileErrors.firstName = '';
+                        }
                     }
                     if (field === 'lastName') {
-                        this.profileErrors.lastName = this.profileForm.lastName.trim().length < 1 ? 'Legacy identifier required' : '';
+                        const val = this.profileForm.lastName.trim();
+                        if (val.length < 1) {
+                            this.profileErrors.lastName = 'Last name is required';
+                        } else if (!/^[a-zA-Z][a-zA-Z\s]*$/.test(val)) {
+                            this.profileErrors.lastName = 'Letters and spaces only';
+                        } else {
+                            this.profileErrors.lastName = '';
+                        }
                     }
                     if (field === 'phone') {
                         const regex = /^[0-9]{10}$/;

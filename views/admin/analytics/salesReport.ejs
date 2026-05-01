@@ -304,6 +304,7 @@
                         <th class="table-header">Order ID</th>
                         <th class="table-header">Customer</th>
                         <th class="table-header text-right">Amount</th>
+                        <th class="table-header text-center">Method</th>
                         <th class="table-header text-center">Status</th>
                     </tr>
                 </thead>
@@ -326,6 +327,11 @@
                                 <span class="text-xs font-bold text-white">₹<%= order.totalAmount.toLocaleString() %></span>
                             </td>
                             <td class="px-6 py-5 text-center">
+                                <span class="px-2 py-0.5 bg-white/5 text-white/60 text-[9px] font-bold uppercase tracking-widest border border-white/5 rounded-sm">
+                                    <%= order.paymentMethod %>
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-center">
                                 <span class="px-3 py-1 bg-status-success/10 text-status-success text-[9px] font-bold uppercase tracking-widest border border-status-success/10 rounded-full">
                                     <%= order.orderStatus %>
                                 </span>
@@ -341,15 +347,15 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    const initSalesReport = () => {
         // Revenue Chart
         const revCtx = document.getElementById('revenueChart').getContext('2d');
         const gradient = revCtx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, 'rgba(255, 106, 0, 0.1)');
         gradient.addColorStop(1, 'rgba(255, 106, 0, 0)');
-
+        
         new Chart(revCtx, {
             type: 'line',
             data: {
@@ -399,6 +405,12 @@
                 plugins: { legend: { display: false } }
             }
         });
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSalesReport);
+    } else {
+        initSalesReport();
+    }
 </script>
 

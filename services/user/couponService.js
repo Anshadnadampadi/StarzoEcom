@@ -1,14 +1,20 @@
 // services/user/couponService.js
 
+import mongoose from "mongoose";
 import Coupon from "../../models/coupon/coupon.js";
 import Cart from "../../models/cart/cart.js";
 
 
 
 
-export const applyCouponService = async (userId, code) => {
-    const normalizedCode = code ? code.trim().toUpperCase() : '';
-    const coupon = await Coupon.findOne({ code: normalizedCode, isActive: true });
+export const applyCouponService = async (userId, codeOrId) => {
+    let query = { isActive: true };
+    if (mongoose.Types.ObjectId.isValid(codeOrId)) {
+        query._id = codeOrId;
+    } else {
+        query.code = codeOrId ? codeOrId.trim().toUpperCase() : '';
+    }
+    const coupon = await Coupon.findOne(query);
 
     if (!coupon) throw new Error("Invalid or inactive coupon");
 
@@ -64,9 +70,13 @@ export const applyCouponService = async (userId, code) => {
     // ENFORCE GLOBAL OVER-DISCOUNTING LIMIT
     const finalDiscount = Math.min(potentialDiscount, remainingDiscountGap);
 
-    if (finalDiscount < potentialDiscount && finalDiscount === remainingDiscountGap) {
-        // Optional: We could inform the user that the discount was capped, 
-        // but for now we just apply the maximum allowed.
+    if (finalDiscount <= 0 && potentialDiscount > 0) {
+        throw new Error("This coupon cannot be combined with existing offers as the maximum total discount limit (50%) has already been reached.");
+    }
+
+    if (finalDiscount < potentialDiscount) {
+        // The discount was capped by the safety limit, but is still > 0
+        // We allow it, but finalDiscount will be the capped value
     }
 
     const finalAmount = cartTotal - finalDiscount;
@@ -80,7 +90,7 @@ export const applyCouponService = async (userId, code) => {
 
     return {
         cartTotal,
-        discount,
+        discount: finalDiscount,
         finalAmount
     };
 };
@@ -104,11 +114,21 @@ export const removeCouponService = async (userId) => {
 };
 
 export const getAvailableCouponsService = async (userId) => {
-    const coupons = await Coupon.find({
+    // Check if user has any previous orders
+    const Order = await import("../../models/order/order.js").then(m => m.default);
+    const hasOrders = await Order.exists({ user: userId, orderStatus: { $ne: 'Cancelled' } });
+
+    const query = {
         isActive: true,
         expiryDate: { $gt: new Date() },
         usedBy: { $ne: userId }
-    }).sort({ createdAt: -1 }).lean();
+    };
+
+    if (hasOrders) {
+        query.isFirstTimeUser = false;
+    }
+
+    const coupons = await Coupon.find(query).sort({ createdAt: -1 }).lean();
     
     // Filter out coupons that have reached their usage limit
     return coupons.filter(c => (c.usedBy ? c.usedBy.length : 0) < (c.usageLimit || 1));

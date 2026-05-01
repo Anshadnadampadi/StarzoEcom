@@ -1,413 +1,169 @@
-<!DOCTYPE html>
-<html lang="en">
+<style>
+  :root {
+    --bg: #000;
+    --surface: #0d0d0d;
+    --card: #111;
+    --elevated: #1a1a1a;
+    --border: #222;
+    --accent: #ff6a00;
+    --accent-h: #e05800;
+    --accent-s: rgba(255, 106, 0, .1);
+    --t1: #fff;
+    --t2: #888;
+    --t3: #444;
+    --success: #22c55e;
+    --danger: #ef4444;
+  }
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>
-    <%= title || "Browse All Phones — MobiVerse" %>
-  </title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-    rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  .font-syne {
+    font-family: 'Syne', sans-serif;
+  }
 
-  <style>
-    :root {
-      --bg: #000;
-      --surface: #0d0d0d;
-      --card: #111;
-      --elevated: #1a1a1a;
-      --border: #222;
-      --accent: #ff6a00;
-      --accent-h: #e05800;
-      --accent-s: rgba(255, 106, 0, .1);
-      --t1: #fff;
-      --t2: #888;
-      --t3: #444;
-      --success: #22c55e;
-      --danger: #ef4444;
-    }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  /* :: SIDEBAR :: */
+  .sidebar-section {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+  }
 
-    body {
-      background: var(--bg);
-      color: var(--t1);
-      font-family: 'DM Sans', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--t1);
+    margin-bottom: 16px;
+  }
 
-    .font-syne {
-      font-family: 'Syne', sans-serif;
-    }
+  /* Filter checkboxes */
+  .filter-lbl {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--t2);
+    cursor: pointer;
+    transition: color .2s;
+    margin-bottom: 12px;
+  }
 
-    .font-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
+  .filter-lbl:hover,
+  .filter-lbl.active {
+    color: var(--t1);
+  }
 
-    /* :: SELECTION :: */
-    ::selection {
-      background: var(--accent);
-      color: #000;
-    }
+  .filter-box {
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--t3);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+    background: transparent;
+  }
 
-    /* :: SCROLLBAR :: */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
+  .filter-lbl input {
+    display: none;
+  }
 
-    ::-webkit-scrollbar-track {
-      background: var(--bg);
-    }
+  .filter-lbl input:checked+.filter-box {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
 
-    ::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 10px;
-    }
+  .filter-lbl input:checked+.filter-box::after {
+    content: '✓';
+    color: #000;
+    font-size: 10px;
+    font-weight: 900;
+  }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--t3);
-    }
+  /* :: PRODUCT GRID :: */
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
 
-    /* :: HEADER :: */
-    header {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 100;
-      background: rgba(0, 0, 0, .8);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      transition: all .3s ease;
-    }
-
-    .nav-link {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--t2);
-      text-decoration: none;
-      transition: color .2s;
-    }
-
-    .nav-link:hover,
-    .nav-link.active {
-      color: var(--t1);
-    }
-
-    .header-icon {
-      color: var(--t2);
-      transition: color .2s;
-      position: relative;
-    }
-
-    .header-icon:hover {
-      color: var(--t1);
-    }
-
-    .pill-badge {
-      position: absolute;
-      top: -5px;
-      right: -8px;
-      background: var(--accent);
-      color: #000;
-      font-size: 9px;
-      font-weight: 800;
-      padding: 2px 5px;
-      border-radius: 10px;
-      line-height: 1;
-    }
-
-    /* :: BREADCRUMB :: */
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--t3);
-    }
-
-    .breadcrumb a {
-      color: var(--t2);
-      text-decoration: none;
-      transition: color .2s;
-    }
-
-    .breadcrumb a:hover {
-      color: var(--t1);
-    }
-
-    /* :: SIDEBAR :: */
-    .sidebar-section {
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 24px;
-      margin-bottom: 24px;
-    }
-
-    .sidebar-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--t1);
-      margin-bottom: 16px;
-    }
-
-    /* Filter checkboxes */
-    .filter-lbl {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      color: var(--t2);
-      cursor: pointer;
-      transition: color .2s;
-      margin-bottom: 12px;
-    }
-
-    .filter-lbl:hover,
-    .filter-lbl.active {
-      color: var(--t1);
-    }
-
-    .filter-box {
-      width: 16px;
-      height: 16px;
-      border: 1px solid var(--t3);
-      border-radius: 2px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .2s;
-      background: transparent;
-    }
-
-    .filter-lbl input {
-      display: none;
-    }
-
-    .filter-lbl input:checked+.filter-box {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .filter-lbl input:checked+.filter-box::after {
-      content: '✓';
-      color: #000;
-      font-size: 10px;
-      font-weight: 900;
-    }
-
-    /* :: PRODUCT GRID :: */
+  @media (max-width: 1024px) {
     .grid-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
+      grid-template-columns: repeat(2, 1fr);
     }
+  }
 
-    @media (max-width: 1024px) {
-      .grid-container {
-        grid-template-columns: repeat(2, 1fr);
-      }
+  @media (max-width: 640px) {
+    .grid-container {
+      grid-template-columns: repeat(1, 1fr);
     }
+  }
 
-    @media (max-width: 640px) {
-      .grid-container {
-        grid-template-columns: repeat(1, 1fr);
-      }
-    }
+  /* Inputs */
+  .input-dark {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+    color: var(--t1);
+    font-size: 13px;
+    transition: border-color .2s;
+    outline: none;
+    border-radius: 0;
+  }
 
-    .product-card {
-      background: var(--bg);
-      position: relative;
-      transition: background .3s;
-      display: flex;
-      flex-direction: column;
-    }
+  .input-dark:focus {
+    border-color: var(--accent);
+  }
 
-    .product-card:hover {
-      background: var(--surface);
-    }
+  .input-dark::placeholder {
+    color: var(--t3);
+  }
 
-    .card-img {
-      aspect-ratio: 1;
-      background: var(--surface);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 30px;
-      cursor: pointer;
-    }
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 40px;
+  }
 
-    .card-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: transform .5s cubic-bezier(.16, 1, .3, 1);
-    }
+  .page-link {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--t2);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: all .2s;
+    cursor: pointer;
+  }
 
-    .product-card:hover .card-img img {
-      transform: scale(1.05);
-    }
+  .page-link:hover {
+    border-color: var(--t1);
+    color: var(--t1);
+  }
 
-    /* Quick add btn */
-    .quick-add {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: var(--accent);
-      color: #000;
-      font-family: 'Syne', sans-serif;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      transform: translateY(100%);
-      transition: transform .3s cubic-bezier(.16, 1, .3, 1);
-    }
+  .page-link.active {
+    background: var(--t1);
+    color: #000;
+    border-color: var(--t1);
+    font-weight: 700;
+  }
+</style>
 
-    .product-card:hover .quick-add {
-      transform: translateY(0);
-    }
-
-    .quick-add:hover {
-      background: var(--accent-h);
-    }
-
-    /* Badges */
-    .badge {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      padding: 4px 8px;
-      z-index: 2;
-    }
-
-    .badge-new {
-      background: #fff;
-      color: #000;
-    }
-
-    .badge-sale {
-      background: var(--accent);
-      color: #000;
-    }
-
-    /* Favorite btn */
-    .btn-fav {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, .5);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--t2);
-      cursor: pointer;
-      transition: all .2s;
-      border: none;
-      z-index: 2;
-    }
-
-    .btn-fav:hover {
-      color: var(--danger);
-      background: var(--elevated);
-    }
-
-    /* Inputs */
-    .input-dark {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 12px 14px;
-      color: var(--t1);
-      font-size: 13px;
-      transition: border-color .2s;
-      outline: none;
-      border-radius: 0;
-    }
-
-    .input-dark:focus {
-      border-color: var(--accent);
-    }
-
-    .input-dark::placeholder {
-      color: var(--t3);
-    }
-
-    /* Pagination */
-    .pagination {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 40px;
-    }
-
-    .page-link {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      color: var(--t2);
-      border: 1px solid var(--border);
-      text-decoration: none;
-      transition: all .2s;
-      cursor: pointer;
-    }
-
-    .page-link:hover {
-      border-color: var(--t1);
-      color: var(--t1);
-    }
-
-    .page-link.active {
-      background: var(--t1);
-      color: #000;
-      border-color: var(--t1);
-      font-weight: 700;
-    }
-  </style>
-</head>
-
-<body>
-
-  <!-- ═══════════════════════════════════════════════════════════ HEADER -->
-
-
-  <!-- ═══════════════════════════════════════════════════════════ MAIN -->
-  <main style="padding:40px 0;">
+<main style="padding:40px 0;">
     <div style="max-width:1400px;margin:0 auto;padding:0 32px;display:flex;gap:40px;align-items:flex-start;">
 
       <!-- LEFT SIDEBAR -->
@@ -439,6 +195,7 @@
         <div class="sidebar-section">
           <div class="sidebar-title">Categories</div>
           <div>
+
 
             <!-- All -->
             <label class="filter-lbl category-item">
@@ -964,7 +721,3 @@
     });
 
   </script>
-
-</body>
-
-</html>

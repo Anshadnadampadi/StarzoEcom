@@ -85,6 +85,10 @@ export const updateOrderStatusService = async (orderId, status) => {
         };
     }
 
+    if (oldStatus === 'Delivered' && status === 'Cancelled') {
+        return { success: false, message: 'Delivered orders cannot be cancelled. Please use the return process instead.', status: 400 };
+    }
+
     if (oldStatus === 'Delivered' && newIndex !== -1 && status !== 'Delivered') {
          return { success: false, message: 'Delivered orders cannot be moved back to logistics stages.', status: 400 };
     }

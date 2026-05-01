@@ -52,7 +52,14 @@
                 %>
                 <select id="statusSelect" class="bg-black border border-white/10 px-6 py-4 text-[10px] font-bold tracking-widest uppercase text-white focus:outline-none focus:border-accent transition-all">
                     <% hierarchy.forEach((s, idx) => { %>
-                        <% if (idx >= currentIndex || s === 'Cancelled') { %>
+                        <% 
+                            // Only show status that are ahead in hierarchy
+                            // And specifically exclude 'Cancelled' if already 'Delivered'
+                            const isCancelled = s === 'Cancelled';
+                            const isDelivered = order.orderStatus === 'Delivered';
+                            const shouldShow = (idx >= currentIndex) && !(isDelivered && isCancelled);
+                        %>
+                        <% if (shouldShow) { %>
                             <option value="<%= s %>" <%= order.orderStatus === s ? 'selected' : '' %>>
                                 <%= order.orderStatus === s ? 'Current: ' : 'Update to: ' %><%= s %>
                             </option>

@@ -1,366 +1,254 @@
 <!-- views/partials/ios-alert.ejs -->
-<div x-data="iosAlertComponent()" 
-     x-show="show" 
-     style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 999999999 !important; pointer-events: none; margin: 0 !important; padding: 0 !important;"
-     x-cloak
-     @show-ios-alert.window="open($event.detail)"
-     @show-confirm.window="open($event.detail)"
-     id="ios-alert-wrapper">
-    
-    <!-- Backdrop with Drastic Blur -->
-    <div class="absolute inset-0 bg-black/80 backdrop-blur-[20px] transition-all duration-500" 
-         style="pointer-events: auto; position: fixed !important; inset: 0 !important;"
-         x-show="show"
-         x-transition:enter="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="opacity-100"
-         x-transition:leave-end="opacity-0"
-         @click="if(!isLocked) cancel()"></div>
-
-    <!-- Modal Box - Pure iOS Fidelity -->
-    <div class="ios-alert-container"
-         style="pointer-events: auto; position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; z-index: 1000000000 !important; margin: 0 !important; box-sizing: border-box !important;"
-         x-show="show"
-         x-transition:enter="transition ease-out duration-300 transform"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100">
-        
-        <div class="ios-alert-content">
-            <!-- Icon Section (Compact) -->
-            <div class="ios-icon-wrapper" x-show="icon">
-                <div class="ios-icon-circle" :class="icon">
-                    <template x-if="icon === 'success'">
-                        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-white"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </template>
-                    <template x-if="icon === 'error' || icon === 'danger'">
-                        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-white"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </template>
-                    <template x-if="icon === 'warning'">
-                        <span class="text-white font-bold text-xl">!</span>
-                    </template>
-                    <template x-if="icon === 'info' || icon === 'question'">
-                        <span class="text-white font-bold text-xl">?</span>
-                    </template>
-                </div>
-            </div>
-
-            <h3 class="ios-title" x-text="title"></h3>
-            <p class="ios-message" x-text="text || message"></p>
-        </div>
-
-        <!-- Inputs Section -->
-        <div class="ios-input-section" x-show="input">
-            <template x-if="input === 'text' || input === 'email' || input === 'password'">
-                <input :type="input" x-model="inputValue" class="ios-text-input" :placeholder="inputPlaceholder">
-            </template>
-            <template x-if="input === 'textarea'">
-                <textarea x-model="inputValue" rows="3" class="ios-text-input" :placeholder="inputPlaceholder"></textarea>
-            </template>
-            <template x-if="input === 'select'">
-                <div class="ios-select-wrapper">
-                    <select x-model="inputValue" class="ios-select">
-                        <option value="" x-text="inputPlaceholder || 'Select Option'" disabled selected class="ios-option-placeholder"></option>
-                        <template x-for="(label, val) in inputOptions" :key="val">
-                            <option :value="val" x-text="label" class="ios-option"></option>
-                        </template>
-                    </select>
-                    <div class="ios-select-arrow">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M6 9l6 6 6-6"/></svg>
-                    </div>
-                </div>
-            </template>
-        </div>
-
-        <!-- Buttons Section -->
-        <div class="ios-button-grid" :class="showCancelButton ? 'two-buttons' : 'one-button'">
-            <button x-show="showCancelButton" @click="cancel()" class="ios-button cancel-btn">
-                <span x-text="cancelButtonText || 'Cancel'"></span>
-            </button>
-            <button @click="confirm()" class="ios-button confirm-btn">
-                <span x-text="confirmButtonText || 'OK'"></span>
-            </button>
-        </div>
-    </div>
-</div>
-
 <style>
-    [x-cloak] { display: none !important; }
-    
-    .ios-alert-container {
-        width: 270px;
-        background: rgba(30, 30, 30, 0.72);
-        backdrop-filter: blur(25px) saturate(180%);
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border-radius: 14px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        border: 0.5px solid rgba(255,255,255,0.1);
-        overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-        position: relative;
-        z-index: 999999 !important;
+    .starzo-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background-color: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
 
-    .ios-alert-content {
-        padding: 20px 16px;
+    .starzo-modal-card {
+        background-color: #0d0d0d;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        box-shadow: 0 40px 100px rgba(0, 0, 0, 1);
+        max-width: 24rem;
+        width: 100%;
+        padding: 2.5rem 2rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
     }
 
-    .ios-icon-wrapper {
-        margin-bottom: 12px;
-    }
-
-    .ios-icon-circle {
-        width: 44px;
-        height: 44px;
+    .starzo-modal-icon {
+        width: 4.5rem;
+        height: 4.5rem;
         border-radius: 50%;
+        border: 2px solid #ff6a00;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        margin-bottom: 1.5rem;
+        color: #ff6a00;
     }
 
-    .ios-icon-circle.success { background: #34C759; }
-    .ios-icon-circle.error, .ios-icon-circle.danger { background: #FF3B30; }
-    .ios-icon-circle.warning { background: #FF9500; }
-    .ios-icon-circle.info, .ios-icon-circle.question { background: #007AFF; }
-
-    .ios-title {
-        color: white;
-        font-size: 17px;
-        font-weight: 600;
-        margin-bottom: 4px;
-        line-height: 1.3;
+    .starzo-modal-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 1rem;
+        letter-spacing: -0.01em;
+        text-transform: capitalize;
     }
 
-    .ios-message {
-        color: rgba(255,255,255,0.85);
-        font-size: 13px;
-        line-height: 1.4;
-        font-weight: 400;
+    .starzo-modal-message {
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        font-weight: 500;
     }
 
-    /* Inputs */
-    .ios-input-section {
-        padding: 0 16px 16px 16px;
-    }
-
-    .ios-text-input {
-        width: 100%;
-        background: rgba(255,255,255,0.08);
-        border: 0.5px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        padding: 8px 12px;
-        color: white;
-        font-size: 14px;
-        outline: none;
-    }
-
-    .ios-select-wrapper {
-        position: relative;
-    }
-
-    .ios-select {
-        width: 100%;
-        background: rgba(255,255,255,0.08);
-        border: 0.5px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        padding: 8px 12px;
-        padding-right: 32px;
-        color: white;
-        font-size: 14px;
-        appearance: none;
-        -webkit-appearance: none;
-        outline: none;
-        cursor: pointer;
-        color-scheme: dark; /* Forces browser to use dark native elements */
-    }
-
-    .ios-select-arrow {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgba(255,255,255,0.4);
-        pointer-events: none;
-    }
-
-    .ios-option {
-        background-color: #1e1e1e;
-        color: white;
-    }
-
-    .ios-option-placeholder {
-        color: rgba(255,255,255,0.4);
-    }
-
-    /* Buttons */
-    .ios-button-grid {
+    .starzo-modal-buttons {
         display: flex;
-        border-top: 0.5px solid rgba(255,255,255,0.15);
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
     }
 
-    .ios-button-grid.one-button .ios-button { width: 100%; }
-    .ios-button-grid.two-buttons .ios-button { width: 50%; }
+    @media (min-width: 640px) {
+        .starzo-modal-buttons {
+            flex-direction: row-reverse;
+        }
+        .starzo-modal-buttons button {
+            flex: 1;
+        }
+    }
 
-    .ios-button {
-        padding: 12px 0;
-        background: transparent;
+    .starzo-btn {
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 0.2s ease;
         border: none;
-        color: #007AFF;
-        font-size: 17px;
         cursor: pointer;
-        transition: background 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        outline: none;
-        -webkit-tap-highlight-color: transparent;
     }
 
-    .ios-button:active {
-        background: rgba(255,255,255,0.1);
+    .starzo-btn-primary {
+        background-color: #ef4444;
+        color: #ffffff;
     }
 
-    .cancel-btn {
-        border-right: 0.5px solid rgba(255,255,255,0.15);
-        font-weight: 400;
+    .starzo-btn-primary:hover {
+        background-color: #dc2626;
+        transform: translateY(-1px);
     }
 
-    .confirm-btn {
-        font-weight: 600;
+    .starzo-btn-secondary {
+        background-color: #1a1a1a;
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Animation Shakes for Validation Errors */
-    .ios-shake {
-        animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    .starzo-btn-secondary:hover {
+        background-color: #262626;
     }
 
-    @keyframes shake {
-        10%, 90% { transform: translate3d(-1px, 0, 0); }
-        20%, 80% { transform: translate3d(2px, 0, 0); }
-        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-        40%, 60% { transform: translate3d(4px, 0, 0); }
-    }
+    /* Type Specific Colors */
+    .icon-danger { border-color: #ef4444; color: #ef4444; }
+    .btn-danger { background-color: #ef4444; }
+    
+    .icon-warning { border-color: #ff6a00; color: #ff6a00; }
+    .btn-warning { background-color: #ff6a00; }
+    
+    .icon-success { border-color: #22c55e; color: #22c55e; }
+    .btn-success { background-color: #22c55e; }
 </style>
 
+<div x-data="starzoAlertComponent()" 
+     x-show="show" 
+     class="starzo-modal-overlay"
+     x-cloak
+     style="display: none;"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+    
+    <div class="starzo-modal-card"
+         x-show="show"
+         x-transition:enter="transition ease-out duration-500"
+         x-transition:enter-start="opacity-0 scale-90 translate-y-8"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-300"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95 translate-y-4">
+        
+        <!-- Icon -->
+        <div class="starzo-modal-icon"
+             :class="{
+                'icon-danger': type === 'danger' || type === 'error',
+                'icon-warning': type === 'warning',
+                'icon-success': type === 'success'
+             }">
+            <template x-if="type === 'danger' || type === 'error'">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </template>
+            <template x-if="type === 'warning'">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </template>
+            <template x-if="type === 'success'">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+            </template>
+        </div>
+
+        <h3 class="starzo-modal-title" x-text="title"></h3>
+        <p class="starzo-modal-message" x-html="message"></p>
+
+        <!-- Optional Input Field -->
+        <div x-show="hasInput" class="w-full mb-6 text-left" x-cloak>
+            <label x-show="inputLabel" class="text-[10px] font-bold uppercase text-white/40 tracking-widest ml-1 mb-2 block" x-text="inputLabel"></label>
+            <textarea x-model="inputValue" 
+                      class="w-full bg-black border border-white/10 rounded-lg p-4 text-white text-sm focus:border-accent outline-none transition-all placeholder-white/10"
+                      :placeholder="inputPlaceholder"
+                      :rows="inputRows"></textarea>
+            <p x-show="inputError" class="text-status-danger text-[10px] mt-1 font-bold uppercase ml-1" x-text="inputError"></p>
+        </div>
+
+        <div class="starzo-modal-buttons">
+            <button @click="confirm()" 
+                    class="starzo-btn" 
+                    :class="{
+                        'btn-danger': type === 'danger' || type === 'error',
+                        'btn-warning': type === 'warning',
+                        'btn-success': type === 'success'
+                    }"
+                    x-text="confirmText"></button>
+            <button @click="cancel()" class="starzo-btn starzo-btn-secondary" x-text="cancelText"></button>
+        </div>
+    </div>
+</div>
+
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('iosAlertComponent', () => ({
-        show: false,
-        title: '',
-        text: '',
-        message: '',
-        icon: null,
-        input: null,
-        inputValue: '',
-        inputPlaceholder: '',
-        inputOptions: {},
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
-        showCancelButton: false,
-        isLocked: false,
-        resolve: null,
-        validator: null,
+    function starzoAlertComponent() {
+        return {
+            show: false,
+            title: '',
+            message: '',
+            type: 'warning',
+            confirmText: 'Confirm',
+            cancelText: 'Cancel',
+            resolve: null,
 
-        open(options) {
-            if (typeof options === 'string') options = { title: options };
-            
-            this.title = options.title || '';
-            this.text = options.text || '';
-            this.message = options.message || '';
-            this.icon = options.icon || null;
-            this.input = options.input || null;
-            this.inputValue = options.inputValue || '';
-            this.inputPlaceholder = options.inputPlaceholder || '';
-            this.inputOptions = options.inputOptions || {};
-            this.confirmButtonText = options.confirmButtonText || 'OK';
-            this.cancelButtonText = options.cancelButtonText || 'Cancel';
-            this.showCancelButton = (options.showCancelButton === true);
-            this.isLocked = options.isLocked || false;
-            this.validator = options.inputValidator || null;
-            
-            this.show = true;
-            
-            return new Promise((res) => {
-                this.resolve = res;
-            });
-        },
+            // Input Support
+            hasInput: false,
+            inputValue: '',
+            inputLabel: '',
+            inputPlaceholder: '',
+            inputRows: 3,
+            inputError: '',
+            inputValidator: null,
 
-        confirm() {
-            if (this.input && this.validator) {
-                const error = this.validator(this.inputValue);
-                if (error) {
-                    const el = document.querySelector('.ios-alert-container');
-                    el.classList.add('ios-shake');
-                    setTimeout(() => el.classList.remove('ios-shake'), 400);
-                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: error, type: 'error' } }));
-                    return;
-                }
-            }
+            init() {
+                window.confirmAction = (config) => {
+                    return new Promise((resolve) => {
+                        this.title = config.title || 'Are you sure?';
+                        this.message = config.message || '';
+                        this.type = config.type || 'warning';
+                        this.confirmText = config.confirmText || 'Confirm';
+                        this.cancelText = config.cancelText || 'Cancel';
+                        
+                        // Reset/Set Input
+                        this.hasInput = config.hasInput || false;
+                        this.inputValue = config.inputValue || '';
+                        this.inputLabel = config.inputLabel || '';
+                        this.inputPlaceholder = config.inputPlaceholder || 'Type here...';
+                        this.inputRows = config.inputRows || 3;
+                        this.inputError = '';
+                        this.inputValidator = config.inputValidator || null;
 
-            this.close({ isConfirmed: true, value: this.input ? this.inputValue : true });
-        },
-
-        cancel() {
-            this.close({ isConfirmed: false, isDismissed: true, value: null });
-        },
-
-        close(result) {
-            this.show = false;
-            if (this.resolve) {
-                this.resolve(result);
-                this.resolve = null;
-            }
-            window.dispatchEvent(new CustomEvent('ios-alert-result', { detail: result }));
-            // Also notify confirm-result for legacy compatibility
-            if (result.isConfirmed) {
-                window.dispatchEvent(new CustomEvent('confirm-result', { detail: true }));
-            } else {
-                window.dispatchEvent(new CustomEvent('confirm-result', { detail: false }));
-            }
-        }
-    }));
-});
-
-// Universal Mock
-(function() {
-    window.Swal = {
-        fire: function(options) {
-            return new Promise((resolve) => {
-                window.dispatchEvent(new CustomEvent('show-ios-alert', { detail: options }));
-                const handleRes = (e) => {
-                    window.removeEventListener('ios-alert-result', handleRes);
-                    resolve(e.detail);
+                        this.resolve = resolve;
+                        this.show = true;
+                    });
                 };
-                window.addEventListener('ios-alert-result', handleRes);
-            });
-        }
-    };
-    ['success', 'error', 'warning', 'info', 'question'].forEach(t => {
-        window.Swal[t] = (title, text) => window.Swal.fire({ title, text, icon: t });
-    });
+            },
 
-    window.confirmAction = (options = {}) => {
-        return new Promise((resolve) => {
-            window.dispatchEvent(new CustomEvent('show-ios-alert', { 
-                detail: {
-                    title: options.title,
-                    message: options.message || options.text,
-                    icon: options.type === 'danger' ? 'error' : (options.type || 'warning'),
-                    showCancelButton: true,
-                    confirmButtonText: options.confirmText || 'Yes',
-                    cancelButtonText: options.cancelText || 'No'
-                } 
-            }));
-            const handleRes = (e) => {
-                window.removeEventListener('ios-alert-result', handleRes);
-                resolve(e.detail.isConfirmed);
-            };
-            window.addEventListener('ios-alert-result', handleRes);
-        });
-    };
-})();
+            async confirm() {
+                if (this.hasInput && this.inputValidator) {
+                    const error = this.inputValidator(this.inputValue);
+                    if (error) {
+                        this.inputError = error;
+                        return;
+                    }
+                }
+                
+                this.show = false;
+                if (this.resolve) {
+                    if (this.hasInput) {
+                        this.resolve(this.inputValue);
+                    } else {
+                        this.resolve(true);
+                    }
+                }
+            },
+
+            cancel() {
+                this.show = false;
+                if (this.resolve) this.resolve(false);
+            }
+        }
+    }
 </script>

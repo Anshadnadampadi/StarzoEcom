@@ -1,4 +1,5 @@
 import Category from "../../models/category/category.js";
+import Product from "../../models/product/product.js";
 
 import { commonCache, CACHE_KEYS } from "../common/cacheService.js";
 
@@ -120,6 +121,23 @@ export const toggleCategoryStatus = async (id) => {
 
     category.isUnlisted = !category.isUnlisted;
     const result = await category.save();
+    commonCache.delete(CACHE_KEYS.CATEGORIES);
+    return result;
+};
+
+export const deleteCategory = async (id) => {
+    const category = await Category.findById(id);
+    if (!category) {
+        throw new Error("Category not found");
+    }
+
+    // Check if any products are associated with this category
+    const productCount = await Product.countDocuments({ category: id });
+    if (productCount > 0) {
+        throw new Error(`Cannot delete category: ${productCount} products are still linked to it.`);
+    }
+
+    const result = await Category.findByIdAndDelete(id);
     commonCache.delete(CACHE_KEYS.CATEGORIES);
     return result;
 };

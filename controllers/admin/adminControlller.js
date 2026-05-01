@@ -67,9 +67,11 @@ export const postAdminLogin = async (req, res) => {
 
 export const getAdminDashboard = async (req, res) => {
     try {
+        const activeStatuses = ['Pending', 'Delivered', 'Shipped', 'Processing', 'Confirmed', 'Return Requested', 'Return Approved', 'Return Picked', 'Partially Returned'];
+
         const [ordersStats, totalCustomers, topProducts, topCategories, topBrands, orderStatusStats, inventoryStats, recentOrders] = await Promise.all([
             Order.aggregate([
-                { $match: { orderStatus: 'Delivered' } },
+                { $match: { orderStatus: { $in: activeStatuses } } },
                 { 
                     $group: { 
                         _id: null, 
@@ -81,7 +83,7 @@ export const getAdminDashboard = async (req, res) => {
             User.countDocuments({ isAdmin: false }),
             // Top 10 Best Selling Products with images
             Order.aggregate([
-                { $match: { orderStatus: 'Delivered' } },
+                { $match: { orderStatus: { $in: activeStatuses } } },
                 { $unwind: "$items" },
                 { $group: { _id: "$items.product", totalSold: { $sum: "$items.qty" } } },
                 { $sort: { totalSold: -1 } },
@@ -105,7 +107,7 @@ export const getAdminDashboard = async (req, res) => {
             ]),
             // Top 10 Best Selling Categories
             Order.aggregate([
-                { $match: { orderStatus: 'Delivered' } },
+                { $match: { orderStatus: { $in: activeStatuses } } },
                 { $unwind: "$items" },
                 {
                     $lookup: {
@@ -132,7 +134,7 @@ export const getAdminDashboard = async (req, res) => {
             ]),
             // Top 10 Best Selling Brands
             Order.aggregate([
-                { $match: { orderStatus: 'Delivered' } },
+                { $match: { orderStatus: { $in: activeStatuses } } },
                 { $unwind: "$items" },
                 {
                     $lookup: {
@@ -232,12 +234,15 @@ export const getChartData = async (req, res) => {
         let labels = [];
         let data = [];
 
+        // Common status filter for revenue
+        const activeStatuses = ['Pending', 'Delivered', 'Shipped', 'Processing', 'Confirmed', 'Return Requested', 'Return Approved', 'Return Picked', 'Partially Returned'];
+
         if (filter === 'yearly') {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const currentYear = new Date().getFullYear();
             const monthlyData = await Order.aggregate([
-                { $match: { orderStatus: 'Delivered', createdAt: { $gte: new Date(currentYear, 0, 1) } } },
-                { $group: { _id: { $month: "$createdAt" }, total: { $sum: "$totalAmount" } } },
+                { $match: { orderStatus: { $in: activeStatuses }, createdAt: { $gte: new Date(currentYear, 0, 1) } } },
+                { $group: { _id: { $month: { date: "$createdAt", timezone: "+05:30" } }, total: { $sum: "$totalAmount" } } },
                 { $sort: { "_id": 1 } }
             ]);
             labels = months;
@@ -248,27 +253,48 @@ export const getChartData = async (req, res) => {
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             const monthlyData = await Order.aggregate([
-                { $match: { orderStatus: 'Delivered', createdAt: { $gte: startOfMonth } } },
-                { $group: { _id: { $dayOfMonth: "$createdAt" }, total: { $sum: "$totalAmount" } } },
+                { $match: { orderStatus: { $in: activeStatuses }, createdAt: { $gte: startOfMonth } } },
+                { $group: { _id: { $dayOfMonth: { date: "$createdAt", timezone: "+05:30" } }, total: { $sum: "$totalAmount" } } },
                 { $sort: { "_id": 1 } }
             ]);
             labels = Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
             data = new Array(daysInMonth).fill(0);
             monthlyData.forEach(d => { data[d._id - 1] = d.total; });
-        } else if (filter === 'weekly') {
-            const last7Days = await Order.aggregate([
-                { $match: { orderStatus: 'Delivered', createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } },
-                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, total: { $sum: "$totalAmount" } } },
+        } else if (filter === 'weekly' || filter === '30days') {
+            const daysCount = filter === 'weekly' ? 7 : 30;
+            const now = new Date();
+            now.setHours(23, 59, 59, 999);
+            const start = new Date(now);
+            start.setDate(now.getDate() - (daysCount - 1));
+            start.setHours(0, 0, 0, 0);
+
+            const dbData = await Order.aggregate([
+                { $match: { orderStatus: { $in: activeStatuses }, createdAt: { $gte: start, $lte: now } } },
+                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "+05:30" } }, total: { $sum: "$totalAmount" } } },
                 { $sort: { "_id": 1 } }
             ]);
-            labels = last7Days.map(d => d._id);
-            data = last7Days.map(d => d.total);
+
+            // Fill all days with 0 by default
+            for (let i = 0; i < daysCount; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                const dateStr = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                
+                const found = dbData.find(item => item._id === dateStr);
+                data.push(found ? found.total : 0);
+            }
         } else if (filter === 'daily') {
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+            const now = new Date();
+            // Calculate start of day in IST (UTC+5:30)
+            const istOffset = 5.5 * 60 * 60 * 1000;
+            const istNow = new Date(now.getTime() + istOffset);
+            istNow.setUTCHours(0, 0, 0, 0);
+            const startOfDay = new Date(istNow.getTime() - istOffset);
+
             const dailyData = await Order.aggregate([
-                { $match: { orderStatus: 'Delivered', createdAt: { $gte: startOfDay } } },
-                { $group: { _id: { $hour: "$createdAt" }, total: { $sum: "$totalAmount" } } },
+                { $match: { orderStatus: { $in: activeStatuses }, createdAt: { $gte: startOfDay } } },
+                { $group: { _id: { $hour: { date: "$createdAt", timezone: "+05:30" } }, total: { $sum: "$totalAmount" } } },
                 { $sort: { "_id": 1 } }
             ]);
             labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
@@ -280,21 +306,43 @@ export const getChartData = async (req, res) => {
             const end = new Date(endDate);
             end.setHours(23, 59, 59, 999);
 
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
             const customData = await Order.aggregate([
-                { $match: { orderStatus: 'Delivered', createdAt: { $gte: start, $lte: end } } },
-                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, total: { $sum: "$totalAmount" } } },
+                { $match: { orderStatus: { $in: activeStatuses }, createdAt: { $gte: start, $lte: end } } },
+                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "+05:30" } }, total: { $sum: "$totalAmount" } } },
                 { $sort: { "_id": 1 } }
             ]);
-            labels = customData.map(d => d._id);
-            data = customData.map(d => d.total);
-        } else { // default to last 30 days
-            const last30Days = await Order.aggregate([
-                { $match: { orderStatus: 'Delivered', createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } },
-                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, total: { $sum: "$totalAmount" } } },
-                { $sort: { "_id": 1 } }
+
+            for (let i = 0; i <= diffDays; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                const dateStr = d.toISOString().split('T')[0];
+                labels.push(dateStr);
+                const found = customData.find(item => item._id === dateStr);
+                data.push(found ? found.total : 0);
+            }
+        } else { // Default fallback (30 days)
+            const daysCount = 30;
+            const now = new Date();
+            const start = new Date();
+            start.setDate(now.getDate() - (daysCount - 1));
+            start.setHours(0,0,0,0);
+
+            const dbData = await Order.aggregate([
+                { $match: { orderStatus: { $in: activeStatuses }, createdAt: { $gte: start } } },
+                { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: "+05:30" } }, total: { $sum: "$totalAmount" } } }
             ]);
-            labels = last30Days.map(d => d._id);
-            data = last30Days.map(d => d.total);
+
+            for (let i = 0; i < daysCount; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                const dateStr = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                const found = dbData.find(item => item._id === dateStr);
+                data.push(found ? found.total : 0);
+            }
         }
 
         res.json({ success: true, labels, data });

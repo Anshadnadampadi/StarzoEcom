@@ -14,7 +14,8 @@ import {
     updateVariant,
     deleteVariant,
     restoreVariant,
-    deleteVariantAsset
+    deleteVariantAsset,
+    checkDuplicateProduct
 } from "../../controllers/admin/product/adminProductController.js";
 import { uploadProductImage } from "../../middlewares/uploadMiddleware.js";
 import { loadProductListing, getProductDetailsPage } from "../../controllers/user/product/productController.js";
@@ -24,6 +25,7 @@ import { loadProductListing, getProductDetailsPage } from "../../controllers/use
 const router = express.Router();
 
 router.get("/productManagement", getProductManagement);
+router.get("/products/check-duplicate", checkDuplicateProduct);
 router.get("/products/add", getAddProduct);
 router.post("/products/add", uploadProductImage.array('images', 5), addProduct);
 router.patch("/products/toggle-status/:id", toggleProductStatus);

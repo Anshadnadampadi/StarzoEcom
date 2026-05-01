@@ -104,6 +104,39 @@
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
+
+  /* Premium Alert & Modal Pattern */
+  .premium-modal-overlay {
+    @apply fixed inset-0 z-[10000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md;
+  }
+
+  .premium-modal-card {
+    @apply bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-10 flex flex-col items-center text-center overflow-hidden;
+  }
+
+  .premium-modal-icon-container {
+    @apply w-20 h-20 rounded-full flex items-center justify-center mb-8;
+  }
+
+  .premium-modal-title {
+    @apply text-2xl font-bold text-gray-900 mb-4 tracking-tight;
+  }
+
+  .premium-modal-message {
+    @apply text-[15px] font-medium text-gray-500 leading-relaxed mb-10 px-4;
+  }
+
+  .premium-modal-btn-grid {
+    @apply grid grid-cols-2 gap-4 w-full;
+  }
+
+  .premium-modal-btn-cancel {
+    @apply py-4 rounded-2xl bg-gray-100 text-gray-600 text-sm font-bold hover:bg-gray-200 transition-all;
+  }
+
+  .premium-modal-btn-action {
+    @apply py-4 rounded-2xl text-white text-sm font-bold shadow-lg shadow-pink-500/20 transition-all hover:scale-[1.02] active:scale-[0.98];
+  }
 }
 
 /* Custom Scrollbar */

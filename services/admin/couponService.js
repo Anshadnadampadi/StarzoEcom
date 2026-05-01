@@ -13,20 +13,19 @@ export const createCouponService = async (data) => {
         usageLimit
     } = data;
 
-    // 🧹 Normalize
-    code = code?.trim().toUpperCase();
+    //  Normalize
+    code= code?.trim().toUpperCase();
 
-    // ✅ Code validation
+    //  Code validation
     if (!code || !/^[A-Z0-9]{4,15}$/.test(code)) {
         throw new Error("Invalid coupon code (4–15 uppercase chars)");
     }
-
-    // ✅ Type
+    //  Type
     if (!["fixed", "percentage"].includes(discountType)) {
         throw new Error("Invalid discount type");
     }
 
-    // ✅ Discount
+    //  Discount
     discountValue = Number(discountValue);
     if (!discountValue || discountValue <= 0) {
         throw new Error("Discount must be greater than 0");
@@ -36,13 +35,18 @@ export const createCouponService = async (data) => {
         throw new Error("Percentage cannot exceed 100");
     }
 
-    // ✅ Min amount
+    //  Min amount
     minAmount = Number(minAmount || 0);
     if (minAmount < 0) {
         throw new Error("Minimum amount cannot be negative");
     }
 
-    // ✅ Max discount
+    if (discountType === "fixed" && discountValue >= minAmount) {
+        throw new Error("Discount amount must be lower than the minimum purchase price");
+    }
+
+
+    //  Max discount
     if (maxDiscount !== undefined && maxDiscount !== "") {
         maxDiscount = Number(maxDiscount);
         if (maxDiscount < 0) {
@@ -56,7 +60,11 @@ export const createCouponService = async (data) => {
         throw new Error("Max discount required for percentage coupons");
     }
 
-    // ✅ Expiry
+    if (discountType === "percentage" && maxDiscount >= minAmount) {
+        throw new Error("Max discount must be lower than the minimum purchase price");
+    }
+
+    //Expiry
     const expiry = new Date(expiryDate);
     expiry.setHours(23, 59, 59, 999); // Set to end of day
 
@@ -66,19 +74,19 @@ export const createCouponService = async (data) => {
         throw new Error("Expiry must be today or a future date");
     }
 
-    // ✅ Usage limit
+    //  Usage limit
     usageLimit = Number(usageLimit);
     if (!usageLimit || usageLimit < 1) {
         throw new Error("Usage limit must be at least 1");
     }
 
-    // ✅ Unique
+    //  Unique
     const existing = await Coupon.findOne({ code });
     if (existing) {
         throw new Error("Coupon already exists");
     }
 
-    // ✅ Create
+    //  Create
     return await Coupon.create({
         code,
         discountType,
@@ -121,27 +129,26 @@ export const updateCouponService = async (id, data) => {
         usageLimit
     } = data;
 
-    // 🧹 Normalize
+    //  Normalize
     code = code?.trim().toUpperCase();
 
-    // 🔒 If used, prevent changing core offer details
+    //  If used, prevent changing core offer details
     if (isUsed) {
         if (code !== undefined && code !== coupon.code) throw new Error("Cannot change the code of a used coupon");
         if (discountType !== undefined && discountType !== coupon.discountType) throw new Error("Cannot change the discount type of a used coupon");
         if (discountValue !== undefined && Number(discountValue) !== coupon.discountValue) throw new Error("Cannot change the discount value of a used coupon");
     }
-
-    // ✅ Code validation
+    // Code validation
     if (code && !/^[A-Z0-9]{4,15}$/.test(code)) {
         throw new Error("Invalid coupon code (4–15 uppercase chars)");
     }
 
-    // ✅ Type
+    //  Type
     if (discountType && !["fixed", "percentage"].includes(discountType)) {
         throw new Error("Invalid discount type");
     }
 
-    // ✅ Discount
+    // Discount
     if (discountValue !== undefined) {
         discountValue = Number(discountValue);
         if (discountValue <= 0) {
@@ -151,17 +158,29 @@ export const updateCouponService = async (id, data) => {
         if (currentType === "percentage" && discountValue > 100) {
             throw new Error("Percentage cannot exceed 100");
         }
+        
+        const currentMinAmount = minAmount !== undefined ? minAmount : coupon.minAmount;
+        if (currentType === "fixed" && discountValue >= currentMinAmount) {
+            throw new Error("Discount amount must be lower than the minimum purchase price");
+        }
     }
 
-    // ✅ Min amount
+
+    //  Min amount
     if (minAmount !== undefined) {
         minAmount = Number(minAmount);
         if (minAmount < 0) {
             throw new Error("Minimum amount cannot be negative");
         }
+        
+        const currentType = discountType || coupon.discountType;
+        const currentDiscountValue = discountValue !== undefined ? discountValue : coupon.discountValue;
+        
+        if (currentType === "fixed" && currentDiscountValue >= minAmount) {
+            throw new Error("Discount amount must be lower than the minimum purchase price");
+        }
     }
-
-    // ✅ Max discount
+    //  Max discount
     if (maxDiscount !== undefined) {
         if (maxDiscount !== "" && maxDiscount !== null) {
             maxDiscount = Number(maxDiscount);
@@ -180,7 +199,12 @@ export const updateCouponService = async (id, data) => {
         throw new Error("Max discount required for percentage coupons");
     }
 
-    // ✅ Expiry
+    const currentMinAmount = minAmount !== undefined ? minAmount : coupon.minAmount;
+    if (currentType === "percentage" && currentMaxDiscount >= currentMinAmount) {
+        throw new Error("Max discount must be lower than the minimum purchase price");
+    }
+
+    // Expiry
     let expiry = coupon.expiryDate;
     if (expiryDate) {
         expiry = new Date(expiryDate);
@@ -190,8 +214,7 @@ export const updateCouponService = async (id, data) => {
             throw new Error("Expiry must be today or a future date");
         }
     }
-
-    // ✅ Usage limit
+    //  Usage limit
     if (usageLimit !== undefined) {
         usageLimit = Number(usageLimit);
         if (usageLimit < 1) {
@@ -199,7 +222,7 @@ export const updateCouponService = async (id, data) => {
         }
     }
 
-    // ✅ Unique
+    // Unique
     if (code) {
         const existing = await Coupon.findOne({ code, _id: { $ne: id } });
         if (existing) {
