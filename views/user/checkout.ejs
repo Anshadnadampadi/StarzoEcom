@@ -823,12 +823,9 @@
                 };
                 try {
                     const rzp = new Razorpay(options);
-                    rzp.on('payment.failed', async (response) => {
-                        // User requirement: "dont remove the cart product" 
-                        // AND "shwo failed orders in orders and retry"
-                        // So we NO LONGER revert/delete the order here.
+                    rzp.on('payment.failed', (response) => {
                         this.isSubmitting = false;
-                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment failed. You can retry from My Orders.', type: 'error' }}));
+                        window.location.href = `/checkout/payment-failure?orderId=${orderInfo.orderId}`;
                     });
                     rzp.open();
                 } catch (err) {
@@ -857,9 +854,7 @@
                         throw new Error(data.message || 'Payment verification failed.');
                     }
                 } catch(error) {
-                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: error.message, type: 'error' }}));
-                    this.isSubmitting = false;
-                    this.isVerifyingPayment = false;
+                    window.location.href = `/checkout/payment-failure?orderId=${orderId}`;
                 }
             }
         }

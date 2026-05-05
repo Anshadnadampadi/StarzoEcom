@@ -10,7 +10,7 @@ import { recalculateOrderTotals, calculateItemRefund } from '../../utils/orderCa
 
 export const getUserOrdersService = async (userId, search, status, page, limit) => {
     const skip = (page - 1) * limit;
-    const filter = { user: userId, orderStatus: { $ne: 'Pending' } };
+    const filter = { user: userId };
 
     // Status Filter
     if (status && status !== 'all') {
@@ -19,6 +19,8 @@ export const getUserOrdersService = async (userId, search, status, page, limit) 
             filter['items.status'] = { $in: ['Ordered', 'Shipped', 'Pending', 'Processing', 'Confirmed'] };
         } else if (s === 'returned') {
             filter['items.status'] = { $in: ['Returned', 'Return Requested', 'Return Approved', 'Return Picked'] };
+        } else if (s === 'pending') {
+            filter.orderStatus = 'Pending';
         } else {
             filter['items.status'] = new RegExp(`^${status}$`, 'i');
         }

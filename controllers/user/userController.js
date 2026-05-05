@@ -42,7 +42,8 @@ export const getSignup = (req, res) => {
             { label: 'Register', url: '/auth/signup' }
         ],
         msg: msg || null,
-        icon: icon || null
+        icon: icon || null,
+        hideAiChat: true
     });
 };
 
@@ -83,7 +84,7 @@ export const postSignup = async (req, res) => {
 };
 export const getForgotPassword = (req, res) => {
     const { msg, icon } = req.query;
-    res.render("user/auth/forgotPassword", { msg: msg || null, icon: icon || null });
+    res.render("user/auth/forgotPassword", { msg: msg || null, icon: icon || null, hideAiChat: true });
 };
 
 // handle submission of the forgot-password form
@@ -127,7 +128,8 @@ export const getlogin = (req, res) => {
         ],
         msg,
         icon,
-        message
+        message,
+        hideAiChat: true
     });
 
 };
@@ -228,13 +230,14 @@ export const resendOtp = async (req, res) => {
 };
 
 export const getOtp = (req, res) => {
-    res.render("user/auth/otpVerification")
+    res.render("user/auth/otpVerification", { hideAiChat: true });
 }
 export const resetPassword = (req, res) => {
     res.render("user/auth/resetPassword", {
         email: req.query.email,
         msg: req.query.msg || null,
-        icon: req.query.icon || null
+        icon: req.query.icon || null,
+        hideAiChat: true
     });
 };
 export const resetSuccess = (req, res) => {
@@ -367,6 +370,7 @@ export const loadVerifyOtp = (req, res) => {
         email,
         error: null,
         context,
+        hideAiChat: true
     });
 };
 

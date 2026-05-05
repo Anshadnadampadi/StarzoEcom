@@ -49,18 +49,26 @@
         <% } %>
 
         <!-- Actions -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10" x-data="failureHandler()">
             <% if (order) { %>
-                <a href="/account/orders/<%= order._id %>" class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)]">
-                    Retry Payment
-                </a>
-            <% } else { %>
-                <a href="/cart" class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)]">
+                <button @click="retryPayment('<%= order.orderId %>')" 
+                    class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)] disabled:opacity-50"
+                    :disabled="isProcessing">
+                    <span x-show="!isProcessing">Retry Payment</span>
+                    <span x-show="isProcessing">Processing...</span>
+                </button>
+                <button @click="returnToCart('<%= order.orderId %>')"
+                    class="w-full sm:w-auto px-6 py-4 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-xs tracking-widest rounded-lg transition-all"
+                    :disabled="isProcessing">
                     Return to Cart
+                </button>
+            <% } else { %>
+                <a href="/cart" class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all">
+                    Back to Cart
                 </a>
             <% } %>
             <a href="/account/orders" class="w-full sm:w-auto px-6 py-4 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-xs tracking-widest rounded-lg transition-all">
-                Order History
+                My Orders
             </a>
         </div>
         
@@ -69,4 +77,90 @@
         </p>
     </div>
 </div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    function failureHandler() {
+        return {
+            isProcessing: false,
+            async retryPayment(orderId) {
+                this.isProcessing = true;
+                try {
+                    const response = await fetch('/checkout/retry-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        const options = {
+                            key: '<%= process.env.RAZORPAY_KEY_ID %>',
+                            amount: data.razorpayOrder.amount,
+                            currency: data.razorpayOrder.currency,
+                            name: 'Starzo Mobiles',
+                            description: 'Order Payment Retry',
+                            order_id: data.razorpayOrder.id,
+                            handler: async (res) => {
+                                // Verify
+                                const vRes = await fetch('/checkout/verify-payment', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ ...res, orderId })
+                                });
+                                const vData = await vRes.json();
+                                if (vData.success) {
+                                    window.location.href = `/checkout/success/${orderId}`;
+                                } else {
+                                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: vData.message || 'Verification failed. Please check My Orders.', type: 'error' }}));
+                                }
+                            },
+                            theme: { color: "#ff3b30" }
+                        };
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                    } else {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Retry failed', type: 'error' }}));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'An error occurred during retry', type: 'error' }}));
+                } finally {
+                    this.isProcessing = false;
+                }
+            },
+            async returnToCart(orderId) {
+                const confirmed = await confirmAction({
+                    title: 'Return to Cart?',
+                    message: 'This will cancel the current order attempt and return items to your cart. Continue?',
+                    type: 'warning',
+                    confirmText: 'Yes, Return',
+                    cancelText: 'Stay Here'
+                });
+
+                if (!confirmed) return;
+                
+                this.isProcessing = true;
+                try {
+                    const response = await fetch('/checkout/revert-failed-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        window.location.href = '/cart';
+                    } else {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Failed to return to cart', type: 'error' }}));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'An error occurred while returning to cart', type: 'error' }}));
+                } finally {
+                    this.isProcessing = false;
+                }
+            }
+        }
+    }
+</script>
 

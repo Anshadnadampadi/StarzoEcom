@@ -130,9 +130,9 @@ export const placeOrderService = async (userId, orderData) => {
         }
     }
 
-    // --- CLEANUP EXISTING PENDING ORDERS ---
-    // If user has previous "Pending" online orders, we should cancel them to release stock
-    // before they place a NEW one from the checkout page.
+    // --- CLEANUP RECENT ABANDONED ORDERS ---
+    // If user has previous "Pending" online orders for the SAME ITEMS, we should cleanup
+    // before they place a NEW one. This prevents stock bloat.
     const existingPendingOrders = await Order.find({ 
         user: userId, 
         orderStatus: 'Pending', 
@@ -140,8 +140,10 @@ export const placeOrderService = async (userId, orderData) => {
     });
     
     for (const oldOrder of existingPendingOrders) {
-        // We use the existing revert logic to restore stock/coupons cleanly
-        await revertFailedOrderService(oldOrder.orderId);
+        // If the old order is very recent (last 30 mins), we might want to keep it
+        // but for simplicity and to follow the "dont lose cart" requirement, 
+        // we'll only revert if they are specifically placing a new order now.
+        await revertFailedOrderService(oldOrder.orderId, userId);
     }
 
     const newOrder = new Order({
@@ -315,9 +317,10 @@ export const retryPaymentService = async (orderId, userId) => {
 };
 
 export const revertFailedOrderService = async (orderId, userId) => {
+    // Find the order that is still pending
     const order = await Order.findOne({ orderId, user: userId, paymentStatus: 'Pending' });
     if (!order) {
-        return { success: true }; // Already reverted or paid
+        return { success: true, message: 'Order already processed or not found.' };
     }
 
     // Restore stock
@@ -345,32 +348,46 @@ export const revertFailedOrderService = async (orderId, userId) => {
         }
     }
 
-    // Restore Cart
-    let cart = await cartService.getCartData(userId);
-    if (!cart) {
-        cart = new Cart({ userId, items: [] });
-    }
-    
-    // Add items back to cart if not already present
-    for (const item of order.items) {
-        const existingItem = cart.items.find(i => 
-            i.product._id.toString() === item.product.toString() && 
-            isSameVariant(i.variant, item.variant)
-        );
-        if (!existingItem) {
-            cart.items.push({
-                product: item.product,
-                variant: item.variant,
-                qty: item.qty,
-                price: item.price
-            });
+    // Restore Cart items
+    const cart = await Cart.findOne({ userId });
+    if (cart) {
+        for (const item of order.items) {
+            const exists = cart.items.find(i => 
+                i.product.toString() === item.product.toString() && 
+                isSameVariant(i.variant, item.variant)
+            );
+            if (!exists) {
+                cart.items.push({
+                    product: item.product,
+                    variant: item.variant,
+                    qty: item.qty,
+                    price: item.price
+                });
+            }
         }
+        await cart.save();
+        await cartService.updateCartTotals(userId);
     }
-    await cart.save();
-    await cartService.updateCartTotals(userId);
 
-    // Delete the order
+    // Finally delete the failed/abandoned order
     await Order.findByIdAndDelete(order._id);
 
-    return { success: true, message: 'Order reverted.' };
+    return { success: true, message: 'Order reverted and items returned to cart.' };
+};
+
+/**
+ * Cleanup abandoned pending orders older than 1 hour
+ */
+export const cleanupAbandonedOrders = async () => {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const abandonedOrders = await Order.find({
+        orderStatus: 'Pending',
+        paymentMethod: 'ONLINE PAYMENT',
+        createdAt: { $lt: oneHourAgo }
+    });
+
+    console.log(`[CRON] Cleaning up ${abandonedOrders.length} abandoned orders...`);
+    for (const order of abandonedOrders) {
+        await revertFailedOrderService(order.orderId, order.user);
+    }
 };

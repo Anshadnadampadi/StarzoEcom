@@ -93,6 +93,14 @@ export const updateOrderStatusService = async (orderId, status) => {
          return { success: false, message: 'Delivered orders cannot be moved back to logistics stages.', status: 400 };
     }
 
+    if (status === 'Delivered' && order.paymentMethod !== 'CASH ON DELIVERY' && order.paymentStatus !== 'Paid') {
+        return { 
+            success: false, 
+            message: `CRITICAL: Payment is ${order.paymentStatus} for this ${order.paymentMethod} order. Mark as Paid first or verify transaction.`,
+            status: 400 
+        };
+    }
+
     order.orderStatus = status;
     const newlyTerminalItems = [];
     

@@ -21,7 +21,8 @@ export const getCart = async (req, res) => {
                 { label: 'Cart', url: '/cart' }
             ],
             msg: msg || null, 
-            icon: icon || null 
+            icon: icon || null,
+            hideAiChat: true
         });
 
     } catch (error) {

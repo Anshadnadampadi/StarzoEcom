@@ -46,6 +46,16 @@ const _recalculateTotals = async (userId, cart) => {
     return { subtotal, originalSubtotal, discount, finalAmount };
 };
 
+export const updateCartTotals = async (userId) => {
+    const cart = await Cart.findOne({ userId }).populate("items.product");
+    if (!cart) return null;
+
+    const totals = await _recalculateTotals(userId, cart);
+    Object.assign(cart, totals);
+    await cart.save();
+    return cart;
+};
+
 export const getCartData = async (userId) => {
     let cart = await Cart.findOne({ userId })
         .populate({
@@ -349,18 +359,18 @@ export const updateItemQty = async (userId, { itemId, change }) => {
     });
 
     return {
-        newQty: item.qty,
-        itemTotal: item.qty * (item.price || 0),
+        itemTotal: item.price * item.qty,
         cartSubtotal: totals.subtotal,
         cartDiscount: totals.discount,
         cartFinalAmount: totals.finalAmount,
-        hasIssues,
+        cartCount: cart.items.length,
         itemStatus: {
             isUnavailable: !item.product || item.product.isBlocked || !item.product.isListed,
             isOutOfStock: stock <= 0,
             insufficientStock: item.qty > stock,
             availableStock: stock
-        }
+        },
+        hasIssues
     };
 };
 
@@ -396,6 +406,7 @@ export const removeItem = async (userId, itemId) => {
         cartSubtotal: totals.subtotal,
         cartDiscount: totals.discount,
         cartFinalAmount: totals.finalAmount,
+        cartCount: cart.items.length,
         isEmpty: cart.items.length === 0,
         hasIssues
     };

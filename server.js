@@ -23,6 +23,7 @@ import { checkBlocked } from "./middlewares/authMiddleware.js";
 import expressEjsLayouts from 'express-ejs-layouts';
 import { setViewLocals } from "./middlewares/viewMiddleware.js";
 import { reclaimStockFromPendingOrders } from "./services/common/orderCleanupService.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 // Run order cleanup every 10 minutes
 setInterval(() => {
@@ -111,6 +112,7 @@ console.log(process.env.MONGO_URI)
 app.use(morgan('dev'))
 app.use(nocache())
 app.use("/", userRoutes);
+app.use("/api/ai",aiRoutes)
 app.use("/", productRoutes);
 app.use("/wishlist",wishlistRoutes)
 app.use("/support", supportRoutes);
@@ -132,8 +134,9 @@ app.use("/admin/support",
     },
     adminSupportRoutes
 );
-
-
+app.get("/ai-chat", (req, res) => {
+    res.render("user/ai-chat");
+});
 
 // 404 Handler
 app.use((req, res) => {

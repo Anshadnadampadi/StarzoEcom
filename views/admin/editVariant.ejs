@@ -104,6 +104,7 @@
                     </div>
                     <input type="file" x-ref="imageInput" @change="handleFileChange" accept="image/*" multiple class="hidden">
                     <p class="text-[8px] text-white/20 uppercase tracking-widest">Note: New assets will be added to the existing collection (Max 5 total).</p>
+                    <p x-show="errors.images" x-text="errors.images" class="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-wider ml-1"></p>
                 </div>
             </div>
 
@@ -130,27 +131,28 @@
         
         <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="cancelCrop()"></div>
         
-        <div class="premium-modal-card-large flex flex-col items-center text-center" 
+        <div class="premium-modal-card-large flex flex-col items-center text-center !max-w-md" 
+             style="max-height: 90vh;"
              x-show="showCropModal"
              x-transition:enter="transition ease-out duration-500"
              x-transition:enter-start="opacity-0 scale-95 translate-y-8"
              x-transition:enter-end="opacity-100 scale-100 translate-y-0">
             
-            <div class="premium-modal-header w-full">
+            <div class="premium-modal-header w-full !p-6">
                 <div class="text-left">
-                    <h2 class="premium-modal-title-text">Align Asset</h2>
-                    <p class="premium-modal-subtitle-text">Optimize for catalog synchronization</p>
+                    <h2 class="premium-modal-title-text !text-lg">Align Asset</h2>
+                    <p class="premium-modal-subtitle-text !text-[10px]">Optimize for catalog synchronization</p>
                 </div>
             </div>
             
-            <div class="p-10 w-full flex flex-col items-center">
-                <div class="w-full aspect-square bg-gray-50 rounded-3xl overflow-hidden border border-gray-100 mb-8 shadow-inner">
-                    <img x-ref="cropImage" src="" class="max-w-full">
+            <div class="p-6 w-full flex flex-col items-center flex-1 overflow-hidden">
+                <div class="w-full max-h-[50vh] aspect-square bg-black rounded-2xl overflow-hidden border border-white/10 mb-6 shadow-inner flex items-center justify-center">
+                    <img x-ref="cropImage" src="" class="max-h-full max-w-full object-contain">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 w-full">
-                    <button @click="cancelCrop()" class="py-4 rounded-2xl bg-gray-100 text-gray-600 text-[10px] font-bold tracking-widest uppercase hover:bg-gray-200 transition-all border-none cursor-pointer">Abort</button>
-                    <button @click="confirmCrop()" class="py-4 rounded-2xl bg-accent text-white text-[10px] font-bold tracking-widest uppercase shadow-lg shadow-accent/20 hover:bg-accent-hover transition-all border-none cursor-pointer">Optimize</button>
+                <div class="grid grid-cols-2 gap-4 w-full mt-auto">
+                    <button @click="cancelCrop()" class="py-3 rounded-xl bg-white/5 text-white/60 text-[10px] font-bold tracking-widest uppercase hover:bg-white/10 transition-all border-none cursor-pointer">Abort</button>
+                    <button @click="confirmCrop()" class="py-3 rounded-xl bg-accent text-black text-[10px] font-bold tracking-widest uppercase hover:scale-105 transition-transform border-none cursor-pointer">Optimize</button>
                 </div>
             </div>
         </div>
@@ -175,7 +177,7 @@ v>
                     previews: [],
                     fileQueue: [],
                     existingImageCount: (existingData.images || []).length,
-                    errors: { color: '', ram: '', storage: '', price: '', stock: '' },
+                    errors: { color: '', ram: '', storage: '', price: '', stock: '', images: '' },
                     form: {
                         color: existingData.color,
                         ram: existingData.ram,
@@ -294,6 +296,13 @@ v>
                                 isValid = false;
                             }
                         }
+
+                        if (this.existingImageCount + this.previews.length < 3) {
+                            this.errors.images = 'A variant must have at least 3 images total.';
+                            isValid = false;
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Please provide at least 3 images.', type: 'warning' } }));
+                        }
+
                         return isValid;
                     },
 
@@ -338,9 +347,10 @@ v>
 <style>
     /* Premium Modal Standard CSS */
     .premium-modal-card-large {
-        background-color: #ffffff;
+        background-color: #0a0a0a;
+        border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 2rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         width: 100%;
         max-width: 32rem;
         overflow: hidden;
@@ -349,25 +359,29 @@ v>
 
     .premium-modal-header {
         padding: 2rem;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: #f9fafb;
+        background-color: #000000;
     }
 
     .premium-modal-title-text {
-        font-family: 'Outfit', sans-serif;
+        font-family: 'Syne', sans-serif;
         font-size: 1.25rem;
-        font-weight: 700;
-        color: #111827;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
     .premium-modal-subtitle-text {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #6b7280;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.4);
         margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
     }
 
     /* Added missing Label and Input styles for consistency */

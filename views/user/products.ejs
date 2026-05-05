@@ -204,15 +204,17 @@
               All Collections
             </label>
 
-            <% categories.forEach(c=> { %>
-              <label class="filter-lbl category-item">
-                <input type="checkbox" class="category-filter" value="<%= c._id %>"
-                  <%=selectedCategories?.includes(c._id.toString()) ? 'checked' : '' %>
-                >
-                <div class="filter-box"></div>
-                <%= c.name %>
-              </label>
+            <% if (locals.categories) { %>
+              <% categories.forEach(c=> { %>
+                <label class="filter-lbl category-item">
+                  <input type="checkbox" class="category-filter" value="<%= c._id %>"
+                    <%=selectedCategories?.includes(c._id.toString()) ? 'checked' : '' %>
+                  >
+                  <div class="filter-box"></div>
+                  <%= c.name %>
+                </label>
               <% }) %>
+            <% } %>
 
           </div>
         </div>
@@ -220,14 +222,16 @@
         <div class="sidebar-section">
           <div class="sidebar-title">Brands</div>
           <div>
-            <% brands.forEach(b=> { %>
-              <label class="filter-lbl brand-item" data-brand="<%= b %>">
-                <input type="checkbox" <%=selectedBrand && selectedBrand.includes(b) ? 'checked' : '' %>
-                onchange="applyFilters()">
-                <div class="filter-box"></div>
-                <%= b %>
-              </label>
+            <% if (locals.brands) { %>
+              <% brands.forEach(b=> { %>
+                <label class="filter-lbl brand-item" data-brand="<%= b %>">
+                  <input type="checkbox" <%=selectedBrand && selectedBrand.includes(b) ? 'checked' : '' %>
+                  onchange="applyFilters()">
+                  <div class="filter-box"></div>
+                  <%= b %>
+                </label>
               <% }) %>
+            <% } %>
           </div>
         </div>
 

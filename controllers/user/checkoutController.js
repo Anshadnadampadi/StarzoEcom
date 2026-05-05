@@ -36,7 +36,8 @@ export const getCheckout = async (req, res) => {
                 { label: 'Shop', url: '/products' },
                 { label: 'Cart', url: '/cart' },
                 { label: 'Checkout', url: '/checkout' }
-            ]
+            ],
+            hideAiChat: true
         });
 
     } catch (error) {
@@ -113,7 +114,8 @@ export const getOrderSuccess = async (req, res) => {
 
         res.render('user/orderSuccess', {
             title: 'Order Confirmation',
-            order
+            order,
+            hideAiChat: true
         });
     } catch (error) {
         console.error('Error fetching order success:', error);
@@ -150,7 +152,8 @@ export const getPaymentFailure = async (req, res) => {
         res.render('user/paymentFailure', {
             title: 'Payment Failed',
             orderId,
-            order: order || null
+            order: order || null,
+            hideAiChat: true
         });
     } catch (error) {
         console.error('Error in payment failure:', error);

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Order from '../../models/order/order.js';
 import Product from '../../models/product/Product.js';
 import { isSameVariant } from '../../utils/productHelpers.js';
@@ -21,9 +22,12 @@ export const reclaimStockFromPendingOrders = async (timeoutMinutes = 30) => {
 
         console.log(`[CLEANUP] Found ${expiredOrders.length} expired pending orders. Processing...`);
 
+        const Coupon = mongoose.model('Coupon');
+
         for (const order of expiredOrders) {
             // 1. Mark as Cancelled
             order.orderStatus = 'Cancelled';
+            order.paymentStatus = 'Failed';
             order.cancellationReason = 'Payment Timeout (Auto-cancelled)';
             
             // 2. Rollback Stock
@@ -42,8 +46,17 @@ export const reclaimStockFromPendingOrders = async (timeoutMinutes = 30) => {
                 }
             }
 
+            // 3. Rollback Coupon
+            if (order.couponCode) {
+                const coupon = await Coupon.findOne({ code: order.couponCode });
+                if (coupon) {
+                    coupon.usedBy = coupon.usedBy.filter(id => id.toString() !== order.user.toString());
+                    await coupon.save();
+                }
+            }
+
             await order.save();
-            console.log(`[CLEANUP] Order #${order.orderId} cancelled and stock restored.`);
+            console.log(`[CLEANUP] Order #${order.orderId} cancelled, stock and coupon restored.`);
         }
 
     } catch (error) {

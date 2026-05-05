@@ -62,23 +62,24 @@ export const getProductListing = async ({ searchQuery, categoryFilter, brandFilt
         const productsPromise = Product.find(filter)
             .collation({ locale: 'en', strength: 2 })
             .lean();
+        const categoryNeeded = !categories || categories.length === 0;
+        const brandsNeeded = !brands || brands.length === 0;
         const promises = [productsPromise];
-        if (!categories || categories.length === 0) promises.push(Category.find({ isUnlisted: false }).lean());
-        if (!brands || brands.length === 0) promises.push(Product.distinct("brand", { isListed: true, isBlocked: false }));
+
+        if (categoryNeeded) promises.push(Category.find({ isUnlisted: false }).lean());
+        if (brandsNeeded) promises.push(Product.distinct("brand", { isListed: true, isBlocked: false }));
 
         const results = await Promise.all(promises);
         const products = results[0];
 
         let resultIdx = 1;
-        if (promises.length > 2) {
-            if (!categories || categories.length === 0) {
-                categories = results[resultIdx++];
-                commonCache.set(CACHE_KEYS.CATEGORIES, categories);
-            }
-            if (!brands || brands.length === 0) {
-                brands = results[resultIdx++];
-                commonCache.set(CACHE_KEYS.PUBLIC_BRANDS, brands);
-            }
+        if (categoryNeeded) {
+            categories = results[resultIdx++];
+            commonCache.set(CACHE_KEYS.CATEGORIES, categories);
+        }
+        if (brandsNeeded) {
+            brands = results[resultIdx++];
+            commonCache.set(CACHE_KEYS.PUBLIC_BRANDS, brands);
         }
 
         // Filter out products where ALL variants are soft-deleted (no purchasable options left)
