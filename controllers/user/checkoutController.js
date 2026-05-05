@@ -2,7 +2,7 @@ import * as cartService from "../../services/user/cartService.js";
 import User from "../../models/user/User.js";
 import Wallet from "../../models/user/Wallet.js";
 import Order from "../../models/order/order.js";
-import { placeOrderService, verifyPaymentService, retryPaymentService } from "../../services/user/checkoutService.js";
+import { placeOrderService, verifyPaymentService, retryPaymentService, revertFailedOrderService } from "../../services/user/checkoutService.js";
 import { applyCouponService, getAvailableCouponsService, removeCouponService } from "../../services/user/couponService.js";
 import { sendAdminNotification } from "../../utils/notificationHelper.js";
 
@@ -166,5 +166,17 @@ export const retryPayment = async (req, res) => {
     } catch (error) {
         console.error('Error retrying payment:', error);
         res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const revertFailedOrder = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const userId = req.session.user;
+        const result = await revertFailedOrderService(orderId, userId);
+        res.json(result);
+    } catch (error) {
+        console.error('Error reverting failed order:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

@@ -67,3 +67,29 @@ export const getAverageRating = async (productId) => {
     
     return result[0] || { average: 0, count: 0 };
 };
+
+/**
+ * Apply review stats (average rating, review count) to a list of products
+ */
+export const applyReviewsToProducts = async (products) => {
+    if (!products || products.length === 0) return products;
+
+    const productIds = products.map(p => new mongoose.Types.ObjectId(p._id));
+    const reviewsAgg = await Review.aggregate([
+        { $match: { productId: { $in: productIds } } },
+        { $group: { _id: "$productId", averageRating: { $avg: "$rating" }, reviewCount: { $sum: 1 } } }
+    ]);
+
+    const reviewMap = {};
+    reviewsAgg.forEach(r => {
+        reviewMap[r._id.toString()] = {
+            averageRating: r.averageRating,
+            reviewCount: r.reviewCount
+        };
+    });
+
+    return products.map(p => {
+        const stats = reviewMap[p._id.toString()] || { averageRating: 0, reviewCount: 0 };
+        return { ...p, ...stats };
+    });
+};

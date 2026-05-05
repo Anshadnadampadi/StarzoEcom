@@ -10,7 +10,7 @@ import { recalculateOrderTotals, calculateItemRefund } from '../../utils/orderCa
 
 export const getUserOrdersService = async (userId, search, status, page, limit) => {
     const skip = (page - 1) * limit;
-    const filter = { user: userId };
+    const filter = { user: userId, orderStatus: { $ne: 'Pending' } };
 
     // Status Filter
     if (status && status !== 'all') {
@@ -53,15 +53,20 @@ export const cancelOrderService = async (userId, orderId, reason) => {
     const order = await Order.findOne({ _id: orderId, user: userId });
     if (!order) return { success: false, message: 'Order not found', status: 404 };
 
-    if (['Shipped', 'Delivered', 'Cancelled', 'Returned'].includes(order.orderStatus)) {
+    const blockedStatuses = ['Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested', 'Return Approved', 'Return Picked', 'Partially Returned'];
+    if (blockedStatuses.includes(order.orderStatus)) {
         return { success: false, message: `Order cannot be cancelled. Current status: ${order.orderStatus}`, status: 400 };
     }
 
     order.orderStatus = 'Cancelled';
     order.cancellationReason = reason || 'Cancelled by user';
     
+    const newlyCancelledItems = [];
     order.items.forEach(item => {
-        if (item.status !== 'Cancelled') item.status = 'Cancelled';
+        if (item.status !== 'Cancelled') {
+            item.status = 'Cancelled';
+            newlyCancelledItems.push(item);
+        }
     });
 
     if (order.paymentStatus === 'Paid') {
@@ -91,7 +96,7 @@ export const cancelOrderService = async (userId, orderId, reason) => {
     });
 
     // Stock Restoration
-    for (const item of order.items) {
+    for (const item of newlyCancelledItems) {
         const product = await Product.findById(item.product);
         if (product) {
             product.stock += item.qty;
@@ -112,7 +117,8 @@ export const cancelOrderItemService = async (userId, orderId, itemId) => {
     const order = await Order.findOne({ _id: orderId, user: userId });
     if (!order) return { success: false, message: 'Order not found', status: 404 };
 
-    if (['Shipped', 'Delivered', 'Cancelled', 'Returned'].includes(order.orderStatus)) {
+    const blockedStatuses = ['Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested', 'Return Approved', 'Return Picked', 'Partially Returned'];
+    if (blockedStatuses.includes(order.orderStatus)) {
         return { success: false, message: `Cannot cancel item. Order status: ${order.orderStatus}`, status: 400 };
     }
 

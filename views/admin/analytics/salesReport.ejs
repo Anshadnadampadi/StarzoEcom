@@ -37,7 +37,7 @@
         text-transform: uppercase;
         letter-spacing: 0.15em;
         color: rgba(255, 255, 255, 0.2);
-        padding: 16px 24px;
+        padding: 16px 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
     .growth-indicator {
@@ -301,8 +301,9 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="bg-white/[0.01]">
-                        <th class="table-header">Order ID</th>
+                        <th class="table-header">Order ID / Date</th>
                         <th class="table-header">Customer</th>
+                        <th class="table-header text-center">Qty</th>
                         <th class="table-header text-right">Amount</th>
                         <th class="table-header text-center">Method</th>
                         <th class="table-header text-center">Status</th>
@@ -311,27 +312,39 @@
                 <tbody class="divide-y divide-white/5">
                     <% orders.forEach(order => { %>
                         <tr class="hover:bg-white/[0.02] transition-colors">
-                            <td class="px-6 py-5">
+                            <td class="px-3 py-5">
                                 <div class="flex flex-col">
                                     <span class="text-xs font-mono text-white/80">#<%= order.orderId %></span>
-                                    <span class="text-[9px] text-white/30 uppercase font-bold"><%= new Date(order.createdAt).toLocaleString() %></span>
+                                    <span class="text-[9px] text-white/30 uppercase font-bold"><%= new Date(order.createdAt).toLocaleDateString() %></span>
                                 </div>
                             </td>
-                            <td class="px-6 py-5">
-                                <div class="flex flex-col">
-                                    <span class="text-xs font-bold text-white uppercase"><%= order.user?.firstName %> <%= order.user?.lastName %></span>
-                                    <span class="text-[9px] text-white/30 uppercase tracking-tighter"><%= order.user?.email %></span>
+                            <td class="px-3 py-5">
+                                <div class="flex flex-col max-w-[150px]">
+                                    <span class="text-xs font-bold text-white uppercase truncate"><%= order.user?.firstName %> <%= order.user?.lastName %></span>
+                                    <span class="text-[9px] text-white/30 uppercase tracking-tighter truncate"><%= order.user?.email %></span>
                                 </div>
                             </td>
-                            <td class="px-6 py-5 text-right">
+                            <td class="px-3 py-5 text-center">
+                                <span class="text-xs font-bold text-white"><%= order.items.reduce((sum, i) => sum + i.qty, 0) %></span>
+                            </td>
+                            <td class="px-3 py-5 text-right">
                                 <span class="text-xs font-bold text-white">₹<%= order.totalAmount.toLocaleString() %></span>
                             </td>
-                            <td class="px-6 py-5 text-center">
-                                <span class="px-2 py-0.5 bg-white/5 text-white/60 text-[9px] font-bold uppercase tracking-widest border border-white/5 rounded-sm">
-                                    <%= order.paymentMethod %>
+                            <td class="px-3 py-5 text-center">
+                                <% 
+                                    const methodMap = {
+                                        'CASH ON DELIVERY': 'COD',
+                                        'ONLINE PAYMENT': 'ONLINE',
+                                        'RAZORPAY': 'ONLINE',
+                                        'WALLET': 'WALLET'
+                                    };
+                                    const shortMethod = methodMap[order.paymentMethod] || order.paymentMethod;
+                                %>
+                                <span class="px-2 py-0.5 bg-white/5 text-white/60 text-[9px] font-bold uppercase tracking-widest border border-white/5 rounded-sm whitespace-nowrap">
+                                    <%= shortMethod %>
                                 </span>
                             </td>
-                            <td class="px-6 py-5 text-center">
+                            <td class="px-3 py-5 text-center">
                                 <span class="px-3 py-1 bg-status-success/10 text-status-success text-[9px] font-bold uppercase tracking-widest border border-status-success/10 rounded-full">
                                     <%= order.orderStatus %>
                                 </span>
@@ -349,14 +362,19 @@
 
 
 <script>
-    const initSalesReport = () => {
+    window.initSalesReport = () => {
         // Revenue Chart
-        const revCtx = document.getElementById('revenueChart').getContext('2d');
+        const revCanvas = document.getElementById('revenueChart');
+        if (!revCanvas) return;
+        
+        const revCtx = revCanvas.getContext('2d');
         const gradient = revCtx.createLinearGradient(0, 0, 0, 300);
         gradient.addColorStop(0, 'rgba(255, 106, 0, 0.1)');
         gradient.addColorStop(1, 'rgba(255, 106, 0, 0)');
         
-        new Chart(revCtx, {
+        if (window.revenueChartInstance instanceof Chart) window.revenueChartInstance.destroy();
+        
+        window.revenueChartInstance = new Chart(revCtx, {
             type: 'line',
             data: {
                 labels: <%- JSON.stringify(chartData.labels) %>,
@@ -383,8 +401,14 @@
         });
 
         // Growth Comparison Chart
-        const growthCtx = document.getElementById('growthChart').getContext('2d');
-        new Chart(growthCtx, {
+        const growthCanvas = document.getElementById('growthChart');
+        if (!growthCanvas) return;
+        
+        const growthCtx = growthCanvas.getContext('2d');
+        
+        if (window.growthChartInstance instanceof Chart) window.growthChartInstance.destroy();
+        
+        window.growthChartInstance = new Chart(growthCtx, {
             type: 'bar',
             data: {
                 labels: ['Previous', 'Current'],
@@ -408,9 +432,9 @@
     };
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSalesReport);
+        document.addEventListener('DOMContentLoaded', window.initSalesReport);
     } else {
-        initSalesReport();
+        window.initSalesReport();
     }
 </script>
 

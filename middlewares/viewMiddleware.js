@@ -14,12 +14,16 @@ export const setViewLocals = async (req, res, next) => {
     // 2. Set User and Basic Locals
     res.locals.user = null;
     if (req.session.user) {
-        try {
-            res.locals.user = await User.findById(req.session.user)
-                .select('firstName lastName name email profileImage isAdmin status isBlocked')
-                .lean();
-        } catch (err) {
-            console.error("Error fetching user for locals:", err);
+        if (req.currentUser) {
+            res.locals.user = req.currentUser;
+        } else {
+            try {
+                res.locals.user = await User.findById(req.session.user)
+                    .select('firstName lastName name email profileImage isAdmin status isBlocked')
+                    .lean();
+            } catch (err) {
+                console.error("Error fetching user for locals:", err);
+            }
         }
     }
     
@@ -38,17 +42,17 @@ export const setViewLocals = async (req, res, next) => {
     // 3. Fetch Cart Count if User Logged In
     if (req.session.user) {
         try {
-            const [cart, wishlist] = await Promise.all([
-                Cart.findOne({ userId: req.session.user }).lean(),
-                wishlistService.getWishlist(req.session.user)
+            const [cart, wishlistCountResult] = await Promise.all([
+                Cart.findOne({ userId: req.session.user }, 'items').lean(),
+                wishlistService.getWishlistCount(req.session.user)
             ]);
 
             if (cart?.items?.length) {
                 res.locals.cartCount = cart.items.length;
             }
 
-            if (wishlist?.length) {
-                res.locals.wishlistCount = wishlist.length;
+            if (wishlistCountResult > 0) {
+                res.locals.wishlistCount = wishlistCountResult;
             }
         } catch (error) {
             console.error("Error fetching cart/wishlist counts:", error);

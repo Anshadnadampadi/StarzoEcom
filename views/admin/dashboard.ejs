@@ -320,23 +320,24 @@
 
 
 <script>
-    let salesChart, statusChart;
-
-    async function updateCharts(url) {
+    window.updateCharts = async function(url) {
         try {
             const response = await fetch(url);
             const result = await response.json();
             
             if (result.success) {
                 // Update Sales Activity Chart
-                const ctx = document.getElementById('salesChart').getContext('2d');
-                if (salesChart) salesChart.destroy();
+                const canvas = document.getElementById('salesChart');
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
+                if (window.salesChart instanceof Chart) window.salesChart.destroy();
 
                 const gradient = ctx.createLinearGradient(0, 0, 0, 400);
                 gradient.addColorStop(0, 'rgba(255, 106, 0, 0.1)');
                 gradient.addColorStop(1, 'rgba(255, 106, 0, 0)');
 
-                salesChart = new Chart(ctx, {
+                window.salesChart = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: result.labels,
@@ -400,8 +401,13 @@
         }
     }
 
-    function initStatusChart() {
-        const ctx = document.getElementById('statusChart').getContext('2d');
+    window.initStatusChart = function() {
+        const canvas = document.getElementById('statusChart');
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        if (window.statusChart instanceof Chart) window.statusChart.destroy();
+        
         const data = {
             labels: ['Delivered', 'Pending', 'Cancelled', 'Returned'],
             datasets: [{
@@ -417,7 +423,7 @@
             }]
         };
 
-        statusChart = new Chart(ctx, {
+        window.statusChart = new Chart(ctx, {
             type: 'doughnut',
             data: data,
             options: {
@@ -431,14 +437,14 @@
         });
     }
 
-    const initDashboard = () => {
-        updateCharts('/admin/api/dashboard/chart-data?filter=monthly');
-        initStatusChart();
+    window.initDashboard = () => {
+        window.updateCharts('/admin/api/dashboard/chart-data?filter=monthly');
+        window.initStatusChart();
     };
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initDashboard);
+        document.addEventListener('DOMContentLoaded', window.initDashboard);
     } else {
-        initDashboard();
+        window.initDashboard();
     }
 </script>

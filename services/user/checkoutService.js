@@ -3,6 +3,7 @@ import Order from '../../models/order/order.js';
 import Product from '../../models/product/Product.js';
 import User from '../../models/user/User.js';
 import Wallet from '../../models/user/Wallet.js';
+import Cart from '../../models/cart/cart.js';
 import * as cartService from './cartService.js';
 import { isSameVariant } from '../../utils/productHelpers.js';
 import { createAdminNotification } from '../../utils/notificationHelper.js';
@@ -129,6 +130,20 @@ export const placeOrderService = async (userId, orderData) => {
         }
     }
 
+    // --- CLEANUP EXISTING PENDING ORDERS ---
+    // If user has previous "Pending" online orders, we should cancel them to release stock
+    // before they place a NEW one from the checkout page.
+    const existingPendingOrders = await Order.find({ 
+        user: userId, 
+        orderStatus: 'Pending', 
+        paymentMethod: 'ONLINE PAYMENT' 
+    });
+    
+    for (const oldOrder of existingPendingOrders) {
+        // We use the existing revert logic to restore stock/coupons cleanly
+        await revertFailedOrderService(oldOrder.orderId);
+    }
+
     const newOrder = new Order({
         orderId,
         user: userId,
@@ -197,11 +212,15 @@ export const placeOrderService = async (userId, orderData) => {
         await appliedCoupon.save();
     }
 
-    // If not Online Payment, we can finalize notifications and clear cart
+    // Clear cart ONLY for immediate payments (COD/Wallet). 
+    // Online payments will clear the cart after verification to satisfy user requirement: 
+    // "dont remove the cart product if payment is failed"
     if (paymentMethod !== 'ONLINE PAYMENT') {
-        // Clear Cart
         await cartService.clearCart(userId);
+    }
 
+    // If not Online Payment, we can finalize notifications
+    if (paymentMethod !== 'ONLINE PAYMENT') {
         // Admin Alert
         await createAdminNotification({
             type: 'order_placed',
@@ -293,4 +312,65 @@ export const retryPaymentService = async (orderId, userId) => {
         console.error("Retry Payment Error:", err);
         throw new Error("Failed to initiate payment retry");
     }
+};
+
+export const revertFailedOrderService = async (orderId, userId) => {
+    const order = await Order.findOne({ orderId, user: userId, paymentStatus: 'Pending' });
+    if (!order) {
+        return { success: true }; // Already reverted or paid
+    }
+
+    // Restore stock
+    for (const item of order.items) {
+        const product = await Product.findById(item.product);
+        if (product) {
+            if (item.variant) {
+                const variantIndex = product.variants.findIndex(v => isSameVariant(v, item.variant));
+                if (variantIndex > -1) {
+                    product.variants[variantIndex].stock += item.qty;
+                }
+            } else {
+                product.stock += item.qty;
+            }
+            await product.save();
+        }
+    }
+
+    // Restore Coupon usage
+    if (order.couponCode) {
+        const coupon = await Coupon.findOne({ code: order.couponCode });
+        if (coupon) {
+            coupon.usedBy = coupon.usedBy.filter(id => id.toString() !== userId.toString());
+            await coupon.save();
+        }
+    }
+
+    // Restore Cart
+    let cart = await cartService.getCartData(userId);
+    if (!cart) {
+        cart = new Cart({ userId, items: [] });
+    }
+    
+    // Add items back to cart if not already present
+    for (const item of order.items) {
+        const existingItem = cart.items.find(i => 
+            i.product._id.toString() === item.product.toString() && 
+            isSameVariant(i.variant, item.variant)
+        );
+        if (!existingItem) {
+            cart.items.push({
+                product: item.product,
+                variant: item.variant,
+                qty: item.qty,
+                price: item.price
+            });
+        }
+    }
+    await cart.save();
+    await cartService.updateCartTotals(userId);
+
+    // Delete the order
+    await Order.findByIdAndDelete(order._id);
+
+    return { success: true, message: 'Order reverted.' };
 };

@@ -1,7 +1,7 @@
 <!-- views/admin/orders/show.ejs -->
 <%- contentFor('body') %>
 
-<div class="max-w-6xl mx-auto space-y-10">
+<div class="max-w-6xl mx-auto space-y-10" id="order-container">
 
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-12">
@@ -263,7 +263,12 @@
                     window.dispatchEvent(new CustomEvent('show-toast', { 
                         detail: { message: `Order status synchronized to ${status} successfully.`, type: 'success' } 
                     }));
-                    setTimeout(() => window.location.reload(), 1500);
+                    
+                    // Fetch updated UI real-time without reloading
+                    const res = await fetch(window.location.href);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
                 } else {
                     throw new Error(data.message);
                 }
@@ -302,7 +307,12 @@
                     window.dispatchEvent(new CustomEvent('show-toast', { 
                         detail: { message: data.message || 'Item return protocol executed successfully.', type: 'success' } 
                     }));
-                    setTimeout(() => window.location.reload(), 1500);
+                    
+                    // Fetch updated UI real-time without reloading
+                    const res = await fetch(window.location.href);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
                 } else {
                     throw new Error(data.message);
                 }

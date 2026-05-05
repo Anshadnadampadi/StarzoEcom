@@ -811,16 +811,24 @@
                         color: "#ff6a00"
                     },
                     modal: {
-                        ondismiss: () => {
+                        ondismiss: async () => {
+                            // User requirement: "dont remove the cart product" 
+                            // AND "shwo failed orders in orders and retry"
+                            // So we NO LONGER revert/delete the order here.
+                            // We just let it stay as 'Pending' and keep items in cart.
                             this.isSubmitting = false;
-                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment window closed. Please complete the payment to place order.', type: 'warning' }}));
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment window closed. You can complete it later from My Orders.', type: 'warning' }}));
                         }
                     }
                 };
                 try {
                     const rzp = new Razorpay(options);
-                    rzp.on('payment.failed', function (response){
-                        window.location.href = `/checkout/payment-failure?orderId=${orderInfo.orderId}`;
+                    rzp.on('payment.failed', async (response) => {
+                        // User requirement: "dont remove the cart product" 
+                        // AND "shwo failed orders in orders and retry"
+                        // So we NO LONGER revert/delete the order here.
+                        this.isSubmitting = false;
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment failed. You can retry from My Orders.', type: 'error' }}));
                     });
                     rzp.open();
                 } catch (err) {

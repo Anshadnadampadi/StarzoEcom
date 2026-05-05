@@ -1,7 +1,7 @@
 <!-- views/user/account/order-details.ejs -->
 <%- contentFor('body') %>
 
-<div class="min-h-screen bg-black py-24">
+<div class="min-h-screen bg-black py-24" id="order-container">
     <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
         <div class="mb-16 flex items-end justify-between gap-8 fade-up">
             <div>
@@ -296,7 +296,11 @@
             const data = await res.json();
             if(data.success) {
                 dispatchGlobalToast('success', 'Payment Verified', 'Your order is now confirmed.');
-                window.location.reload();
+                
+                const res = await fetch(window.location.href);
+                const html = await res.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
             } else {
                 throw new Error(data.message || 'Payment verification failed.');
             }
@@ -332,7 +336,11 @@
                 const data = await response.json();
                 if (data.success) {
                     dispatchGlobalToast('success', 'Request Submitted', data.message);
-                    setTimeout(() => window.location.reload(), 1500);
+                    
+                    const res = await fetch(window.location.href);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
                 } else {
                     throw new Error(data.message);
                 }
@@ -369,7 +377,11 @@
                 const data = await response.json();
                 if (data.success) {
                     dispatchGlobalToast('success', 'Order Cancelled', 'Your order has been successfully terminated.');
-                    setTimeout(() => window.location.reload(), 1500);
+                    
+                    const res = await fetch(window.location.href);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
                 } else {
                     throw new Error(data.message);
                 }
@@ -406,7 +418,11 @@
                 const data = await response.json();
                 if (data.success) {
                     dispatchGlobalToast('success', 'Item Cancelled', data.message);
-                    setTimeout(() => window.location.reload(), 1500);
+                    
+                    const res = await fetch(window.location.href);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
                 } else {
                     throw new Error(data.message);
                 }
@@ -443,7 +459,11 @@
                 const data = await response.json();
                 if (data.success) {
                     dispatchGlobalToast('success', 'Request Submitted', data.message);
-                    setTimeout(() => window.location.reload(), 1500);
+                    
+                    const res = await fetch(window.location.href);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
                 } else {
                     throw new Error(data.message);
                 }

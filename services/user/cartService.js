@@ -1,5 +1,6 @@
 import Cart from "../../models/cart/Cart.js";
 import Product from "../../models/product/Product.js";
+import Category from "../../models/category/category.js";
 import Wishlist from "../../models/wishlist/wishlist.js";
 import { isSameVariant, findMatchingVariant, getVariantDisplayString } from "../../utils/productHelpers.js";
 import * as offerService from "../common/offerService.js";
@@ -46,7 +47,13 @@ const _recalculateTotals = async (userId, cart) => {
 };
 
 export const getCartData = async (userId) => {
-    let cart = await Cart.findOne({ userId }).populate("items.product").populate("coupon").lean();
+    let cart = await Cart.findOne({ userId })
+        .populate({
+            path: "items.product",
+            populate: { path: "category" }
+        })
+        .populate("coupon")
+        .lean();
 
     if (cart && cart.items.length > 0) {
         // Flag items as unavailable and update with BEST OFFER prices
@@ -63,7 +70,8 @@ export const getCartData = async (userId) => {
                 continue;
             }
 
-            const isProductUnavailable = product.isBlocked || !product.isListed;
+            const isCategoryUnlisted = product.category?.isUnlisted || false;
+            const isProductUnavailable = product.isBlocked || !product.isListed || isCategoryUnlisted;
             let isVariantUnavailable = false;
             let currentStock = product.stock || 0;
 
@@ -131,9 +139,9 @@ export const getCartData = async (userId) => {
 };
 
 export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => {
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category');
 
-    if (!product || product.isBlocked || !product.isListed) {
+    if (!product || product.isBlocked || !product.isListed || (product.category && product.category.isUnlisted)) {
         throw new Error("Product is unavailable");
     }
 

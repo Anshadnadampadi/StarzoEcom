@@ -50,9 +50,15 @@
 
         <!-- Actions -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-            <a href="/checkout" class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)]">
-                Try Again
-            </a>
+            <% if (order) { %>
+                <a href="/account/orders/<%= order._id %>" class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)]">
+                    Retry Payment
+                </a>
+            <% } else { %>
+                <a href="/cart" class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)]">
+                    Return to Cart
+                </a>
+            <% } %>
             <a href="/account/orders" class="w-full sm:w-auto px-6 py-4 border border-white/10 bg-white/5 hover:bg-white/10 text-white font-bold uppercase text-xs tracking-widest rounded-lg transition-all">
                 Order History
             </a>
@@ -63,3 +69,4 @@
         </p>
     </div>
 </div>
+

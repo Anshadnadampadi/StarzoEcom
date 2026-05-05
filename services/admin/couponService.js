@@ -99,7 +99,7 @@ export const createCouponService = async (data) => {
 };
 
 export const getCouponService = async (query) => {
-    const { search = "", page = 1, limit = 10 } = query;
+    const { search = "", page = 1, limit = 5 } = query;
     const filter = {
         code: { $regex: search, $options: "i" }
     };

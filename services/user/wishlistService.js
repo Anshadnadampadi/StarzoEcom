@@ -11,7 +11,7 @@ export const getWishlist = async (userId) => {
     const wishlist = await Wishlist.findOne({ userId })
         .populate({
             path: "items.productId",
-            populate: { path: "brand" }
+            populate: [{ path: "brand" }, { path: "category" }]
         });
 
     if (!wishlist || !wishlist.items?.length) return [];
@@ -20,9 +20,9 @@ export const getWishlist = async (userId) => {
         const product = item.productId;
         if (!product) return null;
 
-        // Only skip if the product is explicitly blocked by admin.
+        // Only skip if the product is explicitly blocked by admin or category is unlisted.
         // Unlisted products remain visible but flagged as unavailable.
-        if (product.isBlocked) return null;
+        if (product.isBlocked || (product.category && product.category.isUnlisted)) return null;
 
         const currentVariant = item.variant;
         
@@ -61,6 +61,14 @@ export const getWishlist = async (userId) => {
     }
 
     return uniqueItems;
+};
+
+/**
+ * Fetch only the count of items in the wishlist for header/middleware
+ */
+export const getWishlistCount = async (userId) => {
+    const wishlist = await Wishlist.findOne({ userId }).select('items').lean();
+    return wishlist?.items?.length || 0;
 };
 
 /**
@@ -189,9 +197,9 @@ export const removeFromWishlist = async (userId, productId, variant = {}) => {
  * Move a single item from wishlist to cart
  */
 export const moveToCart = async (userId, productId, variant) => {
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).populate('category');
     if (!product) throw new Error("Product not found or unavailable");
-    if (product.isBlocked || !product.isListed) throw new Error("Product is currently unavailable");
+    if (product.isBlocked || !product.isListed || (product.category && product.category.isUnlisted)) throw new Error("Product is currently unavailable");
 
     // Validate that the variant actually exists and is not soft-deleted
     if (product.variants?.length > 0) {

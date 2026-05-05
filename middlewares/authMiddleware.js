@@ -12,7 +12,7 @@ export const ensureLoggedIn = async (req, res, next) => {
             return handleUnauthorized(req, res, "Please login first");
         }
 
-        const user = await User.findById(req.session.user);
+        const user = req.currentUser || await User.findById(req.session.user).lean();
 
         // user deleted
         if (!user) {
@@ -80,7 +80,8 @@ export const checkBlocked = async (req, res, next) => {
         const userId = req.session?.user || req.user?._id;
 
         if (userId) {
-            const user = await User.findById(userId);
+            const user = await User.findById(userId).select('firstName lastName name email profileImage isAdmin status isBlocked').lean();
+            req.currentUser = user;
             
             // if (user) {
             //     console.log(`[SECURITY SCAN] User: ${user.email} | Blocked: ${user.isBlocked} | Status: ${user.status}`);

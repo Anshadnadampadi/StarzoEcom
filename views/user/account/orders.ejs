@@ -2,229 +2,374 @@
 <%- contentFor('body') %>
 
 <div class="min-h-screen bg-black py-24">
-    <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-        <div class="mb-16 fade-up">
-            <span class="text-accent text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Personal Archives</span>
-            <h1 class="text-white text-5xl font-black tracking-tighter uppercase font-display italic">PURCHASE HISTORY.</h1>
-        </div>
+	<div class="max-w-screen-xl mx-auto px-6 lg:px-8">
+		<div class="mb-16 fade-up">
+			<span class="text-accent text-[10px] font-bold uppercase tracking-[0.3em] mb-4 block">Personal Archives</span>
+			<h1 class="text-white text-5xl font-black tracking-tighter uppercase font-display italic">PURCHASE HISTORY.</h1>
+		</div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
-            <!-- Sidebar Nav -->
-            <%- include('../../partials/account-sidebar', { activeTab: 'orders' }) %>
+		<div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
+			<!-- Sidebar Nav -->
+			<%- include('../../partials/account-sidebar', { activeTab: 'orders' }) %>
 
-            <!-- Main Panel -->
-            <div class="lg:col-span-3">
-                <div class="flex flex-col lg:flex-row gap-6">
-                    
-                    <!-- Filter Sidebar -->
-                    <div class="w-full lg:w-1/4">
-                        <div class="bg-[#0a0a0a] border border-white/[0.03] shadow-2xl overflow-hidden sticky top-24">
-                            <div class="px-6 py-4 border-b border-white/[0.03] bg-white/[0.01]">
-                                <h3 class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Filters</h3>
-                            </div>
-                            
-                            <div class="p-6">
-                                <form action="/account/orders" method="GET" id="filterForm">
-                                    <input type="hidden" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
-                                    
-                                    <!-- Order Status -->
-                                    <div class="mb-6">
-                                        <h4 class="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-4">Order Status</h4>
-                                        <div class="space-y-4">
-                                            <% const selectedStatus = typeof status !== 'undefined' ? status : ''; %>
-                                            <label class="flex items-center gap-3 cursor-pointer group">
-                                                <input type="radio" name="status" value="" onchange="this.form.submit()" <%= !selectedStatus ? 'checked' : '' %> class="accent-accent w-3 h-3 border-white/10 bg-black">
-                                                <span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">All Orders</span>
-                                            </label>
-                                            <label class="flex items-center gap-3 cursor-pointer group">
-                                                <input type="radio" name="status" value="Processing" onchange="this.form.submit()" <%= selectedStatus === 'Processing' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-                                                <span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">On the way</span>
-                                            </label>
-                                            <label class="flex items-center gap-3 cursor-pointer group">
-                                                <input type="radio" name="status" value="Delivered" onchange="this.form.submit()" <%= selectedStatus === 'Delivered' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-                                                <span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Delivered</span>
-                                            </label>
-                                            <label class="flex items-center gap-3 cursor-pointer group">
-                                                <input type="radio" name="status" value="Cancelled" onchange="this.form.submit()" <%= selectedStatus === 'Cancelled' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-                                                <span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Cancelled</span>
-                                            </label>
-                                            <label class="flex items-center gap-3 cursor-pointer group">
-                                                <input type="radio" name="status" value="Returned" onchange="this.form.submit()" <%= selectedStatus === 'Returned' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-                                                <span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Returned</span>
-                                            </label>
-                                        </div>
-                                    </div>
+			<!-- Main Panel -->
+			<div class="lg:col-span-3">
+				<div class="flex flex-col lg:flex-row gap-6">
+					
+					<!-- Filter Sidebar -->
+					<div class="w-full lg:w-1/4">
+						<div class="bg-[#0a0a0a] border border-white/[0.03] shadow-2xl overflow-hidden sticky top-24">
+							<div class="px-6 py-4 border-b border-white/[0.03] bg-white/[0.01]">
+								<h3 class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Filters</h3>
+							</div>
+							
+							<div class="p-6">
+								<form action="/account/orders" method="GET" id="filterForm">
+									<input type="hidden" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
+									
+									<!-- Order Status -->
+									<div class="mb-6">
+										<h4 class="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-4">Order Status</h4>
+										<div class="space-y-4">
+											<% const selectedStatus = typeof status !== 'undefined' ? status : ''; %>
+											<label class="flex items-center gap-3 cursor-pointer group">
+												<input type="radio" name="status" value="" <%= !selectedStatus ? 'checked' : '' %> class="accent-accent w-3 h-3 border-white/10 bg-black">
+												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">All Orders</span>
+											</label>
+											<label class="flex items-center gap-3 cursor-pointer group">
+												<input type="radio" name="status" value="Processing" <%= selectedStatus === 'Processing' ? 'checked' : '' %> class="accent-accent w-3 h-3">
+												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">On the way</span>
+											</label>
+											<label class="flex items-center gap-3 cursor-pointer group">
+												<input type="radio" name="status" value="Delivered" <%= selectedStatus === 'Delivered' ? 'checked' : '' %> class="accent-accent w-3 h-3">
+												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Delivered</span>
+											</label>
+											<label class="flex items-center gap-3 cursor-pointer group">
+												<input type="radio" name="status" value="Cancelled" <%= selectedStatus === 'Cancelled' ? 'checked' : '' %> class="accent-accent w-3 h-3">
+												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Cancelled</span>
+											</label>
+											<label class="flex items-center gap-3 cursor-pointer group">
+												<input type="radio" name="status" value="Returned" <%= selectedStatus === 'Returned' ? 'checked' : '' %> class="accent-accent w-3 h-3">
+												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Returned</span>
+											</label>
+										</div>
+									</div>
 
-                                </form>
-                            </div>
-                        </div>
-                    </div>
+								</form>
+							</div>
+						</div>
+					</div>
 
-                    <!-- Orders List -->
-                    <div class="w-full lg:w-3/4 flex flex-col gap-4">
-                        
-                        <!-- Search Bar -->
-                        <div class="bg-[#0a0a0a] border border-white/[0.03] overflow-hidden flex items-center shadow-lg">
-                            <form action="/account/orders" method="GET" class="w-full flex">
-                                <input type="hidden" name="status" value="<%= typeof status !== 'undefined' ? status : '' %>">
-                                <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" 
-                                       placeholder="Search your orders here" 
-                                       class="w-full bg-transparent px-6 py-4 text-[11px] text-white placeholder:text-white/30 focus:outline-none focus:bg-white/[0.02] transition-colors">
-                                <button type="submit" class="bg-white text-black px-8 py-4 text-[10px] font-black tracking-[0.2em] uppercase hover:bg-accent flex items-center gap-2 transition-colors border-l border-white/10">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                    Search Orders
-                                </button>
-                            </form>
-                        </div>
+					<!-- Orders List -->
+					<div class="w-full lg:w-3/4 flex flex-col gap-4" id="ordersContainer">
+						
+						<!-- Search Bar -->
+						<div class="bg-[#0a0a0a] border border-white/[0.03] overflow-hidden flex items-center shadow-lg">
+							<form action="/account/orders" method="GET" class="w-full flex" id="searchForm">
+								<input type="hidden" name="status" value="<%= typeof status !== 'undefined' ? status : '' %>">
+								<input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" 
+									   placeholder="Search your orders here" 
+									   class="w-full bg-transparent px-6 py-4 text-[11px] text-white placeholder:text-white/30 focus:outline-none focus:bg-white/[0.02] transition-colors">
+								<button type="submit" class="bg-white text-black px-8 py-4 text-[10px] font-black tracking-[0.2em] uppercase hover:bg-accent flex items-center gap-2 transition-colors border-l border-white/10">
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+									Search Orders
+								</button>
+							</form>
+						</div>
 
-                        <!-- List Items -->
-                        <% if (typeof orders !== 'undefined' && orders.length > 0) { %>
-                            <div class="space-y-4">
-                                <% orders.forEach(order => { %>
-                                    <% 
-                                        const filteredItems = order.items.filter(item => {
-                                            // Status Filter
-                                            if (typeof status !== 'undefined' && status && status !== 'all') {
-                                                const s = status.toLowerCase();
-                                                const itemStatus = (item.status || order.status || 'ordered').toLowerCase();
-                                                
-                                                if (s === 'processing') {
-                                                    if (!['ordered', 'shipped', 'pending', 'processing', 'confirmed'].includes(itemStatus)) {
-                                                        return false;
-                                                    }
-                                                } else if (s === 'returned') {
-                                                    if (!['returned', 'return requested', 'return approved', 'return picked'].includes(itemStatus)) {
-                                                        return false;
-                                                    }
-                                                } else if (itemStatus !== s) {
-                                                    return false;
-                                                }
-                                            }
+						<!-- List Items -->
+						<% if (typeof orders !== 'undefined' && orders.length > 0) { %>
+							<div class="space-y-4">
+								<% orders.forEach(order => { %>
+									<% 
+										const filteredItems = order.items.filter(item => {
+											// Status Filter
+											if (typeof status !== 'undefined' && status && status !== 'all') {
+												const s = status.toLowerCase();
+												const itemStatus = (item.status || order.status || 'ordered').toLowerCase();
+												
+												if (s === 'processing') {
+													if (!['ordered', 'shipped', 'pending', 'processing', 'confirmed'].includes(itemStatus)) {
+														return false;
+													}
+												} else if (s === 'returned') {
+													if (!['returned', 'return requested', 'return approved', 'return picked'].includes(itemStatus)) {
+														return false;
+													}
+												} else if (itemStatus !== s) {
+													return false;
+												}
+											}
 
-                                            // Search Filter
-                                            if (typeof search !== 'undefined' && search) {
-                                                const searchLower = search.toLowerCase();
-                                                const orderIdMatch = (order.orderId || '').toLowerCase().includes(searchLower);
-                                                const productNameMatch = (item.product && item.product.name) ? item.product.name.toLowerCase().includes(searchLower) : false;
-                                                if (!orderIdMatch && !productNameMatch) return false;
-                                            }
+											// Search Filter
+											if (typeof search !== 'undefined' && search) {
+												const searchLower = search.toLowerCase();
+												const orderIdMatch = (order.orderId || '').toLowerCase().includes(searchLower);
+												const productNameMatch = (item.product && item.product.name) ? item.product.name.toLowerCase().includes(searchLower) : false;
+												if (!orderIdMatch && !productNameMatch) return false;
+											}
 
-                                            return true;
-                                        });
-                                    %>
-                                    <% filteredItems.forEach(item => { %>
-                                        <% 
-                                            const productTitle = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
-                                            let productImg = '/images/placeholder.png';
-                                            if (item.product && item.product.variants && item.product.variants.length > 0) {
-                                                const targetVar = item.variant || {};
-                                                const matchedVariant = item.product.variants.find(v => 
-                                                    (!targetVar.color || v.color === targetVar.color) && 
-                                                    (!targetVar.storage || v.storage === targetVar.storage) && 
-                                                    (!targetVar.ram || v.ram === targetVar.ram)
-                                                ) || item.product.variants[0];
-                                                
-                                                if (matchedVariant && matchedVariant.images && matchedVariant.images.length > 0) {
-                                                    productImg = matchedVariant.images[0];
-                                                }
-                                            }
+											return true;
+										});
+									%>
+									<% filteredItems.forEach(item => { %>
+										<% 
+											const productTitle = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
+											let productImg = '/images/placeholder.png';
+											if (item.product && item.product.variants && item.product.variants.length > 0) {
+												const targetVar = item.variant || {};
+												const matchedVariant = item.product.variants.find(v => 
+													(!targetVar.color || v.color === targetVar.color) && 
+													(!targetVar.storage || v.storage === targetVar.storage) && 
+													(!targetVar.ram || v.ram === targetVar.ram)
+												) || item.product.variants[0];
+												
+												if (matchedVariant && matchedVariant.images && matchedVariant.images.length > 0) {
+													productImg = matchedVariant.images[0];
+												}
+											}
 
-                                            const itemStatus = (item.status || order.status || 'pending').toLowerCase();
-                                            let dotColor = 'bg-accent';
-                                            let statusText = 'Processing';
-                                            let subText = 'Your item is being processed';
+											const itemStatus = (item.status || order.status || 'pending').toLowerCase();
+											let dotColor = 'bg-accent';
+											let statusText = 'Processing';
+											let subText = 'Your item is being processed';
 
-                                            if (itemStatus === 'delivered') {
-                                                dotColor = 'bg-status-success';
-                                                statusText = `Delivered on ${new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`;
-                                                subText = 'Your item has been delivered';
-                                            } else if (itemStatus === 'cancelled') {
-                                                dotColor = 'bg-status-danger';
-                                                statusText = 'Cancelled';
-                                                subText = 'You cancelled this item';
-                                            } else if (itemStatus.includes('return')) {
-                                                dotColor = 'bg-status-warning';
-                                                statusText = itemStatus === 'returned' ? 'Returned' : 'Return Requested';
-                                                subText = 'Item return initiated';
-                                            } else if (itemStatus === 'shipped') {
-                                                dotColor = 'bg-accent';
-                                                statusText = 'Shipped';
-                                                subText = 'Your item is on the way';
-                                            } else if (itemStatus === 'ordered' || itemStatus === 'pending') {
-                                                dotColor = 'bg-status-warning';
-                                                statusText = order.paymentStatus === 'Pending' ? 'Pending Payment' : 'Ordered';
-                                                subText = order.paymentStatus === 'Pending' ? 'Payment is awaiting completion' : 'Your order has been placed';
-                                            }
-                                        %>
+											if (itemStatus === 'delivered') {
+												dotColor = 'bg-status-success';
+												statusText = `Delivered on ${new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}`;
+												subText = 'Your item has been delivered';
+											} else if (itemStatus === 'cancelled') {
+												dotColor = 'bg-status-danger';
+												statusText = 'Cancelled';
+												subText = 'You cancelled this item';
+											} else if (itemStatus.includes('return')) {
+												dotColor = 'bg-status-warning';
+												statusText = itemStatus === 'returned' ? 'Returned' : 'Return Requested';
+												subText = 'Item return initiated';
+											} else if (itemStatus === 'shipped') {
+												dotColor = 'bg-accent';
+												statusText = 'Shipped';
+												subText = 'Your item is on the way';
+											} else if (itemStatus === 'ordered' || itemStatus === 'pending') {
+												dotColor = 'bg-status-warning';
+												statusText = order.paymentStatus === 'Pending' ? 'Pending Payment' : 'Ordered';
+												subText = order.paymentStatus === 'Pending' ? 'Payment is awaiting completion' : 'Your order has been placed';
+											}
+										%>
 
-                                        <a href="/account/orders/<%= order._id %>" class="block bg-[#0a0a0a] border border-white/[0.03] hover:border-white/20 transition-all duration-300 shadow-xl overflow-hidden group relative">
-                                            
-                                            <!-- Top tiny accent bar -->
-                                            <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+										<a href="/account/orders/<%= order._id %>" class="block bg-[#0a0a0a] border border-white/[0.03] hover:border-white/20 transition-all duration-300 shadow-xl overflow-hidden group relative">
+											
+											<!-- Top tiny accent bar -->
+											<div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-                                            <div class="p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
-                                                
-                                                <!-- Image -->
-                                                <div class="w-24 h-24 flex-shrink-0 bg-black/50 p-2 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
-                                                    <img src="<%= productImg %>" class="max-w-full max-h-full object-contain filter brightness-90 group-hover:brightness-100 transition-all" alt="<%= productTitle %>">
-                                                </div>
+											<div class="p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
+												
+												<!-- Image -->
+												<div class="w-24 h-24 flex-shrink-0 bg-black/50 p-2 flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
+													<img src="<%= productImg %>" class="max-w-full max-h-full object-contain filter brightness-90 group-hover:brightness-100 transition-all" alt="<%= productTitle %>">
+												</div>
 
-                                                <!-- Details -->
-                                                <div class="flex-1 w-full text-center md:text-left">
-                                                    <h3 class="text-white text-[13px] font-bold mb-1.5 group-hover:text-accent transition-colors truncate pr-0 md:pr-4"><%= productTitle %></h3>
-                                                    <p class="text-white/40 text-[9px] uppercase tracking-widest font-mono mb-2">
-                                                        <%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.color, item.variant.storage, item.variant.ram].filter(Boolean).join(' / ') : (item.variant || 'Standard') %>
-                                                    </p>
-                                                    <p class="text-white/30 text-[8px] uppercase tracking-widest mb-4">Seller: STARZO Retail</p>
-                                                </div>
+												<!-- Details -->
+												<div class="flex-1 w-full text-center md:text-left">
+													<h3 class="text-white text-[13px] font-bold mb-1.5 group-hover:text-accent transition-colors truncate pr-0 md:pr-4"><%= productTitle %></h3>
+													<p class="text-white/40 text-[9px] uppercase tracking-widest font-mono mb-2">
+														<%= (typeof item.variant === 'object' && item.variant !== null) ? [item.variant.color, item.variant.storage, item.variant.ram].filter(Boolean).join(' / ') : (item.variant || 'Standard') %>
+													</p>
+													<p class="text-white/30 text-[8px] uppercase tracking-widest mb-4">Seller: STARZO Retail</p>
+												</div>
 
-                                                <!-- Price -->
-                                                <div class="w-full md:w-28 flex-shrink-0 text-center md:text-left mt-2 md:mt-0">
-                                                    <p class="text-white text-base font-mono font-bold">₹<%= (item.price * item.qty).toLocaleString() %></p>
-                                                    <% if (item.qty > 1) { %>
-                                                        <p class="text-white/30 text-[8px] font-mono mt-1">Qty: <%= item.qty %></p>
-                                                    <% } %>
-                                                </div>
+												<!-- Price -->
+												<div class="w-full md:w-28 flex-shrink-0 text-center md:text-left mt-2 md:mt-0">
+													<p class="text-white text-base font-mono font-bold">₹<%= (item.price * item.qty).toLocaleString() %></p>
+													<% if (item.qty > 1) { %>
+														<p class="text-white/30 text-[8px] font-mono mt-1">Qty: <%= item.qty %></p>
+													<% } %>
+												</div>
 
-                                                <!-- Status -->
-                                                <div class="w-full md:w-64 flex-shrink-0 flex flex-col justify-center items-center md:items-start mt-4 md:mt-0 md:pl-6 border-t md:border-t-0 md:border-l border-white/[0.03] pt-4 md:pt-0">
-                                                    <div class="flex items-center gap-3 mb-1.5">
-                                                        <span class="w-2.5 h-2.5 rounded-full <%= dotColor %> shadow-[0_0_10px_currentColor]"></span>
-                                                        <p class="text-white text-[11px] font-bold"><%= statusText %></p>
-                                                    </div>
-                                                    <p class="text-white/40 text-[9px] md:pl-5"><%= subText %></p>
-                                                </div>
+												<!-- Status -->
+												<div class="w-full md:w-64 flex-shrink-0 flex flex-col justify-center items-center md:items-start mt-4 md:mt-0 md:pl-6 border-t md:border-t-0 md:border-l border-white/[0.03] pt-4 md:pt-0">
+													<div class="flex items-center gap-3 mb-1.5">
+														<span class="w-2.5 h-2.5 rounded-full <%= dotColor %> shadow-[0_0_10px_currentColor]"></span>
+														<p class="text-white text-[11px] font-bold"><%= statusText %></p>
+													</div>
+													<p class="text-white/40 text-[9px] md:pl-5 mb-3"><%= subText %></p>
+													
+													<% if (order.orderStatus === 'Pending' && order.paymentMethod === 'ONLINE PAYMENT') { %>
+														<button onclick="event.preventDefault(); retryPayment('<%= order.orderId %>')" 
+															class="md:ml-5 px-4 py-2 bg-accent text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_15px_rgba(255,106,0,0.2)]">
+															Complete Payment
+														</button>
+													<% } %>
+												</div>
 
-                                                <!-- Chevron Arrow -->
-                                                <div class="hidden md:flex items-center justify-center text-white/10 group-hover:text-accent transition-colors">
-                                                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                                </div>
+												<!-- Chevron Arrow -->
+												<div class="hidden md:flex items-center justify-center text-white/10 group-hover:text-accent transition-colors">
+													<svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+												</div>
 
-                                            </div>
-                                        </a>
-                                    <% }) %>
-                                <% }) %>
-                            </div>
-                            
-                            <!-- Pagination -->
-                            <% if (typeof totalPages !== 'undefined') { %>
-                                <div class="mt-10">
-                                    <%- include('../../partials/pagination') %>
-                                </div>
-                            <% } %>
-                        <% } else { %>
-                            <div class="py-32 text-center bg-[#0a0a0a] border border-white/[0.03] rounded-sm shadow-2xl">
-                                <div class="mb-8 opacity-20">
-                                    <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                                </div>
-                                <p class="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">No orders found matching criteria</p>
-                                <a href="/products" class="bg-white text-black font-bold px-10 py-4 text-[10px] tracking-[0.3em] uppercase hover:bg-accent transition-all">START SHOPPING</a>
-                            </div>
-                        <% } %>
+											</div>
+										</a>
+									<% }) %>
+								<% }) %>
+							</div>
+							
+							<!-- Pagination -->
+							<% if (typeof totalPages !== 'undefined') { %>
+								<div class="mt-10">
+									<%- include('../../partials/pagination') %>
+								</div>
+							<% } %>
+						<% } else { %>
+							<div class="py-32 text-center bg-[#0a0a0a] border border-white/[0.03] rounded-sm shadow-2xl">
+								<div class="mb-8 opacity-20">
+									<svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+								</div>
+								<p class="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">No orders found matching criteria</p>
+								<a href="/products" class="bg-white text-black font-bold px-10 py-4 text-[10px] tracking-[0.3em] uppercase hover:bg-accent transition-all">START SHOPPING</a>
+							</div>
+						<% } %>
 
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+	async function retryPayment(orderId) {
+		try {
+			const response = await fetch('/checkout/retry-payment', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ orderId })
+			});
+			
+			const data = await response.json();
+			
+			if (data.success) {
+				const options = {
+					key: "<%= typeof razorpayKeyId !== 'undefined' ? razorpayKeyId : '' %>",
+					amount: data.razorpayOrder.amount,
+					currency: data.razorpayOrder.currency,
+					name: "STARZO MOBILES",
+					description: "Complete Your Order Payment",
+					order_id: data.razorpayOrder.id,
+					handler: async function (response) {
+						await verifyPayment(response, orderId);
+					},
+					theme: { color: "#ff6a00" }
+				};
+				const rzp = new Razorpay(options);
+				rzp.open();
+			} else {
+				throw new Error(data.message || "Failed to initiate payment");
+			}
+		} catch (error) {
+			console.error('Retry error:', error);
+			alert(error.message);
+		}
+	}
+
+	async function verifyPayment(razorpayResponse, orderId) {
+		try {
+			const res = await fetch('/checkout/verify-payment', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					...razorpayResponse,
+					orderId: orderId
+				})
+			});
+			const data = await res.json();
+			if(data.success) {
+				window.location.reload();
+			} else {
+				throw new Error(data.message || 'Payment verification failed.');
+			}
+		} catch(error) {
+			alert(error.message);
+		}
+	}
+
+	document.addEventListener('DOMContentLoaded', () => {
+		const ordersContainer = document.getElementById('ordersContainer');
+		const filterFormInputs = document.querySelectorAll('#filterForm input[name="status"]');
+		
+		const updateContent = async (url) => {
+			ordersContainer.style.opacity = '0.5';
+			ordersContainer.style.pointerEvents = 'none';
+			try {
+				const response = await fetch(url, {
+					headers: { 'X-Requested-With': 'XMLHttpRequest' }
+				});
+				if (!response.ok) throw new Error('Network error');
+				const html = await response.text();
+				
+				const parser = new DOMParser();
+				const doc = parser.parseFromString(html, 'text/html');
+				const newContent = doc.getElementById('ordersContainer').innerHTML;
+				
+				ordersContainer.innerHTML = newContent;
+				
+				// Sync the search value in the filter form
+				const newSearchInput = doc.querySelector('#searchForm input[name="search"]');
+				if (newSearchInput) {
+					document.querySelector('#filterForm input[name="search"]').value = newSearchInput.value;
+				}
+				
+				window.history.pushState({}, '', url);
+				attachContentListeners();
+			} catch (error) {
+				console.error('Error fetching orders:', error);
+				window.location.href = url; // Fallback to full reload
+			} finally {
+				ordersContainer.style.opacity = '1';
+				ordersContainer.style.pointerEvents = 'auto';
+			}
+		};
+
+		const attachContentListeners = () => {
+			const searchForm = document.getElementById('searchForm');
+			if (searchForm) {
+				searchForm.addEventListener('submit', (e) => {
+					e.preventDefault();
+					const searchInput = searchForm.querySelector('input[name="search"]');
+					const url = new URL(window.location.href);
+					url.searchParams.set('search', searchInput.value);
+					url.searchParams.set('page', '1');
+					updateContent(url.toString());
+				});
+			}
+
+			const paginationLinks = document.querySelectorAll('#ordersContainer a[href*="page="]');
+			paginationLinks.forEach(link => {
+				link.addEventListener('click', (e) => {
+					e.preventDefault();
+					updateContent(link.href);
+				});
+			});
+		};
+
+		filterFormInputs.forEach(input => {
+			input.addEventListener('change', (e) => {
+				const url = new URL(window.location.href);
+				url.searchParams.set('status', e.target.value);
+				url.searchParams.set('page', '1');
+				updateContent(url.toString());
+			});
+		});
+
+		attachContentListeners();
+
+		window.addEventListener('popstate', () => {
+			updateContent(window.location.href);
+			
+			const urlParams = new URLSearchParams(window.location.search);
+			const currentStatus = urlParams.get('status') || '';
+			const radio = document.querySelector(`#filterForm input[name="status"][value="${currentStatus}"]`);
+			if (radio) radio.checked = true;
+		});
+	});
+</script>
