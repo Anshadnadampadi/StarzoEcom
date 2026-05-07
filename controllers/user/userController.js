@@ -241,7 +241,7 @@ export const resetPassword = (req, res) => {
     });
 };
 export const resetSuccess = (req, res) => {
-    res.render("user/resetSuccess");
+    res.render("user/auth/resetSuccess", { hideAiChat: true });
 };
 
 // update password submission

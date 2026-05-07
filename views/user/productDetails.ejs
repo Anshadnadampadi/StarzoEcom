@@ -333,6 +333,7 @@
       cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: color .2s, border-color .2s;
+      white-space: nowrap;
     }
 
     .tab-btn:hover {
@@ -342,6 +343,21 @@
     .tab-btn.active {
       color: var(--t1);
       border-bottom-color: var(--accent);
+    }
+
+    /* ── SCROLLABLE TABS CONTAINER ── */
+    .tabs-nav {
+      display: flex;
+      gap: 32px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 32px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .tabs-nav::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
     }
 
     /* ── PRODUCT CARD ── */
@@ -703,7 +719,7 @@
       <!-- LEFT: GALLERY -->
       <div class="fade-up">
         <!-- Badges row -->
-        <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <div class="flex flex-wrap gap-2 mb-4">
           <span class="badge badge-new">New</span>
           <span class="badge badge-hot">Bestseller</span>
           <% if (product.hasOffer) { %>
@@ -712,11 +728,10 @@
         </div>
 
         <!-- Main Image -->
-        <div class="gallery-main" id="mainGallery" style="position:relative;">
+        <div class="gallery-main relative" id="mainGallery">
           <img id="mainImg" src="<%= defaultImage || '/images/placeholder.jpg' %>" alt="<%= product.name %>" onclick="openFsCarousel()" style="cursor:zoom-in;">
           <!-- Zoom hint -->
-          <div
-            style="position:absolute;bottom:12px;left:12px;background:rgba(0,0,0,.7);padding:6px 10px;font-size:11px;color:var(--t2);display:flex;align-items:center;gap:6px;z-index:10;">
+          <div class="absolute bottom-3 left-3 bg-black/70 px-2.5 py-1.5 text-[10px] text-t2 flex items-center gap-1.5 z-10">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8" />
               <path d="m21 21-4.35-4.35" />
@@ -727,16 +742,16 @@
           </div>
 
           <!-- Carousel Controls -->
-          <button id="prevImgBtn" onclick="prevImage(event)" style="position:absolute;top:50%;left:12px;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,0.1);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;z-index:10;transition:background .2s, transform 0.2s;" onmouseover="this.style.background='rgba(0,0,0,.8)';this.style.transform='translateY(-50%) scale(1.05)';" onmouseout="this.style.background='rgba(0,0,0,.6)';this.style.transform='translateY(-50%) scale(1)';">
+          <button id="prevImgBtn" onclick="prevImage(event)" class="absolute top-1/2 left-3 -translate-y-1/2 bg-black/60 text-white border border-white/10 w-10 h-10 flex items-center justify-center rounded-full cursor-pointer z-10 transition-all hover:bg-black/80 hover:scale-105">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
-          <button id="nextImgBtn" onclick="nextImage(event)" style="position:absolute;top:50%;right:12px;transform:translateY(-50%);background:rgba(0,0,0,.6);color:#fff;border:1px solid rgba(255,255,255,0.1);width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;z-index:10;transition:background .2s, transform 0.2s;" onmouseover="this.style.background='rgba(0,0,0,.8)';this.style.transform='translateY(-50%) scale(1.05)';" onmouseout="this.style.background='rgba(0,0,0,.6)';this.style.transform='translateY(-50%) scale(1)';">
+          <button id="nextImgBtn" onclick="nextImage(event)" class="absolute top-1/2 right-3 -translate-y-1/2 bg-black/60 text-white border border-white/10 w-10 h-10 flex items-center justify-center rounded-full cursor-pointer z-10 transition-all hover:bg-black/80 hover:scale-105">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
           </button>
         </div>
 
         <!-- Thumbnails -->
-        <div id="galleryThumbnails" class="grid grid-cols-5 gap-2 mt-3">
+        <div id="galleryThumbnails" class="grid grid-cols-4 sm:grid-cols-5 gap-2 mt-3">
           <% if (initialImages && initialImages.length> 0) { %>
             <% initialImages.forEach((img, index)=> { %>
               <div class="gallery-thumb <%= index === 0 ? 'active' : '' %>" onclick="changeImg(<%= index %>)">
@@ -747,8 +762,8 @@
         </div>
 
         <!-- Tabs Section -->
-        <div style="margin-top:56px;">
-          <div style="display:flex;gap:32px;border-bottom:1px solid var(--border);margin-bottom:32px;">
+        <div class="mt-10 md:mt-14">
+          <div class="tabs-nav">
             <button class="tab-btn active" onclick="switchTab(this,'overview')">Overview</button>
             <button class="tab-btn" onclick="switchTab(this,'specs')">Specifications</button>
             <button id="reviewTabBtn" class="tab-btn" onclick="switchTab(this,'reviews')">Reviews</button>
@@ -984,28 +999,26 @@
       <!-- RIGHT: PURCHASE PANEL -->
       <div class="sticky-purchase fade-up fade-up-d1">
         <!-- Brand + Title -->
-        <div style="margin-bottom:20px;">
-          <p
-            style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:8px;">
+        <div class="mb-5">
+          <p class="text-[11px] font-bold tracking-[0.14em] uppercase text-t2 mb-2">
             <%= product.brand %>
           </p>
-          <h1 class="font-syne" style="font-size:26px;font-weight:800;line-height:1.2;margin-bottom:6px;">
+          <h1 class="font-syne text-2xl md:text-3xl font-extrabold leading-tight mb-1.5">
             <%= product.name %>
           </h1>
-          <p style="font-size:12px;color:var(--t3);font-family:'JetBrains Mono',monospace;">SKU: <%= product._id %>
+          <p class="text-[11px] text-t3 font-mono">SKU: <%= product._id %>
           </p>
         </div>
 
         <!-- Rating row -->
-        <div
-          style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:20px;">
-          <div style="display:flex;gap:2px; color:var(--accent);" id="summaryStars">
+        <div class="flex flex-wrap items-center gap-3 py-3.5 border-y border-border mb-5">
+          <div class="flex gap-0.5 text-accent" id="summaryStars">
             <!-- Stars injected here -->
           </div>
           <a href="#" onclick="switchTab(document.querySelector('[onclick*=reviews]'),'reviews')"
-            style="font-size:13px;color:var(--t2);text-decoration:none;" id="summaryRatingText">0.0 (0 reviews)</a>
-          <span style="color:var(--border);">|</span>
-          <span id="stockStatusBadge" style="font-size:12px;color:var(--success);font-weight:600;">
+            class="text-[13px] text-t2 no-underline" id="summaryRatingText">0.0 (0 reviews)</a>
+          <span class="text-border hidden sm:inline">|</span>
+          <span id="stockStatusBadge" class="text-[12px] text-success font-semibold">
             <% if ((defaultVariant ? defaultVariant.stock : product.stock)> 0) { %>● IN STOCK<% } else { %><span
                   style="color:var(--danger)">● OUT OF STOCK</span>
                 <% } %>
@@ -1013,8 +1026,8 @@
         </div>
 
         <!-- Price -->
-        <div style="margin-bottom:20px;" class="fade-up fade-up-d2">
-          <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+        <div class="mb-5 fade-up fade-up-d2">
+          <div class="flex items-baseline gap-3 flex-wrap">
             <% 
               let initialPrice = (defaultVariant ? defaultVariant.price : product.price);
               let initialDiscounted = initialPrice;
@@ -1085,15 +1098,14 @@
 
             <% if (uniqueColors.length> 0) { %>
               <!-- Color Variant -->
-              <div style="margin-bottom:20px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <span
-                    style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);">Color</span>
-                  <span id="selectedColor" style="font-size:13px;color:var(--t1);font-weight:600;text-transform:capitalize;">
+              <div class="mb-5">
+                <div class="flex items-center justify-between mb-2.5">
+                  <span class="text-[12px] font-semibold uppercase tracking-[0.08em] text-t2">Color</span>
+                  <span id="selectedColor" class="text-[13px] text-t1 font-semibold capitalize">
                     <%= defaultVariant ? (defaultVariant.color || '').trim() : uniqueColors[0] %>
                   </span>
                 </div>
-                <div style="display:flex;gap:10px;" id="colorSwatches">
+                <div class="flex flex-wrap gap-2.5" id="colorSwatches">
                   <% uniqueColors.forEach((color, i)=> { %>
                     <button
                       class="color-swatch <%= (defaultVariant && color.toLowerCase() === (defaultVariant.color || '').trim().toLowerCase()) ? 'active' : '' %>"
@@ -1106,15 +1118,14 @@
 
                 <% if (uniqueStorages.length> 0) { %>
                   <!-- Storage Variant -->
-                  <div style="margin-bottom:20px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                      <span
-                        style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);">Storage</span>
-                      <span id="selectedStorage" style="font-size:13px;color:var(--t1);font-weight:500;">
+                  <div class="mb-5">
+                    <div class="flex items-center justify-between mb-2.5">
+                      <span class="text-[12px] font-semibold uppercase tracking-[0.08em] text-t2">Storage</span>
+                      <span id="selectedStorage" class="text-[13px] text-t1 font-medium">
                         <%= defaultVariant ? (defaultVariant.storage || '').trim() : uniqueStorages[0] %>
                       </span>
                     </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="storagePills">
+                    <div class="flex gap-2 flex-wrap" id="storagePills">
                       <% uniqueStorages.forEach((storage, i)=> { %>
                         <button
                           class="variant-pill <%= (defaultVariant && storage.toLowerCase() === (defaultVariant.storage || '').trim().toLowerCase()) ? 'active' : '' %>"
@@ -1128,15 +1139,14 @@
 
                 <% if (uniqueRams.length > 0) { %>
                   <!-- RAM Variant -->
-                  <div style="margin-bottom:20px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                      <span
-                        style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);">RAM</span>
-                      <span id="selectedRam" style="font-size:13px;color:var(--t1);font-weight:500;">
+                  <div class="mb-5">
+                    <div class="flex items-center justify-between mb-2.5">
+                      <span class="text-[12px] font-semibold uppercase tracking-[0.08em] text-t2">RAM</span>
+                      <span id="selectedRam" class="text-[13px] text-t1 font-medium">
                         <%= defaultVariant ? (defaultVariant.ram || '').trim() : uniqueRams[0] %>
                       </span>
                     </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="ramPills">
+                    <div class="flex gap-2 flex-wrap" id="ramPills">
                       <% uniqueRams.forEach((ram, i) => { %>
                         <button
                           class="variant-pill <%= (defaultVariant && ram.toLowerCase() === (defaultVariant.ram || '').trim().toLowerCase()) ? 'active' : '' %>"
@@ -1149,29 +1159,28 @@
                 <% } %>
 
                     <!-- Qty + CTA -->
-                    <div style="margin-bottom:20px;">
-                      <div
-                        style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);margin-bottom:10px;">
-                        Quantity</div>
-                      <div style="display:flex;align-items:center;gap:0;width:fit-content;margin-bottom:16px;">
+                    <div class="mb-5">
+                      <div class="text-[12px] font-semibold uppercase tracking-[0.08em] text-t2 mb-2.5">Quantity</div>
+                      <div class="flex items-center gap-0 w-fit mb-4">
                         <button class="qty-btn" onclick="adjustQty(-1)">−</button>
                         <div class="qty-display" id="qtyDisplay">1</div>
                         <button class="qty-btn" onclick="adjustQty(1)">+</button>
                       </div>
                       <!-- Stock warning -->
                       <div id="stockWarningContainer"
-                        style="display: <%= (defaultVariant ? defaultVariant.stock : product.stock) > 0 ? 'flex' : 'none' %>; align-items:center; gap:8px; padding:10px 14px; background:<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(34, 197, 94, 0.06)' %>; border:1px solid <%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)' %>; margin-bottom:16px;">
+                        class="items-center gap-2 px-3.5 py-2.5 mb-4 border"
+                        style="display: <%= (defaultVariant ? defaultVariant.stock : product.stock) > 0 ? 'flex' : 'none' %>; background:<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(34, 197, 94, 0.06)' %>; border-color: <%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)' %>;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'var(--danger)' : 'var(--success)' %>" stroke-width="2">
                           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                           <line x1="12" y1="9" x2="12" y2="13" />
                           <line x1="12" y1="17" x2="12.01" y2="17" />
                         </svg>
-                        <span id="stockWarningText" style="font-size:12px; color:<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'var(--danger)' : 'var(--success)' %>; font-weight:500;">
+                        <span id="stockWarningText" class="text-[12px] font-medium" style="color:<%= (defaultVariant ? defaultVariant.stock : product.stock) <= 5 ? 'var(--danger)' : 'var(--success)' %>;">
                            <% const initialStock = (defaultVariant ? defaultVariant.stock : product.stock); %>
                            <%= initialStock <= 5 ? `Hurry! Only ${initialStock} left in stock — order soon` : `${initialStock} units currently available` %>
                         </span>
                       </div>
-                      <button class="btn-primary" style="width:100%;margin-bottom:10px;" onclick="addToCart()">
+                      <button class="btn-primary w-full mb-2.5" onclick="addToCart()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                           stroke-width="2">
                           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -1182,26 +1191,25 @@
                       </button>
                       
                       <% if (product.bestOffer) { %>
-                        <div style="margin: 20px 0; padding: 16px; background: rgba(34, 197, 94, 0.05); border: 1px dashed rgba(34, 197, 94, 0.3);">
-                          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                        <div class="my-5 p-4 bg-success/5 border border-dashed border-success/30">
+                          <div class="flex items-center gap-2 mb-2">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2">
                               <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
                               <line x1="7" y1="7" x2="7.01" y2="7" />
                             </svg>
-                            <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--success);">Active Offer Applied</span>
+                            <span class="text-[11px] font-extrabold uppercase tracking-widest text-success">Active Offer Applied</span>
                           </div>
-                          <p style="font-size:13px; font-weight:700; color:var(--t1); margin-bottom:4px;"><%= product.bestOffer.name %></p>
-                          <p style="font-size:11px; color:var(--t2);"><%= product.bestOffer.discountType === 'percentage' ? product.bestOffer.discountValue + '%' : '₹' + product.bestOffer.discountValue.toLocaleString() %> discount automatically applied at checkout.</p>
+                          <p class="text-[13px] font-bold text-t1 mb-1"><%= product.bestOffer.name %></p>
+                          <p class="text-[11px] text-t2"><%= product.bestOffer.discountType === 'percentage' ? product.bestOffer.discountValue + '%' : '₹' + product.bestOffer.discountValue.toLocaleString() %> discount automatically applied at checkout.</p>
                         </div>
                       <% } %>
 
-                      <button class="btn-secondary" style="width:100%;">Buy Now</button>
+                      <button class="btn-secondary w-full">Buy Now</button>
                     </div>
 
                     <!-- Action row -->
-                    <div style="display:flex;gap:8px;margin-bottom:24px;">
-                      <button class="btn-icon <%= isWishlisted ? 'active' : '' %>" id="wishlistBtn" onclick="toggleWishlist('<%= product._id %>')"
-                        style="flex:1;gap:6px;width:auto;font-size:12px;color:var(--t2);">
+                    <div class="flex gap-2 mb-6">
+                      <button class="btn-icon <%= isWishlisted ? 'active' : '' %> flex-1 gap-1.5 w-auto text-[12px] text-t2" id="wishlistBtn" onclick="toggleWishlist('<%= product._id %>')">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="<%= isWishlisted ? 'currentColor' : 'none' %>" stroke="currentColor"
                           stroke-width="1.8">
                           <path
@@ -1209,7 +1217,7 @@
                         </svg>
                         Wishlist
                       </button>
-                      <button class="btn-icon" style="flex:1;gap:6px;width:auto;font-size:12px;color:var(--t2);">
+                      <button class="btn-icon flex-1 gap-1.5 w-auto text-[12px] text-t2">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                           stroke-width="1.8">
                           <circle cx="18" cy="5" r="3" />

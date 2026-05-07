@@ -24,6 +24,8 @@ import expressEjsLayouts from 'express-ejs-layouts';
 import { setViewLocals } from "./middlewares/viewMiddleware.js";
 import { reclaimStockFromPendingOrders } from "./services/common/orderCleanupService.js";
 import aiRoutes from "./routes/aiRoutes.js";
+import helmet from "helmet";
+
 
 // Run order cleanup every 10 minutes
 setInterval(() => {
@@ -41,6 +43,32 @@ const io = await initSocket(httpServer);
 
 // Make io accessible globally via req if needed
 app.set("io", io);
+
+// Security Middlewares
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            "default-src": ["'self'", "https:", "http:"],
+            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "*.razorpay.com", "cdn.jsdelivr.net", "cdn.tailwindcss.com", "cdnjs.cloudflare.com", "blob:"],
+            "script-src-elem": ["'self'", "'unsafe-inline'", "https:", "http:", "*.razorpay.com", "cdn.jsdelivr.net", "cdn.tailwindcss.com", "cdnjs.cloudflare.com", "blob:"],
+            "script-src-attr": ["'unsafe-inline'"],
+            "style-src": ["'self'", "'unsafe-inline'", "https:", "http:", "fonts.googleapis.com", "cdnjs.cloudflare.com", "cdn.jsdelivr.net", "blob:"],
+            "style-src-attr": ["'unsafe-inline'"],
+            "font-src": ["'self'", "https:", "http:", "fonts.gstatic.com", "cdnjs.cloudflare.com", "data:"],
+            "img-src": ["'self'", "data:", "blob:", "https:", "http:", "res.cloudinary.com", "*.cloudinary.com", "upload.wikimedia.org", "*.razorpay.com"],
+            "connect-src": ["'self'", "https:", "http:", "*.razorpay.com", "cdn.jsdelivr.net", "ws:", "wss:"],
+            "frame-src": ["'self'", "https:", "http:", "*.razorpay.com"],
+            "object-src": ["'none'"],
+            "worker-src": ["'self'", "blob:"],
+            ...(process.env.NODE_ENV === 'production' ? { "upgrade-insecure-requests": [] } : {}),
+        },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+    dnsPrefetchControl: { allow: true },
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+}));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -110,7 +138,7 @@ app.use(setViewLocals);
 
 console.log(process.env.MONGO_URI)
 app.use(morgan('dev'))
-app.use(nocache())
+// Global nocache removed for performance. Keep it only for sensitive routes.
 app.use("/", userRoutes);
 app.use("/api/ai",aiRoutes)
 app.use("/", productRoutes);

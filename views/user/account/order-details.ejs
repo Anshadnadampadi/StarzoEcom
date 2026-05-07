@@ -37,10 +37,10 @@
                     <button onclick="confirmReturn('<%= order._id %>')" class="text-status-warning text-[10px] font-bold tracking-widest uppercase border border-status-warning/30 px-8 py-4 hover:bg-status-warning hover:text-white transition-all">Return Order</button>
                 <% } %>
 
-                <% if (order.orderStatus === 'Pending' && order.paymentMethod === 'ONLINE PAYMENT') { %>
+                <% if ((order.orderStatus === 'Pending' || order.orderStatus === 'Confirmed') && (order.paymentStatus === 'Pending' || order.paymentStatus === 'Failed') && order.paymentMethod === 'ONLINE PAYMENT') { %>
                     <button onclick="retryPayment('<%= order.orderId %>')" 
                         class="bg-accent text-black text-[10px] font-bold tracking-widest uppercase px-10 py-4 hover:bg-white transition-all shadow-[0_0_20px_rgba(255,106,0,0.2)]">
-                        Complete Payment
+                        Retry Payment
                     </button>
                 <% } %>
             </div>
@@ -228,7 +228,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-white/30 text-[9px] uppercase font-bold tracking-widest">Status</span>
-                            <span class="text-[9px] font-bold uppercase tracking-widest <%= order.paymentStatus === 'Paid' ? 'text-status-success' : 'text-status-warning' %>"><%= order.paymentStatus %></span>
+                            <span class="text-[9px] font-bold uppercase tracking-widest <%= order.paymentStatus === 'Paid' ? 'text-status-success' : (order.paymentStatus === 'Failed' ? 'text-status-danger' : 'text-status-warning') %>"><%= order.paymentStatus %></span>
                         </div>
                     </div>
                 </div>

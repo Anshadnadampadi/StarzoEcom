@@ -149,10 +149,16 @@ export const getPaymentFailure = async (req, res) => {
         const orderId = req.query.orderId || 'UNKNOWN';
         const order = await Order.findOne({ orderId, user: req.session.user });
 
+        if (order && order.paymentStatus === 'Pending') {
+            order.paymentStatus = 'Failed';
+            await order.save();
+        }
+
         res.render('user/paymentFailure', {
             title: 'Payment Failed',
             orderId,
             order: order || null,
+            razorpayKeyId: process.env.RAZORPAY_KEY_ID,
             hideAiChat: true
         });
     } catch (error) {

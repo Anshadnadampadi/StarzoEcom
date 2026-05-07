@@ -47,8 +47,8 @@ export const setViewLocals = async (req, res, next) => {
                 wishlistService.getWishlistCount(req.session.user)
             ]);
 
-            if (cart?.items?.length) {
-                res.locals.cartCount = cart.items.length;
+            if (cart?.items) {
+                res.locals.cartCount = cart.items.reduce((sum, item) => sum + (item.qty || 1), 0);
             }
 
             if (wishlistCountResult > 0) {

@@ -164,11 +164,11 @@
                     <p class="text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Inventory</p>
                     <a href="/cart" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic flex justify-between items-center group hover:text-accent transition-colors">
                         Cart
-                        <span class="text-[10px] bg-accent text-black px-2.5 py-1 rounded-sm font-black tracking-tighter"><%= typeof cartCount !== 'undefined' ? cartCount : 0 %></span>
+                        <span id="cart-badge-mobile" class="text-[10px] bg-accent text-black px-2.5 py-1 rounded-sm font-black tracking-tighter"><%= typeof cartCount !== 'undefined' ? cartCount : 0 %></span>
                     </a>
                     <a href="/wishlist" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic flex justify-between items-center group hover:text-accent transition-colors">
                         Wishlist
-                        <span class="text-[10px] bg-accent text-black px-2.5 py-1 rounded-sm font-black tracking-tighter"><%= typeof wishlistCount !== 'undefined' ? wishlistCount : 0 %></span>
+                        <span id="wishlist-badge-mobile" class="text-[10px] bg-accent text-black px-2.5 py-1 rounded-sm font-black tracking-tighter"><%= typeof wishlistCount !== 'undefined' ? wishlistCount : 0 %></span>
                     </a>
                 </div>
             </div>

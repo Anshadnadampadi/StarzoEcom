@@ -31,7 +31,7 @@
             
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
                 <span class="text-white/40 text-xs font-semibold uppercase tracking-wider">Payment Status</span>
-                <span class="text-status-danger font-bold text-xs uppercase tracking-widest">Failed / Pending</span>
+                <span class="text-status-danger font-bold text-xs uppercase tracking-widest"><%= order.paymentStatus || 'Failed' %></span>
             </div>
             
             <div class="flex justify-between items-center">
@@ -95,7 +95,7 @@
                     
                     if (data.success) {
                         const options = {
-                            key: '<%= process.env.RAZORPAY_KEY_ID %>',
+                            key: '<%= typeof razorpayKeyId !== "undefined" ? razorpayKeyId : "" %>',
                             amount: data.razorpayOrder.amount,
                             currency: data.razorpayOrder.currency,
                             name: 'Starzo Mobiles',

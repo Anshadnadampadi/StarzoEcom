@@ -368,6 +368,15 @@
         }
 
         async function updateQty(itemId, change) {
+            const itemDiv = document.getElementById('item-' + itemId);
+            if (!itemDiv) return;
+
+            const qtyContainer = itemDiv.querySelector('.flex.items-center.border');
+            const btns = qtyContainer.querySelectorAll('button');
+            
+            // Add loading state
+            qtyContainer.classList.add('opacity-50', 'pointer-events-none');
+            
             try {
                 const res = await fetch('/cart/update-qty', {
                     method: 'POST',
@@ -375,14 +384,12 @@
                     body: JSON.stringify({ itemId, change })
                 });
                 const data = await res.json();
-                console.log('Update Qty Response:', data);
 
                 if (data && data.success) {
-                    const itemDiv = document.getElementById('item-' + itemId);
+                    // Update Item UI
                     itemDiv.querySelector('.qty').textContent = data.newQty;
-                    
                     const priceEl = document.getElementById('item-total-' + itemId);
-                    priceEl.textContent = `₹${(data.itemTotal || 0).toLocaleString()}`;
+                    if (priceEl) priceEl.textContent = `₹${(data.itemTotal || 0).toLocaleString()}`;
 
                     // Update Alpine state
                     const alpineNode = document.getElementById('cart-container');
@@ -390,19 +397,29 @@
                         const alpineData = Alpine.$data(alpineNode);
                         alpineData.subtotal = data.cartSubtotal || 0;
                         alpineData.discount = data.cartDiscount || 0;
-                        
                         alpineData.updateItemBadge(itemId, data.itemStatus);
                         alpineData.updateCheckoutUI(data.hasIssues);
                     }
-                } 
-                else {
+
+                    // Update Navigation Badges (All instances)
+                    const badgeIds = ['cart-badge', 'cart-badge-mobile'];
+                    badgeIds.forEach(id => {
+                        const b = document.getElementById(id);
+                        if (b) {
+                            b.textContent = data.cartCount;
+                            b.classList.toggle('hidden', data.cartCount === 0);
+                        }
+                    });
+                } else {
                     const errorMsg = (data && data.message) ? data.message : 'Error updating quantity';
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: errorMsg, type: 'error' } }));
                 }
             } catch (err) {
                 console.error('Update Qty Error:', err);
-                const toastMsg = err.name === 'SyntaxError' ? 'Invalid server response' : 'Server connection failed';
-                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: toastMsg, type: 'error' } }));
+                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Server connection failed', type: 'error' } }));
+            } finally {
+                // Remove loading state
+                qtyContainer.classList.remove('opacity-50', 'pointer-events-none');
             }
         }
 
@@ -436,6 +453,13 @@
                             alpineData.discount = data.cartDiscount || 0;
                             
                             alpineData.updateCheckoutUI(data.hasIssues);
+                        }
+
+                        // Update Navigation Badge
+                        const badge = document.getElementById('cart-badge');
+                        if (badge && data.cartCount !== undefined) {
+                            badge.textContent = data.cartCount;
+                            badge.classList.toggle('hidden', data.cartCount === 0);
                         }
                     }
                 } else {
@@ -477,10 +501,11 @@
 
       const data = await res.json();
 
-      showT(data.message);
-
-      // update UI without reload
-      document.getElementById("cartContainer").innerHTML = "<p>Cart is empty</p>";
+      if (data.success) {
+          window.location.reload();
+      } else {
+          window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Error clearing cart', type: 'error' } }));
+      }
 
     } catch (error) {
       console.error("Error:", error);

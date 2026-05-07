@@ -155,9 +155,19 @@
 												statusText = 'Shipped';
 												subText = 'Your item is on the way';
 											} else if (itemStatus === 'ordered' || itemStatus === 'pending') {
-												dotColor = 'bg-status-warning';
-												statusText = order.paymentStatus === 'Pending' ? 'Pending Payment' : 'Ordered';
-												subText = order.paymentStatus === 'Pending' ? 'Payment is awaiting completion' : 'Your order has been placed';
+												if (order.paymentStatus === 'Failed') {
+													dotColor = 'bg-status-danger';
+													statusText = 'Payment Failed';
+													subText = 'Transaction failed. Please retry to confirm order.';
+												} else if (order.paymentStatus === 'Pending') {
+													dotColor = 'bg-status-warning';
+													statusText = 'Pending Payment';
+													subText = 'Payment is awaiting completion';
+												} else {
+													dotColor = 'bg-status-warning';
+													statusText = 'Ordered';
+													subText = 'Your order has been placed';
+												}
 											}
 										%>
 
@@ -198,10 +208,10 @@
 													</div>
 													<p class="text-white/40 text-[9px] md:pl-5 mb-3"><%= subText %></p>
 													
-													<% if (order.orderStatus === 'Pending' && order.paymentMethod === 'ONLINE PAYMENT') { %>
+													<% if ((order.orderStatus === 'Pending' || order.orderStatus === 'Confirmed') && (order.paymentStatus === 'Pending' || order.paymentStatus === 'Failed') && order.paymentMethod === 'ONLINE PAYMENT') { %>
 														<button onclick="event.preventDefault(); retryPayment('<%= order.orderId %>')" 
 															class="md:ml-5 px-4 py-2 bg-accent text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_15px_rgba(255,106,0,0.2)]">
-															Complete Payment
+															Retry Payment
 														</button>
 													<% } %>
 												</div>

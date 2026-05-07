@@ -383,11 +383,21 @@ export const cleanupAbandonedOrders = async () => {
     const abandonedOrders = await Order.find({
         orderStatus: 'Pending',
         paymentMethod: 'ONLINE PAYMENT',
+        $or: [
+            { paymentStatus: 'Pending' },
+            { paymentStatus: 'Failed' }
+        ],
         createdAt: { $lt: oneHourAgo }
     });
 
-    console.log(`[CRON] Cleaning up ${abandonedOrders.length} abandoned orders...`);
-    for (const order of abandonedOrders) {
-        await revertFailedOrderService(order.orderId, order.user);
+    if (abandonedOrders.length > 0) {
+        console.log(`[CRON] Cleaning up ${abandonedOrders.length} abandoned/failed online orders...`);
+        for (const order of abandonedOrders) {
+            try {
+                await revertFailedOrderService(order.orderId, order.user);
+            } catch (err) {
+                console.error(`[CRON] Failed to revert order ${order.orderId}:`, err);
+            }
+        }
     }
 };

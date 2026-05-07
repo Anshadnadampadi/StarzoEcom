@@ -270,7 +270,7 @@ export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => 
 
     const wishlist = await Wishlist.findOne({ userId });
     return {
-        cartCount: cart.items.length,
+        cartCount: cart.items.reduce((sum, item) => sum + item.qty, 0),
         wishlistCount: wishlist ? wishlist.items.length : 0
     };
 };
@@ -359,11 +359,12 @@ export const updateItemQty = async (userId, { itemId, change }) => {
     });
 
     return {
+        newQty: item.qty,
         itemTotal: item.price * item.qty,
         cartSubtotal: totals.subtotal,
         cartDiscount: totals.discount,
         cartFinalAmount: totals.finalAmount,
-        cartCount: cart.items.length,
+        cartCount: cart.items.reduce((sum, i) => sum + i.qty, 0),
         itemStatus: {
             isUnavailable: !item.product || item.product.isBlocked || !item.product.isListed,
             isOutOfStock: stock <= 0,
@@ -406,7 +407,7 @@ export const removeItem = async (userId, itemId) => {
         cartSubtotal: totals.subtotal,
         cartDiscount: totals.discount,
         cartFinalAmount: totals.finalAmount,
-        cartCount: cart.items.length,
+        cartCount: cart.items.reduce((sum, i) => sum + i.qty, 0),
         isEmpty: cart.items.length === 0,
         hasIssues
     };

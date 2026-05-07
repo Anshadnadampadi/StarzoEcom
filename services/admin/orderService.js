@@ -63,6 +63,40 @@ export const getOrdersService = async (search, status, page, limit) => {
     return { orders, stats, totalPages, totalOrders };
 };
 
+/**
+ * Synchronizes the overall order status based on individual item statuses.
+ */
+const _syncOrderStatus = (order) => {
+    const items = order.items;
+    const allItemsTerminal = items.every(i => i.status === 'Returned' || i.status === 'Cancelled');
+    const anyItemReturned = items.some(i => i.status === 'Returned');
+    const anyItemPicked = items.some(i => i.status === 'Return Picked');
+    const anyItemRequested = items.some(i => i.status === 'Return Requested');
+    const anyItemApproved = items.some(i => i.status === 'Return Approved');
+    const anyItemCancelled = items.some(i => i.status === 'Cancelled');
+    const allItemsCancelled = items.every(i => i.status === 'Cancelled');
+
+    if (allItemsCancelled) {
+        order.orderStatus = 'Cancelled';
+    } else if (allItemsTerminal) {
+        order.orderStatus = 'Returned';
+        order.paymentStatus = 'Refunded';
+    } else if (anyItemRequested) {
+        order.orderStatus = 'Return Requested';
+    } else if (anyItemApproved) {
+        order.orderStatus = 'Return Approved';
+    } else if (anyItemPicked) {
+        order.orderStatus = 'Return Picked';
+    } else if (anyItemReturned) {
+        order.orderStatus = 'Partially Returned';
+    } else if (anyItemCancelled) {
+        // If some are cancelled but others are Delivered/Ordered, the order status 
+        // usually follows the non-terminal items' logistics flow.
+        // But we don't have "Partially Cancelled". 
+        // We'll let it stay at its current logistics stage (Delivered, Shipped, etc.)
+    }
+};
+
 export const updateOrderStatusService = async (orderId, status) => {
     const order = await Order.findById(orderId);
     if (!order) return { success: false, message: 'Order not found', status: 404 };
@@ -93,10 +127,11 @@ export const updateOrderStatusService = async (orderId, status) => {
          return { success: false, message: 'Delivered orders cannot be moved back to logistics stages.', status: 400 };
     }
 
-    if (status === 'Delivered' && order.paymentMethod !== 'CASH ON DELIVERY' && order.paymentStatus !== 'Paid') {
+    const logisticsStages = ['Confirmed', 'Processing', 'Shipped', 'Delivered'];
+    if (logisticsStages.includes(status) && order.paymentMethod === 'ONLINE PAYMENT' && order.paymentStatus !== 'Paid') {
         return { 
             success: false, 
-            message: `CRITICAL: Payment is ${order.paymentStatus} for this ${order.paymentMethod} order. Mark as Paid first or verify transaction.`,
+            message: `ACCESS DENIED: Order #${order.orderId} has not been paid. Online payments must be 'Paid' before advancing to ${status}.`,
             status: 400 
         };
     }
@@ -117,9 +152,11 @@ export const updateOrderStatusService = async (orderId, status) => {
             if (['Return Requested', 'Return Approved', 'Return Picked', 'Returned'].includes(status)) {
                 if (status === 'Return Requested' && item.status === 'Delivered') {
                     item.status = 'Return Requested';
-                } else if (['Return Approved', 'Return Picked'].includes(status) && item.status === 'Return Requested') {
+                } else if (status === 'Return Approved' && item.status === 'Return Requested') {
                     item.status = 'Return Approved';
-                } else if (status === 'Returned' && ['Return Approved', 'Return Picked', 'Return Requested'].includes(item.status)) {
+                } else if (status === 'Return Picked' && (item.status === 'Return Requested' || item.status === 'Return Approved')) {
+                    item.status = 'Return Picked';
+                } else if (status === 'Returned' && ['Return Requested', 'Return Approved', 'Return Picked'].includes(item.status)) {
                     item.status = 'Returned';
                 }
             } else if (statusMap[status]) {
@@ -143,6 +180,11 @@ export const updateOrderStatusService = async (orderId, status) => {
     
     if (status === 'Delivered' && order.paymentMethod === 'CASH ON DELIVERY') {
         order.paymentStatus = 'Paid';
+    }
+
+    // Smart status synchronization for returns/cancellations
+    if (['Cancelled', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned'].includes(status)) {
+        _syncOrderStatus(order);
     }
 
     if (newlyTerminalItems.length > 0) {
@@ -244,26 +286,7 @@ export const updateItemReturnStatusService = async (orderId, itemId, status) => 
         }
     }
 
-    const allItemsTerminal = order.items.every(i => i.status === 'Returned' || i.status === 'Cancelled');
-    const anyItemReturned = order.items.some(i => i.status === 'Returned');
-    const anyItemPicked = order.items.some(i => i.status === 'Return Picked');
-    const anyItemRequested = order.items.some(i => i.status === 'Return Requested');
-    const anyItemApproved = order.items.some(i => i.status === 'Return Approved');
-    
-    if (allItemsTerminal) {
-        order.orderStatus = 'Returned';
-        order.paymentStatus = 'Refunded';
-    } else if (anyItemRequested) {
-        order.orderStatus = 'Return Requested';
-    } else if (anyItemApproved) {
-        order.orderStatus = 'Return Approved';
-    } else if (anyItemPicked) {
-        order.orderStatus = 'Return Picked';
-    } else if (anyItemReturned) {
-        order.orderStatus = 'Partially Returned';
-    } else {
-        order.orderStatus = 'Delivered';
-    }
+    _syncOrderStatus(order);
 
     await recalculateOrderTotals(order);
     await order.save();
