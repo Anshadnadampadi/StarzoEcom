@@ -7,14 +7,17 @@ import Offer from '../../models/offer/offer.js';
 export const getBestOfferForProduct = async (product) => {
     const now = new Date();
     
+    const prodId = product._id;
+    const catId = product.category?._id || product.category;
+
     // Find active offers for this product or its category
     const offers = await Offer.find({
         isActive: true,
         expiryDate: { $gt: now },
         startDate: { $lte: now },
         $or: [
-            { type: 'Product', productId: product._id },
-            { type: 'Category', categoryId: product.category }
+            { type: 'Product', productIds: prodId },
+            { type: 'Category', categoryIds: catId }
         ]
     });
 
@@ -31,13 +34,22 @@ export const getBestOfferForProduct = async (product) => {
             discount = offer.discountValue;
         }
 
+        // Apply cap if defined (now for both percentage and fixed)
+        if (offer.maxDiscountAmount && discount > offer.maxDiscountAmount) {
+            discount = offer.maxDiscountAmount;
+        }
+
         if (discount > bestDiscount) {
             bestDiscount = discount;
             bestOffer = offer;
         }
     });
 
-    const discountedPrice = Math.max(0, product.price - bestDiscount);
+    // Ensure price doesn't drop to 0 or negative. 
+    // Absolute minimum is ₹1, but we should also cap total discount at 95% of original price as a safety net.
+    const maxSafetyDiscount = product.price * 0.95;
+    const finalDiscount = Math.min(bestDiscount, maxSafetyDiscount);
+    const discountedPrice = Math.max(1, product.price - finalDiscount);
     
     return {
         bestOffer,
@@ -62,8 +74,8 @@ export const applyOffersToProducts = async (products) => {
         const catId = product.category?._id?.toString() || product.category?.toString();
 
         const relevantOffers = activeOffers.filter(offer => 
-            (offer.type === 'Product' && offer.productId && offer.productId.toString() === prodId) ||
-            (offer.type === 'Category' && offer.categoryId && offer.categoryId.toString() === catId)
+            (offer.type === 'Product' && offer.productIds && offer.productIds.some(id => id.toString() === prodId)) ||
+            (offer.type === 'Category' && offer.categoryIds && offer.categoryIds.some(id => id.toString() === catId))
         );
 
         let bestDiscount = 0;
@@ -77,13 +89,21 @@ export const applyOffersToProducts = async (products) => {
                 discount = offer.discountValue;
             }
 
+            // Apply cap if defined
+            if (offer.maxDiscountAmount && discount > offer.maxDiscountAmount) {
+                discount = offer.maxDiscountAmount;
+            }
+
             if (discount > bestDiscount) {
                 bestDiscount = discount;
                 bestOffer = offer;
             }
         });
 
-        const discountedPrice = Math.max(0, product.price - bestDiscount);
+        // Ensure price doesn't drop to 0 or negative
+        const maxSafetyDiscount = product.price * 0.95;
+        const finalDiscount = Math.min(bestDiscount, maxSafetyDiscount);
+        const discountedPrice = Math.max(1, product.price - finalDiscount);
         
         return {
             ...product,

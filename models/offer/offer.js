@@ -21,16 +21,19 @@ const offerSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    productId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
-        default: null
+    maxDiscountAmount: {
+        type: Number,
+        default: null,
+        min: 0
     },
-    categoryId: {
+    productIds: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category',
-        default: null
-    },
+        ref: 'Product'
+    }],
+    categoryIds: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category'
+    }],
     startDate: {
         type: Date,
         required: true,
@@ -46,13 +49,13 @@ const offerSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// Ensure either productId or categoryId is provided based on type
-offerSchema.pre('save', function() {
-    if (this.type === 'Product' && !this.productId) {
-        throw new Error('Product ID is required for Product offer');
+// Ensure either productIds or categoryIds are provided based on type
+offerSchema.pre('save', async function() {
+    if (this.type === 'Product' && (!this.productIds || this.productIds.length === 0)) {
+        throw new Error('At least one Product ID is required for Product offer');
     }
-    if (this.type === 'Category' && !this.categoryId) {
-        throw new Error('Category ID is required for Category offer');
+    if (this.type === 'Category' && (!this.categoryIds || this.categoryIds.length === 0)) {
+        throw new Error('At least one Category ID is required for Category offer');
     }
 });
 

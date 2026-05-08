@@ -113,9 +113,10 @@
                                     <td class="px-8 py-8">
                                         <div class="flex items-center gap-6">
                                             <% 
-                                                const productTitle = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
-                                                let productImg = '/images/placeholder.png';
-                                                if (item.product && item.product.variants && item.product.variants.length > 0) {
+                                                const productTitle = item.productName || (item.product && item.product.name) || 'Product Unavailable';
+                                                let productImg = item.productImage || '/images/placeholder.png';
+                                                
+                                                if (!item.productImage && item.product && item.product.variants && item.product.variants.length > 0) {
                                                     const targetVar = item.variant || {};
                                                     const matchedVariant = item.product.variants.find(v => 
                                                         (!targetVar.color || v.color === targetVar.color) && 
@@ -298,10 +299,8 @@
             if(data.success) {
                 dispatchGlobalToast('success', 'Payment Verified', 'Your order is now confirmed.');
                 
-                const res = await fetch(window.location.href);
-                const html = await res.text();
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
+                // Full reload to ensure header cart badge is updated
+                setTimeout(() => window.location.reload(), 1000);
             } else {
                 throw new Error(data.message || 'Payment verification failed.');
             }

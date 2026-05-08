@@ -106,27 +106,64 @@ export const placeOrderService = async (userId, orderData) => {
     let totalAmount = Math.max(0, subtotal + tax + shippingFee - discount);
     const orderId = `ORD-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-    // Reduce stock
+    // 1. Pre-validate stock for ALL items to ensure atomic reservation
     for (const item of cart.items) {
         const product = await Product.findById(item.product._id);
-        if (product) {
-            if (item.variant && product.variants.length > 0) {
-                const variantIndex = product.variants.findIndex(v => isSameVariant(v, item.variant));
-                if (variantIndex > -1) {
-                    if (product.variants[variantIndex].stock >= item.qty) {
-                        product.variants[variantIndex].stock -= item.qty;
-                    } else {
-                        throw new Error(`Insufficient stock for ${product.name}`);
-                    }
-                }
-            } else {
-                if (product.stock >= item.qty) {
-                    product.stock -= item.qty;
+        if (!product) continue;
+
+        let availableStock = 0;
+        let identifier = product.name;
+
+        if (item.variant && product.variants.length > 0) {
+            const variant = product.variants.find(v => isSameVariant(v, item.variant));
+            if (variant) {
+                availableStock = (variant.stock || 0) - (variant.reservedStock || 0);
+                identifier = `${product.name} (${variant.color} ${variant.storage})`;
+            }
+        } else {
+            availableStock = (product.stock || 0) - (product.reservedStock || 0);
+        }
+
+        if (availableStock < item.qty) {
+            return { 
+                success: false, 
+                message: `Insufficient stock for ${identifier}. Available: ${availableStock}`, 
+                status: 400 
+            };
+        }
+    }
+
+    // 2. Reserve stock first
+    for (const item of cart.items) {
+        const product = await Product.findById(item.product._id);
+        if (!product) continue;
+
+        if (item.variant && product.variants.length > 0) {
+            const variantIndex = product.variants.findIndex(v => isSameVariant(v, item.variant));
+            if (variantIndex > -1) {
+                const variant = product.variants[variantIndex];
+                const availableStock = (variant.stock || 0) - (variant.reservedStock || 0);
+                if (availableStock >= item.qty) {
+                    variant.reservedStock = (variant.reservedStock || 0) + item.qty;
                 } else {
-                    throw new Error(`Insufficient stock for ${product.name}`);
+                    return { success: false, message: `Insufficient stock for ${product.name} (${variant.color} ${variant.storage})`, status: 400 };
                 }
             }
-            await product.save();
+        } else {
+            const availableStock = (product.stock || 0) - (product.reservedStock || 0);
+            if (availableStock >= item.qty) {
+                product.reservedStock = (product.reservedStock || 0) + item.qty;
+            } else {
+                return { success: false, message: `Insufficient stock for ${product.name}`, status: 400 };
+            }
+        }
+        await product.save();
+    }
+
+    // 2. If immediate payment (COD/Wallet), finalize the stock reduction right away
+    if (paymentMethod !== 'ONLINE PAYMENT') {
+        for (const item of cart.items) {
+            await finalizeStockSale(item.product._id, item.variant, item.qty);
         }
     }
 
@@ -151,6 +188,8 @@ export const placeOrderService = async (userId, orderData) => {
         user: userId,
         items: cart.items.map(item => ({
             product: item.product._id,
+            productName: item.product.name,
+            productImage: item.displayImage,
             variant: item.variant,
             qty: item.qty,
             price: item.price
@@ -260,6 +299,11 @@ export const verifyPaymentService = async (paymentData) => {
             order.razorpaySignature = razorpay_signature;
             await order.save();
 
+            // Finalize Stock (Convert reservation to sale)
+            for (const item of order.items) {
+                await finalizeStockSale(item.product, item.variant, item.qty);
+            }
+
             // Clear Cart
             await cartService.clearCart(order.user);
 
@@ -323,17 +367,17 @@ export const revertFailedOrderService = async (orderId, userId) => {
         return { success: true, message: 'Order already processed or not found.' };
     }
 
-    // Restore stock
+    // Release reserved stock
     for (const item of order.items) {
         const product = await Product.findById(item.product);
         if (product) {
             if (item.variant) {
                 const variantIndex = product.variants.findIndex(v => isSameVariant(v, item.variant));
                 if (variantIndex > -1) {
-                    product.variants[variantIndex].stock += item.qty;
+                    product.variants[variantIndex].reservedStock = Math.max(0, (product.variants[variantIndex].reservedStock || 0) - item.qty);
                 }
             } else {
-                product.stock += item.qty;
+                product.reservedStock = Math.max(0, (product.reservedStock || 0) - item.qty);
             }
             await product.save();
         }
@@ -401,3 +445,23 @@ export const cleanupAbandonedOrders = async () => {
         }
     }
 };
+/**
+ * Helper to convert a stock reservation into a permanent sale
+ * Decrements both physical stock and reserved stock
+ */
+async function finalizeStockSale(productId, variant, qty) {
+    const product = await Product.findById(productId);
+    if (!product) return;
+
+    if (variant && product.variants.length > 0) {
+        const variantIndex = product.variants.findIndex(v => isSameVariant(v, variant));
+        if (variantIndex > -1) {
+            product.variants[variantIndex].stock -= qty;
+            product.variants[variantIndex].reservedStock = Math.max(0, (product.variants[variantIndex].reservedStock || 0) - qty);
+        }
+    } else {
+        product.stock -= qty;
+        product.reservedStock = Math.max(0, (product.reservedStock || 0) - qty);
+    }
+    await product.save();
+}

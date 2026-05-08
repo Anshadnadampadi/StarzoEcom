@@ -28,9 +28,11 @@ export const applyCouponService = async (userId, codeOrId) => {
         throw new Error("Coupon usage limit reached");
     }
 
-    // Check if user already used
-    if (coupon.usedBy.some(id => id.toString() === userId.toString())) {
-        throw new Error("You already used this coupon");
+    // Check per-user limit
+    const userUsageCount = coupon.usedBy.filter(id => id.toString() === userId.toString()).length;
+    const perUserLimit = coupon.perUserLimit || 1;
+    if (userUsageCount >= perUserLimit) {
+        throw new Error(perUserLimit === 1 ? "You already used this coupon" : `You've used this coupon ${userUsageCount}/${perUserLimit} times`);
     }
 
     // Get cart

@@ -334,7 +334,10 @@
                         const v = this.formData;
                         this.formErrors[field] = '';
                         if (field === "code" && !/^[A-Z0-9]{4,15}$/.test(v.code)) this.formErrors.code = "4-15 Alphanumeric";
-                        if (field === "discountValue" && (!v.discountValue || v.discountValue <= 0)) this.formErrors.discountValue = "Invalid value";
+                        if (field === "discountValue") {
+                            if (!v.discountValue || v.discountValue <= 0) this.formErrors.discountValue = "Invalid value";
+                            else if (v.discountType === 'percentage' && v.discountValue > 90) this.formErrors.discountValue = "Offer percentage too high";
+                        }
                         if (field === "minAmount" && (v.discountType === "fixed" && Number(v.discountValue) >= Number(v.minAmount))) {
                             this.formErrors.minAmount = "Must be > Discount";
                         }

@@ -1,0 +1,170 @@
+<!-- views/admin/returns.ejs -->
+<%- contentFor('body') %>
+
+    <style>
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .dashboard-card:hover {
+            border-color: rgba(255, 106, 0, 0.2);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+
+    <div class="space-y-10">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">RETURN MANAGEMENT.</h1>
+            <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Process and track customer return requests</p>
+        </div>
+
+        <!-- Stats summary -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="dashboard-card p-6 flex items-center gap-6 bg-white/[0.04]">
+                <div class="stat-icon bg-status-warning/20 text-status-warning">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">New Requests</p>
+                    <p class="text-2xl font-bold text-white"><%= stats.requested %></p>
+                </div>
+            </div>
+
+            <div class="dashboard-card p-6 flex items-center gap-6">
+                <div class="stat-icon bg-status-info/20 text-status-info">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Approved</p>
+                    <p class="text-2xl font-bold text-white"><%= stats.approved %></p>
+                </div>
+            </div>
+
+            <div class="dashboard-card p-6 flex items-center gap-6">
+                <div class="stat-icon bg-status-success/20 text-status-success">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div>
+                    <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Completed</p>
+                    <p class="text-2xl font-bold text-white"><%= stats.completed %></p>
+                </div>
+            </div>
+
+            <div class="dashboard-card p-6 flex items-center gap-6">
+                <div class="stat-icon bg-accent/20 text-accent">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </div>
+                <div>
+                    <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Total Returns</p>
+                    <p class="text-2xl font-bold text-white"><%= totalReturns %></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-black-surface border border-white/5 p-6 flex flex-col lg:flex-row justify-between items-center gap-6">
+            <div class="w-full lg:w-1/2">
+                <form action="/admin/returns" method="GET" class="flex gap-2">
+                    <div class="relative group flex-1">
+                        <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-white/20">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" 
+                               placeholder="Search Order ID / Product / Customer..." 
+                               class="w-full bg-black border border-white/10 px-10 py-3 text-[10px] text-white placeholder:text-white/20 focus:border-accent focus:outline-none transition-all uppercase tracking-widest font-mono">
+                    </div>
+                    <button type="submit" class="bg-white text-black px-8 py-3 text-[10px] font-black tracking-[0.2em] uppercase hover:bg-accent transition-all shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                        FIND
+                    </button>
+                </form>
+            </div>
+
+            <div class="w-full lg:w-auto flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Status:</span>
+                    <div class="flex gap-1">
+                        <% ['all', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned', 'Return Rejected'].forEach(s => { %>
+                            <a href="/admin/returns?status=<%= s %><%= search ? '&search=' + search : '' %>" 
+                               class="px-4 py-2 text-[9px] font-bold uppercase tracking-widest transition-all border <%= (typeof status !== 'undefined' && status === s) || (s === 'all' && !status) ? 'bg-white text-black border-white' : 'bg-white/5 text-white/40 border-white/5 hover:border-white/20 hover:text-white' %>">
+                                <%= s.replace('Return ', '') %>
+                            </a>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-black-surface border border-white/5 overflow-hidden">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-white/[0.02] border-b border-white/5">
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Order ID</th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Customer</th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Total Amount</th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Payment</th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30">Status</th>
+                        <th class="px-8 py-6 text-[10px] font-bold tracking-widest uppercase text-white/30 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    <% returns.forEach(order=> { %>
+                        <tr class="hover:bg-white/[0.01] transition-colors">
+                            <td class="px-8 py-6">
+                                <span class="text-white font-mono text-xs font-bold tracking-wider">#<%= order.orderId %></span>
+                                <p class="text-white/20 text-[8px] uppercase mt-1">
+                                    Last Updated: <%= new Date(order.updatedAt).toLocaleString() %>
+                                </p>
+                            </td>
+                            <td class="px-8 py-6">
+                                <p class="text-white text-xs font-bold uppercase">
+                                    <%= (order.user.firstName || order.user.name || order.user.email.split('@')[0]) %> <%= (order.user.lastName || '' ) %>
+                                </p>
+                                <p class="text-white/30 text-[9px] tracking-wider truncate w-40">
+                                    <%= order.user.email %>
+                                </p>
+                            </td>
+                            <td class="px-8 py-6 text-white font-mono text-sm font-bold">
+                                ₹<%= order.totalAmount.toLocaleString() %>
+                            </td>
+                            <td class="px-8 py-6">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[9px] font-bold uppercase tracking-widest <%= order.paymentStatus === 'Paid' ? 'text-status-success' : 'text-status-warning' %>">
+                                        <%= order.paymentStatus %>
+                                    </span>
+                                    <span class="text-[8px] text-white/20 uppercase">(<%= order.paymentMethod %>)</span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-6">
+                                <%- include('../partials/status-badge.ejs', { status: order.orderStatus }) %>
+                            </td>
+                            <td class="px-8 py-6 text-right">
+                                <a href="/admin/orders/<%= order._id %>"
+                                    class="bg-white/5 border border-white/10 text-white text-[9px] font-bold tracking-widest uppercase px-6 py-2.5 hover:bg-white/10 transition-all rounded-sm inline-block">Manage</a>
+                            </td>
+                        </tr>
+                        <% }) %>
+                        <% if (returns.length === 0) { %>
+                            <tr>
+                                <td colspan="6" class="px-8 py-20 text-center">
+                                    <p class="text-white/20 text-[10px] font-bold uppercase tracking-[0.2em]">No return requests found</p>
+                                </td>
+                            </tr>
+                        <% } %>
+                </tbody>
+            </table>
+        </div>
+        <%- include('../partials/pagination.ejs', { currentPage, totalPages, query }) %>
+    </div>

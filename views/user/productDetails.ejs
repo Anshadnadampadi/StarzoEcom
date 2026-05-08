@@ -1038,7 +1038,17 @@
                   } else {
                       discount = product.bestOffer.discountValue;
                   }
-                  initialDiscounted = Math.floor(Math.max(0, initialPrice - discount));
+
+                  // Apply cap if defined
+                  if (product.bestOffer.maxDiscountAmount && discount > product.bestOffer.maxDiscountAmount) {
+                      discount = product.bestOffer.maxDiscountAmount;
+                  }
+
+                  // Safety net: Max 95% discount
+                  const maxSafety = initialPrice * 0.95;
+                  discount = Math.min(discount, maxSafety);
+
+                  initialDiscounted = Math.floor(Math.max(1, initialPrice - discount));
               }
             %>
             <span class="font-mono" style="font-size:34px;font-weight:700;color:var(--t1);" id="productPrice">₹<%= initialDiscounted.toLocaleString() %></span>
@@ -1832,7 +1842,17 @@
             } else {
                 discount = offer.discountValue;
             }
-            finalPrice = Math.floor(Math.max(0, match.price - discount));
+
+            // Apply cap if defined
+            if (offer.maxDiscountAmount && discount > offer.maxDiscountAmount) {
+                discount = offer.maxDiscountAmount;
+            }
+
+            // Safety net: Max 95% discount
+            const maxSafety = match.price * 0.95;
+            discount = Math.min(discount, maxSafety);
+
+            finalPrice = Math.floor(Math.max(1, match.price - discount));
             
             // If it's a 0% offer but product.hasOffer was true (maybe it was just discountedPrice set), 
             // we should still respect the discountedPrice if we don't have bestOffer details.

@@ -118,9 +118,10 @@
 									%>
 									<% filteredItems.forEach(item => { %>
 										<% 
-											const productTitle = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
-											let productImg = '/images/placeholder.png';
-											if (item.product && item.product.variants && item.product.variants.length > 0) {
+											const productTitle = item.productName || (item.product && item.product.name) || 'Product Unavailable';
+											let productImg = item.productImage || '/images/placeholder.png';
+											
+											if (!item.productImage && item.product && item.product.variants && item.product.variants.length > 0) {
 												const targetVar = item.variant || {};
 												const matchedVariant = item.product.variants.find(v => 
 													(!targetVar.color || v.color === targetVar.color) && 

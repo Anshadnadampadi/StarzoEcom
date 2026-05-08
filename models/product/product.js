@@ -22,6 +22,11 @@ const productSchema = new mongoose.Schema({
         default: 0
     },
 
+    reservedStock: {
+        type: Number,
+        default: 0
+    },
+
     price: {
         type: Number,
         default: 0
@@ -72,6 +77,10 @@ const productSchema = new mongoose.Schema({
             type: Number,
             default: 0
         },
+        reservedStock: {
+            type: Number,
+            default: 0
+        },
         images: [String],
 
         
@@ -93,9 +102,12 @@ productSchema.pre('save', async function() {
         const activeVariants = this.variants.filter(v => !v.isDeleted);
         if (activeVariants.length > 0) {
             this.price = activeVariants[0].price;
-            this.stock = activeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+            // Physical stock minus reserved stock = available stock shown to users
+            this.reservedStock = activeVariants.reduce((sum, v) => sum + (v.reservedStock || 0), 0);
+            this.stock = activeVariants.reduce((sum, v) => sum + (v.stock || 0) - (v.reservedStock || 0), 0);
         } else {
             this.stock = 0;
+            this.reservedStock = 0;
         }
     }
 });

@@ -11,6 +11,10 @@ const orderSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    orderDate: {
+        type: Date,
+        default: Date.now
+    },
     items: [{
         product: {
             type: mongoose.Schema.Types.ObjectId,
@@ -19,6 +23,13 @@ const orderSchema = new mongoose.Schema({
         },
         variant: {
             type: mongoose.Schema.Types.Mixed // Can be object with storage, color, ram or just a string
+        },
+        productName: {
+            type: String,
+            required: true
+        },
+        productImage: {
+            type: String
         },
         qty: {
             type: Number,

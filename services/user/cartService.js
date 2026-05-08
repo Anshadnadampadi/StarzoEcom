@@ -83,14 +83,14 @@ export const getCartData = async (userId) => {
             const isCategoryUnlisted = product.category?.isUnlisted || false;
             const isProductUnavailable = product.isBlocked || !product.isListed || isCategoryUnlisted;
             let isVariantUnavailable = false;
-            let currentStock = product.stock || 0;
+            let currentStock = (product.stock || 0) - (product.reservedStock || 0);
 
             if (product.variants?.length > 0 && item.variant) {
                 const specificVariant = product.variants.find(v => isSameVariant(v, item.variant));
                 if (!specificVariant || specificVariant.isDeleted) {
                     isVariantUnavailable = true;
                 } else {
-                    currentStock = specificVariant.stock || 0;
+                    currentStock = (specificVariant.stock || 0) - (specificVariant.reservedStock || 0);
                 }
             }
 
@@ -159,7 +159,7 @@ export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => 
     let targetVariant = typeof variant === 'string' ? null : variant;
     
     let price = product.price;
-    let stock = product.stock || 0;
+    let stock = (product.stock || 0) - (product.reservedStock || 0);
 
     // Active (non-deleted) variants only
     const activeVariants = (product.variants || []).filter(v => !v.isDeleted);
@@ -178,7 +178,7 @@ export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => 
             ram: matchedVariant.ram || ""
         };
         price = matchedVariant.price;
-        stock = matchedVariant.stock;
+        stock = (matchedVariant.stock || 0) - (matchedVariant.reservedStock || 0);
     } else if (activeVariants.length > 0) {
         // If no variant provided or matched, but product has active variants, use the first active one
         const fallback = activeVariants[0];
@@ -188,7 +188,7 @@ export const addItemToCart = async (userId, { productId, variant, qty = 1 }) => 
             ram: fallback.ram || ""
         };
         price = fallback.price;
-        stock = fallback.stock;
+        stock = (fallback.stock || 0) - (fallback.reservedStock || 0);
     } else if (product.variants?.length > 0) {
         // All variants are soft-deleted
         throw new Error("No available variants for this product");
@@ -305,7 +305,7 @@ export const updateItemQty = async (userId, { itemId, change }) => {
     let stock = 0;
     let basePrice = 0;
     if (item.product) {
-        stock = item.product.stock || 0;
+        stock = (item.product.stock || 0) - (item.product.reservedStock || 0);
         basePrice = item.product.price || 0;
         const productVariants = item.product.variants;
 
@@ -316,7 +316,7 @@ export const updateItemQty = async (userId, { itemId, change }) => {
                 throw new Error("This item's variant is no longer available. Please remove it from your cart.");
             }
             if (matched) {
-                stock = matched.stock;
+                stock = (matched.stock || 0) - (matched.reservedStock || 0);
                 basePrice = matched.price || 0;
             }
         }

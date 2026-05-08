@@ -102,6 +102,7 @@ export const sendOtpService = async ({ firstName, lastName, email, password, ref
         if (existingUser && existingUser.isVerified) {
             return { success: false, message: "User already exists" };
         }
+     
 
         const hashedPassword = await bcrypt.hash(password, 10);
 

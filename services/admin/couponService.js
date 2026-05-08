@@ -1,5 +1,7 @@
 
 import Coupon from "../../models/coupon/coupon.js";
+import product from "../../models/product/product.js";
+import cart from "../../models/cart/Cart.js"
 
 export const createCouponService = async (data) => {
 
@@ -10,7 +12,8 @@ export const createCouponService = async (data) => {
         minAmount,
         maxDiscount,
         expiryDate,
-        usageLimit
+        usageLimit,
+        perUserLimit
     } = data;
 
     //  Normalize
@@ -31,8 +34,8 @@ export const createCouponService = async (data) => {
         throw new Error("Discount must be greater than 0");
     }
 
-    if (discountType === "percentage" && discountValue > 100) {
-        throw new Error("Percentage cannot exceed 100");
+    if (discountType === "percentage" && discountValue > 90) {
+        throw new Error("Offer percentage too high");
     }
 
     //  Min amount
@@ -74,10 +77,19 @@ export const createCouponService = async (data) => {
         throw new Error("Expiry must be today or a future date");
     }
 
-    //  Usage limit
+    //  Usage limit (global)
     usageLimit = Number(usageLimit);
     if (!usageLimit || usageLimit < 1) {
         throw new Error("Usage limit must be at least 1");
+    }
+
+    //  Per-user limit
+    perUserLimit = Number(perUserLimit || 1);
+    if (perUserLimit < 1) {
+        throw new Error("Per-user limit must be at least 1");
+    }
+    if (perUserLimit > usageLimit) {
+        throw new Error("Per-user limit cannot exceed the total usage limit");
     }
 
     //  Unique
@@ -94,7 +106,8 @@ export const createCouponService = async (data) => {
         minAmount,
         maxDiscount,
         expiryDate: expiry,
-        usageLimit
+        usageLimit,
+        perUserLimit
     });
 };
 
@@ -135,7 +148,8 @@ export const updateCouponService = async (id, data) => {
         minAmount,
         maxDiscount,
         expiryDate,
-        usageLimit
+        usageLimit,
+        perUserLimit
     } = data;
 
     //  Normalize
@@ -164,8 +178,8 @@ export const updateCouponService = async (id, data) => {
             throw new Error("Discount must be greater than 0");
         }
         const currentType = discountType || coupon.discountType;
-        if (currentType === "percentage" && discountValue > 100) {
-            throw new Error("Percentage cannot exceed 100");
+        if (currentType === "percentage" && discountValue > 90) {
+            throw new Error("Offer percentage too high");
         }
         
         const currentMinAmount = minAmount !== undefined ? minAmount : coupon.minAmount;
@@ -223,11 +237,23 @@ export const updateCouponService = async (id, data) => {
             throw new Error("Expiry must be today or a future date");
         }
     }
-    //  Usage limit
+    //  Usage limit (global)
     if (usageLimit !== undefined) {
         usageLimit = Number(usageLimit);
         if (usageLimit < 1) {
             throw new Error("Usage limit must be at least 1");
+        }
+    }
+
+    //  Per-user limit
+    if (perUserLimit !== undefined) {
+        perUserLimit = Number(perUserLimit);
+        if (perUserLimit < 1) {
+            throw new Error("Per-user limit must be at least 1");
+        }
+        const currentUsageLimit = usageLimit !== undefined ? usageLimit : coupon.usageLimit;
+        if (perUserLimit > currentUsageLimit) {
+            throw new Error("Per-user limit cannot exceed the total usage limit");
         }
     }
 
@@ -247,6 +273,7 @@ export const updateCouponService = async (id, data) => {
     if (maxDiscount !== undefined) coupon.maxDiscount = maxDiscount;
     if (expiryDate !== undefined) coupon.expiryDate = expiry;
     if (usageLimit !== undefined) coupon.usageLimit = usageLimit;
+    if (perUserLimit !== undefined) coupon.perUserLimit = perUserLimit;
 
     await coupon.save();
     return coupon;
@@ -278,3 +305,6 @@ export const deleteCouponService = async (id) => {
     await Coupon.findByIdAndDelete(id);
     return true;
 };
+
+
+

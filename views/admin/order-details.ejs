@@ -96,9 +96,10 @@
                 <div class="divide-y divide-white/5">
                     <% order.items.forEach(item => { %>
                         <%
-                            const pName = (item.product && item.product.name) ? item.product.name : 'Product Unavailable';
-                            let pImg = '/images/placeholder.png';
-                            if (item.product && item.product.variants && item.product.variants.length > 0) {
+                            const pName = item.productName || (item.product && item.product.name) || 'Product Unavailable';
+                            let pImg = item.productImage || '/images/placeholder.png';
+                            
+                            if (!item.productImage && item.product && item.product.variants && item.product.variants.length > 0) {
                                 const tv = item.variant || {};
                                 const mv = item.product.variants.find(v =>
                                     (!tv.color   || v.color   === tv.color) &&

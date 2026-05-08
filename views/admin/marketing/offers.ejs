@@ -82,14 +82,47 @@
                                 <p class="text-white/20 text-[8px] uppercase mt-1 tracking-widest"><%= offer.type %> Level</p>
                             </td>
                             <td class="px-8 py-8">
-                                <div class="bg-white/5 border border-white/10 px-3 py-1.5 text-white/60 text-[10px] font-bold tracking-widest uppercase inline-block rounded-sm">
-                                    <%= offer.type === 'Product' ? (offer.productId ? offer.productId.name : 'Unknown Product') : (offer.categoryId ? offer.categoryId.name : 'Unknown Category') %>
+                                <div class="flex flex-wrap gap-2">
+                                    <% if (offer.type === 'Product') { %>
+                                        <% if (offer.productIds && offer.productIds.length > 0) { %>
+                                            <% offer.productIds.slice(0, 2).forEach(p => { %>
+                                                <span class="bg-white/5 border border-white/10 px-2 py-1 text-white/60 text-[9px] font-bold tracking-widest uppercase rounded-sm">
+                                                    <%= p.name %>
+                                                </span>
+                                            <% }) %>
+                                            <% if (offer.productIds.length > 2) { %>
+                                                <span class="bg-accent/10 border border-accent/20 px-2 py-1 text-accent text-[9px] font-bold tracking-widest uppercase rounded-sm">
+                                                    +<%= offer.productIds.length - 2 %> MORE
+                                                </span>
+                                            <% } %>
+                                        <% } else { %>
+                                            <span class="text-white/20 text-[9px] uppercase">No Products</span>
+                                        <% } %>
+                                    <% } else { %>
+                                        <% if (offer.categoryIds && offer.categoryIds.length > 0) { %>
+                                            <% offer.categoryIds.slice(0, 2).forEach(c => { %>
+                                                <span class="bg-white/5 border border-white/10 px-2 py-1 text-white/60 text-[9px] font-bold tracking-widest uppercase rounded-sm">
+                                                    <%= c.name %>
+                                                </span>
+                                            <% }) %>
+                                            <% if (offer.categoryIds.length > 2) { %>
+                                                <span class="bg-accent/10 border border-accent/20 px-2 py-1 text-accent text-[9px] font-bold tracking-widest uppercase rounded-sm">
+                                                    +<%= offer.categoryIds.length - 2 %> MORE
+                                                </span>
+                                            <% } %>
+                                        <% } else { %>
+                                            <span class="text-white/20 text-[9px] uppercase">No Categories</span>
+                                        <% } %>
+                                    <% } %>
                                 </div>
                             </td>
                             <td class="px-8 py-8">
                                 <p class="text-white text-sm font-bold uppercase">
                                     <%= offer.discountType === 'percentage' ? offer.discountValue + '%' : '₹' + offer.discountValue.toLocaleString() %> Off
                                 </p>
+                                <% if (offer.discountType === 'percentage' && offer.maxDiscountAmount) { %>
+                                    <p class="text-white/20 text-[8px] uppercase mt-1 tracking-widest italic">Up to ₹<%= offer.maxDiscountAmount.toLocaleString() %></p>
+                                <% } %>
                             </td>
                             <td class="px-8 py-8">
                                 <div class="flex flex-col">
@@ -110,7 +143,7 @@
                             </td>
                             <td class="px-8 py-8 text-center align-middle">
                                 <div class="flex items-center justify-center gap-6">
-                                    <!-- Premium Toggle (Icon Movement Focused) -->
+                                    <!-- Premium Toggle -->
                                     <label class="relative inline-flex items-center cursor-pointer group">
                                         <input type="checkbox" class="absolute opacity-0" x-model="active" @change="toggle()">
                                         <div class="w-10 h-5 bg-white/5 rounded-full relative border border-white/10 transition-colors duration-300">
@@ -120,7 +153,18 @@
                                         </div>
                                     </label>
 
-                                    <button type="button" @click.prevent.stop="openEditModal('<%= offer._id %>', '<%= offer.name %>', '<%= offer.type %>', '<%= offer.discountType %>', <%= offer.discountValue %>, '<%= offer.productId ? offer.productId._id : `` %>', '<%= offer.categoryId ? offer.categoryId._id : `` %>', '<%= offer.startDate ? new Date(offer.startDate).toISOString().split(`T`)[0] : `` %>', '<%= offer.expiryDate ? new Date(offer.expiryDate).toISOString().split(`T`)[0] : `` %>')"
+                                    <button type="button" @click.prevent.stop="openEditModal({
+                                        id: '<%= offer._id %>',
+                                        name: '<%= offer.name %>',
+                                        type: '<%= offer.type %>',
+                                        discountType: '<%= offer.discountType %>',
+                                        discountValue: <%= offer.discountValue %>,
+                                        productIds: [<%= offer.productIds.map(p => `'${p._id}'`).join(',') %>],
+                                        categoryIds: [<%= offer.categoryIds.map(c => `'${c._id}'`).join(',') %>],
+                                        startDate: '<%= offer.startDate ? new Date(offer.startDate).toISOString().split('T')[0] : '' %>',
+                                        expiryDate: '<%= offer.expiryDate ? new Date(offer.expiryDate).toISOString().split('T')[0] : '' %>',
+                                        maxDiscountAmount: <%= offer.maxDiscountAmount || "''" %>
+                                    })"
                                         class="text-white/40 hover:text-white transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     </button>
@@ -149,25 +193,27 @@
         <%- include('../../partials/pagination', { currentPage, totalPages, query: paginationQuery }) %>
 
         <!-- Create/Edit Offer Modal (Polished) -->
-        <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+        <div x-show="showModal" class="fixed inset-0 z-[60] overflow-y-auto bg-black/90 backdrop-blur-md custom-scrollbar"
             style="display: none;" x-transition.opacity>
-            <div class="bg-black-surface border border-white/10 w-full max-w-lg p-8 relative shadow-[0_0_50px_rgba(0,0,0,0.5)]"
-                @click.away="closeModal()" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0">
+            <div class="flex items-start justify-center min-h-screen p-4 md:p-10">
+                <div class="bg-black-surface border border-white/10 w-full max-w-xl p-8 relative shadow-[0_0_100px_rgba(0,0,0,1)] rounded-none"
+                    @click.away="closeModal()" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
 
-                <div class="flex items-center gap-4 mb-8">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+                    <h2 class="text-xl font-black tracking-tighter uppercase text-white italic"
+                        x-text="isEditing ? 'Edit Promo Protocol' : 'New Offer Entry'"></h2>
                     <button @click="closeModal()" type="button"
-                        class="text-white hover:bg-accent hover:text-black transition-all border border-accent w-8 h-8 flex items-center justify-center rounded-sm bg-accent/5 shadow-[0_0_10px_rgba(255,106,0,0.2)] group">
-                        <svg class="w-4 h-4 transform group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+                        class="text-white/20 hover:text-white transition-colors group">
+                        <svg class="w-6 h-6 transform group-hover:rotate-90 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
-                    <h2 class="text-xl font-bold tracking-tight uppercase text-white"
-                        x-text="isEditing ? 'Edit Offer' : 'Create Offer'"></h2>
                 </div>
 
-                <form @submit.prevent="submitForm()" data-no-spa="true" class="space-y-6">
-                    <div class="grid grid-cols-2 gap-6">
+                <form @submit.prevent="submitForm()" data-no-spa="true" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
                         <div class="col-span-2 space-y-1">
                             <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Offer Name</label>
                             <input type="text" x-model="formData.name" @input="validateField('name')"
@@ -177,7 +223,7 @@
 
                         <div class="space-y-1">
                             <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Offer Type</label>
-                            <select x-model="formData.type" class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none">
+                            <select x-model="formData.type" @change="resetTargets()" class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none">
                                 <option value="Product">Product Specific</option>
                                 <option value="Category">Category Wide</option>
                             </select>
@@ -191,41 +237,96 @@
                             </select>
                         </div>
 
-                        <div class="space-y-1" x-show="formData.type === 'Product'">
-                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Product</label>
-                            <select x-model="formData.productId" @change="validateField('productId')"
-                                class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none">
-                                <option value="">-- Select --</option>
-                                <% products.forEach(p => { %> <option value="<%= p._id %>"><%= p.name %></option> <% }) %>
-                            </select>
-                            <p x-show="formErrors.productId" class="text-status-danger text-[10px] mt-1" x-text="formErrors.productId"></p>
+                        <!-- Multi-Select Target -->
+                        <div class="col-span-2 space-y-2">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40" x-text="formData.type === 'Product' ? 'SELECT PRODUCTS' : 'SELECT CATEGORIES'"></label>
+                            
+                            <div class="relative" x-data="{ open: false, search: '' }">
+                                <!-- Search Input -->
+                                <div class="relative group">
+                                    <input type="text" x-model="search" @focus="open = true" @click.away="open = false"
+                                           :placeholder="formData.type === 'Product' ? 'Search products...' : 'Search categories...'"
+                                           class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none transition-all">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-white/20">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                    </div>
+                                </div>
+
+                                <!-- Dropdown -->
+                                <div x-show="open" 
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 translate-y-4"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     class="absolute z-50 w-full mt-2 bg-black-surface border border-white/10 shadow-2xl max-h-48 overflow-y-auto custom-scrollbar">
+                                    
+                                    <template x-if="formData.type === 'Product'">
+                                        <div class="divide-y divide-white/5">
+                                            <template x-for="p in filteredProducts(search)" :key="p.id">
+                                                <button type="button" @click="toggleTarget(p.id)" 
+                                                        class="w-full px-4 py-3 text-left text-[10px] font-bold tracking-widest uppercase flex items-center justify-between hover:bg-white/5 transition-colors"
+                                                        :class="isTargetSelected(p.id) ? 'text-accent' : 'text-white/60'">
+                                                    <span x-text="p.name"></span>
+                                                    <svg x-show="isTargetSelected(p.id)" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <template x-if="formData.type === 'Category'">
+                                        <div class="divide-y divide-white/5">
+                                            <template x-for="c in filteredCategories(search)" :key="c.id">
+                                                <button type="button" @click="toggleTarget(c.id)" 
+                                                        class="w-full px-4 py-3 text-left text-[10px] font-bold tracking-widest uppercase flex items-center justify-between hover:bg-white/5 transition-colors"
+                                                        :class="isTargetSelected(c.id) ? 'text-accent' : 'text-white/60'">
+                                                    <span x-text="c.name"></span>
+                                                    <svg x-show="isTargetSelected(c.id)" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Selected Tags -->
+                            <div class="flex flex-wrap gap-2 pt-2">
+                                <template x-for="id in (formData.type === 'Product' ? formData.productIds : formData.categoryIds)" :key="id">
+                                    <div class="bg-accent/10 border border-accent/30 px-3 py-1.5 flex items-center gap-3 rounded-sm group transition-all hover:border-accent/50">
+                                        <span class="text-accent text-[9px] font-black uppercase tracking-[0.1em]" x-text="getTargetName(id)"></span>
+                                        <button type="button" @click="toggleTarget(id)" class="text-accent/40 hover:text-accent transition-colors">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+                                    </div>
+                                </template>
+                                <template x-if="(formData.type === 'Product' ? formData.productIds : formData.categoryIds).length === 0">
+                                    <p class="text-white/20 text-[9px] uppercase tracking-widest font-bold italic py-2">No selections made yet</p>
+                                </template>
+                            </div>
+                            <p x-show="formData.type === 'Product' ? formErrors.productIds : formErrors.categoryIds" 
+                               class="text-status-danger text-[10px] mt-1" 
+                               x-text="formData.type === 'Product' ? formErrors.productIds : formErrors.categoryIds"></p>
                         </div>
 
-                        <div class="space-y-1" x-show="formData.type === 'Category'">
-                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Category</label>
-                            <select x-model="formData.categoryId" @change="validateField('categoryId')"
-                                class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none">
-                                <option value="">-- Select --</option>
-                                <% categories.forEach(c => { %> <option value="<%= c._id %>"><%= c.name %></option> <% }) %>
-                            </select>
-                            <p x-show="formErrors.categoryId" class="text-status-danger text-[10px] mt-1" x-text="formErrors.categoryId"></p>
-                        </div>
-
-                        <div class="space-y-1">
+                        <div class="col-span-2 md:col-span-1 space-y-1">
                             <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Discount Value</label>
                             <input type="number" x-model="formData.discountValue" @input="validateField('discountValue')"
                                 class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none transition-all">
                             <p x-show="formErrors.discountValue" class="text-status-danger text-[10px] mt-1" x-text="formErrors.discountValue"></p>
                         </div>
 
-                        <div class="space-y-1">
+                        <div class="col-span-2 md:col-span-1 space-y-1">
+                            <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Max Discount (₹)</label>
+                            <input type="number" x-model="formData.maxDiscountAmount" placeholder="Optional"
+                                class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none transition-all">
+                        </div>
+
+                        <div class="col-span-2 md:col-span-1 space-y-1">
                             <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Start Date</label>
                             <input type="date" x-model="formData.startDate" @change="validateField('startDate')"
                                 class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none">
                             <p x-show="formErrors.startDate" class="text-status-danger text-[10px] mt-1" x-text="formErrors.startDate"></p>
                         </div>
 
-                        <div class="space-y-1">
+                        <div class="col-span-2 space-y-1">
                             <label class="text-[9px] font-bold tracking-widest uppercase text-white/40">Expiry Date</label>
                             <input type="date" x-model="formData.expiryDate" @change="validateField('expiryDate')"
                                 class="w-full bg-black border border-white/10 px-4 py-3 text-white text-xs focus:border-accent outline-none">
@@ -233,7 +334,7 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-4 pt-6 border-t border-white/5">
+                    <div class="flex items-center gap-4 pt-4 border-t border-white/5">
                         <button type="button" @click="closeModal()" class="flex-1 py-4 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase">Cancel</button>
                         <button type="submit" :disabled="isSubmitting" class="flex-1 py-4 bg-accent text-black text-[10px] font-bold tracking-widest uppercase shadow-[0_0_20px_rgba(255,106,0,0.3)] hover:bg-white transition-all">
                             <span x-show="!isSubmitting">Save Offer</span>
@@ -256,13 +357,46 @@
                     currentId: null,
                     currentTab: 'live',
                     search: '',
-                    formData: { name: '', type: 'Product', discountType: 'percentage', discountValue: '', productId: '', categoryId: '', startDate: new Date().toISOString().split('T')[0], expiryDate: '' },
-                    formErrors: { name: '', discountValue: '', productId: '', categoryId: '', startDate: '', expiryDate: '' },
+                    products: [<% products.forEach((p, index) => { %> { id: '<%= p._id %>', name: '<%= p.name.replace(/'/g, "\\'") %>' }<%= index < products.length - 1 ? ',' : '' %> <% }) %>],
+                    categories: [<% categories.forEach((c, index) => { %> { id: '<%= c._id %>', name: '<%= c.name.replace(/'/g, "\\'") %>' }<%= index < categories.length - 1 ? ',' : '' %> <% }) %>],
+                    formData: { name: '', type: 'Product', discountType: 'percentage', discountValue: '', productIds: [], categoryIds: [], startDate: new Date().toISOString().split('T')[0], expiryDate: '', maxDiscountAmount: '' },
+                    formErrors: { name: '', discountValue: '', productIds: '', categoryIds: '', startDate: '', expiryDate: '' },
+                    
+                    filteredProducts(s) {
+                        return this.products.filter(p => p.name.toLowerCase().includes(s.toLowerCase()));
+                    },
+                    filteredCategories(s) {
+                        return this.categories.filter(c => c.name.toLowerCase().includes(s.toLowerCase()));
+                    },
+                    isTargetSelected(id) {
+                        const arr = this.formData.type === 'Product' ? this.formData.productIds : this.formData.categoryIds;
+                        return arr.includes(id);
+                    },
+                    toggleTarget(id) {
+                        const key = this.formData.type === 'Product' ? 'productIds' : 'categoryIds';
+                        if (this.formData[key].includes(id)) {
+                            this.formData[key] = this.formData[key].filter(i => i !== id);
+                        } else {
+                            this.formData[key].push(id);
+                        }
+                        this.validateField(key);
+                    },
+                    getTargetName(id) {
+                        const list = this.formData.type === 'Product' ? this.products : this.categories;
+                        const item = list.find(i => i.id === id);
+                        return item ? item.name : 'Unknown';
+                    },
+                    resetTargets() {
+                        this.formData.productIds = [];
+                        this.formData.categoryIds = [];
+                        this.formErrors.productIds = '';
+                        this.formErrors.categoryIds = '';
+                    },
                     openCreateModal() {
                         this.isEditing = false;
                         this.currentId = null;
-                        this.formData = { name: '', type: 'Product', discountType: 'percentage', discountValue: '', productId: '', categoryId: '', startDate: new Date().toISOString().split('T')[0], expiryDate: '' };
-                        this.formErrors = { name: '', discountValue: '', productId: '', categoryId: '', startDate: '', expiryDate: '' };
+                        this.formData = { name: '', type: 'Product', discountType: 'percentage', discountValue: '', productIds: [], categoryIds: [], startDate: new Date().toISOString().split('T')[0], expiryDate: '', maxDiscountAmount: '' };
+                        this.formErrors = { name: '', discountValue: '', productIds: '', categoryIds: '', startDate: '', expiryDate: '' };
                         this.showModal = true;
                     },
                     async confirmDelete(id, name) {
@@ -292,11 +426,11 @@
                             }
                         }
                     },
-                    openEditModal(id, name, type, dType, val, pId, cId, start, expiry) {
+                    openEditModal(data) {
                         this.isEditing = true;
-                        this.currentId = id;
-                        this.formData = { name, type, discountType: dType, discountValue: val, productId: pId, categoryId: cId, startDate: start, expiryDate: expiry };
-                        this.formErrors = { name: '', discountValue: '', productId: '', categoryId: '', startDate: '', expiryDate: '' };
+                        this.currentId = data.id;
+                        this.formData = { ...data };
+                        this.formErrors = { name: '', discountValue: '', productIds: '', categoryIds: '', startDate: '', expiryDate: '' };
                         this.showModal = true;
                     },
                     closeModal() { this.showModal = false; },
@@ -309,28 +443,28 @@
                         if (f === 'discountValue') {
                             const val = parseFloat(this.formData.discountValue);
                             if (isNaN(val) || val <= 0) this.formErrors.discountValue = 'Value must be greater than 0';
-                            else if (this.formData.discountType === 'percentage' && val > 100) this.formErrors.discountValue = 'Percentage cannot exceed 100%';
+                            else if (this.formData.discountType === 'percentage' && val > 90) this.formErrors.discountValue = 'Offer percentage too high';
                         }
-                        if (f === 'productId' && this.formData.type === 'Product') {
-                            if (!this.formData.productId) this.formErrors.productId = 'Please select a product';
+                        if (f === 'productIds' && this.formData.type === 'Product') {
+                            if (!this.formData.productIds || this.formData.productIds.length === 0) this.formErrors.productIds = 'Please select at least one product';
                         }
-                        if (f === 'categoryId' && this.formData.type === 'Category') {
-                            if (!this.formData.categoryId) this.formErrors.categoryId = 'Please select a category';
+                        if (f === 'categoryIds' && this.formData.type === 'Category') {
+                            if (!this.formData.categoryIds || this.formData.categoryIds.length === 0) this.formErrors.categoryIds = 'Please select at least one category';
                         }
                         if (f === 'startDate') {
                             if (!this.formData.startDate) this.formErrors.startDate = 'Start date is required';
                         }
                         if (f === 'expiryDate') {
                             if (!this.formData.expiryDate) this.formErrors.expiryDate = 'Expiry date is required';
-                            else if (this.formData.startDate && new Date(this.formData.expiryDate) <= new Date(this.formData.startDate)) {
-                                this.formErrors.expiryDate = 'Expiry must be after start date';
+                            else if (this.formData.startDate && new Date(this.formData.expiryDate) < new Date(this.formData.startDate)) {
+                                this.formErrors.expiryDate = 'Expiry must be on or after start date';
                             }
                         }
                         return !this.formErrors[f];
                     },
                     validateAll() {
                         let isValid = true;
-                        ['name', 'discountValue', 'productId', 'categoryId', 'startDate', 'expiryDate'].forEach(f => {
+                        ['name', 'discountValue', 'productIds', 'categoryIds', 'startDate', 'expiryDate'].forEach(f => {
                             if (!this.validateField(f)) isValid = false;
                         });
                         return isValid;

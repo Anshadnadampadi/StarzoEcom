@@ -60,3 +60,4 @@ D:\Anshad Coding Playground\First Project\StarzoMobiles\views\user\auth\login.ej
 D:\Anshad Coding Playground\First Project\StarzoMobiles\views\user\auth\otpVerification.ejs
 D:\Anshad Coding Playground\First Project\StarzoMobiles\views\user\auth\register.ejs
 D:\Anshad Coding Playground\First Project\StarzoMobiles\views\user\auth\resetPassword.ejs
+
