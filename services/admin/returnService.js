@@ -62,7 +62,8 @@ export const getReturnsService = async (search, status, page, limit) => {
         requested: await Order.countDocuments({ orderStatus: 'Return Requested' }),
         approved: await Order.countDocuments({ orderStatus: 'Return Approved' }),
         picked: await Order.countDocuments({ orderStatus: 'Return Picked' }),
-        completed: await Order.countDocuments({ orderStatus: 'Returned' })
+        completed: await Order.countDocuments({ orderStatus: 'Returned' }),
+        rejected: await Order.countDocuments({ orderStatus: 'Return Rejected' })
     };
 
     return { returns, stats, totalPages, totalReturns };

@@ -128,7 +128,7 @@
                                     </span>
                                 </div>
                                 <div class="flex justify-between text-text-secondary text-sm" x-show="discount > 0" x-cloak>
-                                    <span>Protocol Discount</span>
+                                    <span>Coupon Discount</span>
                                     <span class="text-accent font-mono" x-text="'-₹' + discount.toLocaleString()"></span>
                                 </div>
                                 <div class="flex justify-between text-text-secondary text-sm">
@@ -217,7 +217,7 @@
                     <template x-if="isLoadingCoupons">
                         <div class="py-12 flex flex-col items-center gap-4">
                             <div class="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
-                            <p class="text-white/20 text-[9px] font-black uppercase tracking-widest">Scanning Protocols...</p>
+                            <p class="text-white/20 text-[9px] font-black uppercase tracking-widest"> Coupon Scanning ...</p>
                         </div>
                     </template>
 
@@ -249,7 +249,7 @@
                     <!-- Empty State -->
                     <template x-if="!isLoadingCoupons && availableCoupons.length === 0">
                         <div class="text-center py-12 border border-dashed border-white/10">
-                            <p class="text-white/20 text-[10px] font-black uppercase tracking-widest">No available protocols found.</p>
+                            <p class="text-white/20 text-[10px] font-black uppercase tracking-widest">No available Coupon found.</p>
                         </div>
                     </template>
                 </div>

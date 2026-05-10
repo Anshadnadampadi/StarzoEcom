@@ -112,17 +112,28 @@ export const createCouponService = async (data) => {
 };
 
 export const getCouponService = async (query) => {
-    const { search = "", page = 1, limit = 5 } = query;
+    const page = Math.max(1, parseInt(query.page) || 1);
+    const limit = Math.max(1, parseInt(query.limit) || 5);
+    const search = query.search || "";
+    const tab = query.tab || "live";
+    
     const filter = {
         code: { $regex: search, $options: "i" }
     };
 
-    const skip = (Number(page) - 1) * Number(limit);
+    if (tab === "live") {
+        filter.expiryDate = { $gte: new Date() };
+    } else if (tab === "archived") {
+        filter.expiryDate = { $lt: new Date() };
+    }
+
+    const skip = (page - 1) * limit;
+    
     const [coupons, totalCoupons] = await Promise.all([
         Coupon.find(filter)
             .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(Number(limit)),
+            .limit(limit),
         Coupon.countDocuments(filter)
     ]);
 
@@ -130,7 +141,8 @@ export const getCouponService = async (query) => {
         coupons,
         totalPages: Math.ceil(totalCoupons / limit),
         totalCoupons,
-        currentPage: Number(page)
+        currentPage: page,
+        tab
     };
 };
 

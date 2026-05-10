@@ -66,21 +66,33 @@ export const getOrdersService = async (search, status, page, limit) => {
 /**
  * Synchronizes the overall order status based on individual item statuses.
  */
-const _syncOrderStatus = (order) => {
+export const syncOrderStatus = (order) => {
     const items = order.items;
-    const allItemsTerminal = items.every(i => i.status === 'Returned' || i.status === 'Cancelled');
-    const anyItemReturned = items.some(i => i.status === 'Returned');
-    const anyItemPicked = items.some(i => i.status === 'Return Picked');
+    
+    // Status definitions
+    const isTerminal = (s) => ['Returned', 'Cancelled', 'Return Rejected'].includes(s);
+    const allItemsTerminal = items.every(i => isTerminal(i.status));
+    const allItemsCancelled = items.every(i => i.status === 'Cancelled');
+    const allItemsRejected = items.every(i => i.status === 'Return Rejected');
+    const allItemsReturned = items.every(i => i.status === 'Returned');
+
     const anyItemRequested = items.some(i => i.status === 'Return Requested');
     const anyItemApproved = items.some(i => i.status === 'Return Approved');
-    const anyItemCancelled = items.some(i => i.status === 'Cancelled');
-    const allItemsCancelled = items.every(i => i.status === 'Cancelled');
+    const anyItemPicked = items.some(i => i.status === 'Return Picked');
+    const anyItemReturned = items.some(i => i.status === 'Returned');
+    const anyItemRejected = items.some(i => i.status === 'Return Rejected');
 
     if (allItemsCancelled) {
         order.orderStatus = 'Cancelled';
-    } else if (allItemsTerminal) {
+    } else if (allItemsRejected) {
+        order.orderStatus = 'Return Rejected';
+    } else if (allItemsReturned) {
         order.orderStatus = 'Returned';
         order.paymentStatus = 'Refunded';
+    } else if (allItemsTerminal) {
+        // Mixed terminal states (some returned, some rejected)
+        const hasSuccessfulReturns = items.some(i => i.status === 'Returned');
+        order.orderStatus = hasSuccessfulReturns ? 'Partially Returned' : 'Return Rejected';
     } else if (anyItemRequested) {
         order.orderStatus = 'Return Requested';
     } else if (anyItemApproved) {
@@ -89,11 +101,8 @@ const _syncOrderStatus = (order) => {
         order.orderStatus = 'Return Picked';
     } else if (anyItemReturned) {
         order.orderStatus = 'Partially Returned';
-    } else if (anyItemCancelled) {
-        // If some are cancelled but others are Delivered/Ordered, the order status 
-        // usually follows the non-terminal items' logistics flow.
-        // But we don't have "Partially Cancelled". 
-        // We'll let it stay at its current logistics stage (Delivered, Shipped, etc.)
+    } else if (anyItemRejected) {
+        order.orderStatus = 'Return Rejected';
     }
 };
 
@@ -184,7 +193,7 @@ export const updateOrderStatusService = async (orderId, status) => {
 
     // Smart status synchronization for returns/cancellations
     if (['Cancelled', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned'].includes(status)) {
-        _syncOrderStatus(order);
+        syncOrderStatus(order);
     }
 
     if (newlyTerminalItems.length > 0) {
@@ -286,7 +295,9 @@ export const updateItemReturnStatusService = async (orderId, itemId, status) => 
         }
     }
 
-    _syncOrderStatus(order);
+    syncOrderStatus(order);
+    order.markModified('orderStatus');
+    order.markModified('items');
 
     await recalculateOrderTotals(order);
     await order.save();

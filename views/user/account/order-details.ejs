@@ -71,9 +71,9 @@
                             const stages = [
                                 { name: 'Delivered', desc: 'Initial Delivery', date: order.createdAt, active: true },
                                 { name: 'Requested', desc: 'Return initiated', date: order.updatedAt, active: true },
-                                { name: 'Processing', desc: 'Reviewing request', date: ['Return Approved', 'Return Picked', 'Returned'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Return Approved', 'Return Picked', 'Returned'].includes(order.orderStatus) },
-                                { name: 'Picked', desc: 'Item collected', date: ['Return Picked', 'Returned'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Return Picked', 'Returned'].includes(order.orderStatus) },
-                                { name: 'Returned', desc: 'Refund complete', date: order.orderStatus === 'Returned' ? order.updatedAt : null, active: order.orderStatus === 'Returned' }
+                                { name: 'Processing', desc: 'Reviewing request', date: ['Return Approved', 'Return Picked', 'Returned', 'Partially Returned'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Return Approved', 'Return Picked', 'Returned', 'Partially Returned'].includes(order.orderStatus) },
+                                { name: 'Picked', desc: 'Item collected', date: ['Return Picked', 'Returned', 'Partially Returned'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Return Picked', 'Returned', 'Partially Returned'].includes(order.orderStatus) },
+                                { name: 'Returned', desc: 'Refund complete', date: ['Returned', 'Partially Returned'].includes(order.orderStatus) ? order.updatedAt : null, active: ['Returned', 'Partially Returned'].includes(order.orderStatus) }
                             ];
                 
                             if (order.orderStatus === 'Return Rejected') {

@@ -16,10 +16,19 @@
 }" x-init="fetchAll()">
     <div class="flex justify-between items-end">
         <div>
-            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">SYSTEM PROTOCOL.</h1>
+            <h1 class="text-3xl font-bold tracking-tight uppercase text-white mb-2">SYSTEM NOTIFICATION.</h1>
             <p class="text-white/40 text-[10px] tracking-[0.2em] font-bold uppercase">Chronological log of administrative events</p>
         </div>
-        <button @click="await fetch('/admin/api/notifications/read-all', {method:'PATCH'}); fetchAll();" class="px-6 py-3 bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-white/10 transition-all">Clear All Alerts</button>
+        <div class="flex flex-wrap gap-4 justify-end">
+            <button @click="await fetch('/admin/api/notifications/read-all', {method:'PATCH'}); await fetchAll();" 
+                class="px-8 py-3 bg-white/5 border border-white/10 text-white text-[10px] font-bold tracking-widest uppercase hover:bg-white/20 transition-all">
+                Mark All Read
+            </button>
+            <button @click="if(confirm('Are you sure you want to purge all system notifications? This action cannot be undone.')) { await fetch('/admin/api/notifications/clear-all', {method:'DELETE'}); await fetchAll(); }" 
+                class="px-8 py-3 bg-status-danger/10 border border-status-danger/20 text-status-danger text-[10px] font-bold tracking-widest uppercase hover:bg-status-danger hover:text-white transition-all">
+                Clear All
+            </button>
+        </div>
     </div>
 
     <div class="bg-black-surface border border-white/5 overflow-hidden">

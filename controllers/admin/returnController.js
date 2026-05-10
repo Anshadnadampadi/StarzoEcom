@@ -3,7 +3,7 @@ import { getReturnsService } from '../../services/admin/returnService.js';
 export const getReturnsPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 10;
+        const limit = 5;
         const search = req.query.search || '';
         const status = req.query.status || '';
 

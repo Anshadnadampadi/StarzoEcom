@@ -8,78 +8,75 @@
 			<h1 class="text-white text-5xl font-black tracking-tighter uppercase font-display italic">PURCHASE HISTORY.</h1>
 		</div>
 
-		<div class="grid grid-cols-1 lg:grid-cols-4 gap-12">
-			<!-- Sidebar Nav -->
-			<%- include('../../partials/account-sidebar', { activeTab: 'orders' }) %>
+		<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+			
+			<!-- Sidebar Nav (Col 1-2) -->
+			<div class="lg:col-span-2">
+				<%- include('../../partials/account-sidebar', { activeTab: 'orders' }) %>
+			</div>
 
-			<!-- Main Panel -->
+			<!-- Filter Sidebar (Col 3-5) -->
 			<div class="lg:col-span-3">
-				<div class="flex flex-col lg:flex-row gap-6">
-					
-					<!-- Filter Sidebar -->
-					<div class="w-full lg:w-1/4">
-						<div class="bg-[#0a0a0a] border border-white/[0.03] shadow-2xl overflow-hidden sticky top-24">
-							<div class="px-6 py-4 border-b border-white/[0.03] bg-white/[0.01]">
-								<h3 class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Filters</h3>
-							</div>
-							
-							<div class="p-6">
-								<form action="/account/orders" method="GET" id="filterForm">
-									<input type="hidden" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
-									
-									<!-- Order Status -->
-									<div class="mb-6">
-										<h4 class="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-4">Order Status</h4>
-										<div class="space-y-4">
-											<% const selectedStatus = typeof status !== 'undefined' ? status : ''; %>
-											<label class="flex items-center gap-3 cursor-pointer group">
-												<input type="radio" name="status" value="" <%= !selectedStatus ? 'checked' : '' %> class="accent-accent w-3 h-3 border-white/10 bg-black">
-												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">All Orders</span>
-											</label>
-											<label class="flex items-center gap-3 cursor-pointer group">
-												<input type="radio" name="status" value="Processing" <%= selectedStatus === 'Processing' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">On the way</span>
-											</label>
-											<label class="flex items-center gap-3 cursor-pointer group">
-												<input type="radio" name="status" value="Pending" <%= selectedStatus === 'Pending' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Pending Payment</span>
-											</label>
-											<label class="flex items-center gap-3 cursor-pointer group">
-												<input type="radio" name="status" value="Delivered" <%= selectedStatus === 'Delivered' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Delivered</span>
-											</label>
-											<label class="flex items-center gap-3 cursor-pointer group">
-												<input type="radio" name="status" value="Cancelled" <%= selectedStatus === 'Cancelled' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Cancelled</span>
-											</label>
-											<label class="flex items-center gap-3 cursor-pointer group">
-												<input type="radio" name="status" value="Returned" <%= selectedStatus === 'Returned' ? 'checked' : '' %> class="accent-accent w-3 h-3">
-												<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">Returned</span>
-											</label>
-										</div>
-									</div>
-
-								</form>
-							</div>
-						</div>
+				<div class="bg-[#0a0a0a] border border-white/[0.03] shadow-2xl overflow-hidden lg:sticky lg:top-24">
+					<div class="px-6 py-4 border-b border-white/[0.03] bg-white/[0.01]">
+						<h3 class="text-white text-[10px] font-black uppercase tracking-[0.2em]">Filters</h3>
 					</div>
+					
+					<div class="p-6">
+						<form action="/account/orders" method="GET" id="filterForm">
+							<input type="hidden" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>">
+							
+							<!-- Order Status -->
+							<div class="mb-6">
+								<h4 class="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-4">Transmission Status</h4>
+								<div class="space-y-4">
+									<% const selectedStatus = typeof status !== 'undefined' ? status : ''; %>
+									<label class="flex items-center gap-3 cursor-pointer group">
+										<div class="relative flex items-center justify-center">
+											<input type="radio" name="status" value="" <%= !selectedStatus ? 'checked' : '' %> class="peer sr-only">
+											<div class="w-3 h-3 border border-white/20 rounded-full peer-checked:border-accent transition-all"></div>
+											<div class="absolute w-1.5 h-1.5 bg-accent rounded-full scale-0 peer-checked:scale-100 transition-transform"></div>
+										</div>
+										<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">All Transmissions</span>
+									</label>
 
-					<!-- Orders List -->
-					<div class="w-full lg:w-3/4 flex flex-col gap-4" id="ordersContainer">
-						
-						<!-- Search Bar -->
-						<div class="bg-[#0a0a0a] border border-white/[0.03] overflow-hidden flex items-center shadow-lg">
-							<form action="/account/orders" method="GET" class="w-full flex" id="searchForm">
-								<input type="hidden" name="status" value="<%= typeof status !== 'undefined' ? status : '' %>">
-								<input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" 
-									   placeholder="Search your orders here" 
-									   class="w-full bg-transparent px-6 py-4 text-[11px] text-white placeholder:text-white/30 focus:outline-none focus:bg-white/[0.02] transition-colors">
-								<button type="submit" class="bg-white text-black px-8 py-4 text-[10px] font-black tracking-[0.2em] uppercase hover:bg-accent flex items-center gap-2 transition-colors border-l border-white/10">
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-									Search Orders
-								</button>
-							</form>
+									<% ['Processing', 'Pending', 'Delivered', 'Cancelled', 'Returned'].forEach(s => { %>
+										<label class="flex items-center gap-3 cursor-pointer group">
+											<div class="relative flex items-center justify-center">
+												<input type="radio" name="status" value="<%= s %>" <%= selectedStatus === s ? 'checked' : '' %> class="peer sr-only">
+												<div class="w-3 h-3 border border-white/20 rounded-full peer-checked:border-accent transition-all"></div>
+												<div class="absolute w-1.5 h-1.5 bg-accent rounded-full scale-0 peer-checked:scale-100 transition-transform"></div>
+											</div>
+											<span class="text-white/70 text-[11px] font-medium group-hover:text-white transition-colors">
+												<%= s === 'Processing' ? 'On the way' : (s === 'Pending' ? 'Pending Payment' : s) %>
+											</span>
+										</label>
+									<% }) %>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<!-- Orders List (Col 6-12) -->
+			<div class="lg:col-span-7 flex flex-col gap-4" id="ordersContainer">
+				
+				<!-- Search Bar -->
+				<div class="bg-[#0a0a0a] border border-white/[0.03] overflow-hidden flex items-center shadow-lg group focus-within:border-white/10 transition-colors">
+					<form action="/account/orders" method="GET" class="w-full flex" id="searchForm">
+						<input type="hidden" name="status" value="<%= typeof status !== 'undefined' ? status : '' %>">
+						<div class="pl-6 flex items-center text-white/20 group-focus-within:text-accent transition-colors">
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
 						</div>
+						<input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" 
+							   placeholder="Filter by Order ID or Product Name..." 
+							   class="w-full bg-transparent px-4 py-4 text-[11px] text-white placeholder:text-white/20 focus:outline-none transition-colors">
+						<button type="submit" class="bg-white text-black px-8 py-4 text-[10px] font-black tracking-[0.2em] uppercase hover:bg-accent transition-colors">
+							Search
+						</button>
+					</form>
+				</div>
 
 						<!-- List Items -->
 						<% if (typeof orders !== 'undefined' && orders.length > 0) { %>
@@ -90,7 +87,7 @@
 											// Status Filter
 											if (typeof status !== 'undefined' && status && status !== 'all') {
 												const s = status.toLowerCase();
-												const itemStatus = (item.status || order.status || 'ordered').toLowerCase();
+												const itemStatus = (item.status || order.orderStatus || 'ordered').toLowerCase();
 												
 												if (s === 'processing') {
 													if (!['ordered', 'shipped', 'pending', 'processing', 'confirmed'].includes(itemStatus)) {
@@ -134,7 +131,7 @@
 												}
 											}
 
-											const itemStatus = (item.status || order.status || 'pending').toLowerCase();
+											const itemStatus = (item.status || order.orderStatus || 'pending').toLowerCase();
 											let dotColor = 'bg-accent';
 											let statusText = 'Processing';
 											let subText = 'Your item is being processed';
@@ -312,33 +309,39 @@
 		const ordersContainer = document.getElementById('ordersContainer');
 		const filterFormInputs = document.querySelectorAll('#filterForm input[name="status"]');
 		
-		const updateContent = async (url) => {
-			ordersContainer.style.opacity = '0.5';
+		const updateContent = async (url, push = true) => {
+			ordersContainer.style.opacity = '0.4';
 			ordersContainer.style.pointerEvents = 'none';
+			
 			try {
 				const response = await fetch(url, {
 					headers: { 'X-Requested-With': 'XMLHttpRequest' }
 				});
-				if (!response.ok) throw new Error('Network error');
-				const html = await response.text();
 				
+				if (!response.ok) throw new Error('Network response was not ok');
+				
+				const html = await response.text();
 				const parser = new DOMParser();
 				const doc = parser.parseFromString(html, 'text/html');
-				const newContent = doc.getElementById('ordersContainer').innerHTML;
 				
-				ordersContainer.innerHTML = newContent;
+				const newContent = doc.getElementById('ordersContainer');
+				if (!newContent) throw new Error('Could not find orders container');
 				
-				// Sync the search value in the filter form
-				const newSearchInput = doc.querySelector('#searchForm input[name="search"]');
-				if (newSearchInput) {
-					document.querySelector('#filterForm input[name="search"]').value = newSearchInput.value;
-				}
+				// Update the content
+				ordersContainer.innerHTML = newContent.innerHTML;
 				
-				window.history.pushState({}, '', url);
+				// Synchronize search inputs
+				const urlObj = new URL(url, window.location.origin);
+				const searchInputs = document.querySelectorAll('input[name="search"]');
+				searchInputs.forEach(i => i.value = urlObj.searchParams.get('search') || '');
+				
+				if (push) window.history.pushState({ url }, '', url);
+				
 				attachContentListeners();
+				window.scrollTo({ top: 0, behavior: 'smooth' });
 			} catch (error) {
-				console.error('Error fetching orders:', error);
-				window.location.href = url; // Fallback to full reload
+				console.error('Update failed:', error);
+				window.location.href = url;
 			} finally {
 				ordersContainer.style.opacity = '1';
 				ordersContainer.style.pointerEvents = 'auto';
@@ -378,13 +381,17 @@
 
 		attachContentListeners();
 
-		window.addEventListener('popstate', () => {
-			updateContent(window.location.href);
-			
-			const urlParams = new URLSearchParams(window.location.search);
-			const currentStatus = urlParams.get('status') || '';
-			const radio = document.querySelector(`#filterForm input[name="status"][value="${currentStatus}"]`);
-			if (radio) radio.checked = true;
+		window.addEventListener('popstate', (e) => {
+			if (e.state && e.state.url) {
+				updateContent(e.state.url, false);
+				
+				const params = new URLSearchParams(new URL(e.state.url).search);
+				const status = params.get('status') || '';
+				const radio = document.querySelector(`#filterForm input[name="status"][value="${status}"]`);
+				if (radio) radio.checked = true;
+			} else {
+				window.location.reload();
+			}
 		});
 	});
 </script>

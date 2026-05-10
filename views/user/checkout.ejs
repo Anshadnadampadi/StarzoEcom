@@ -524,6 +524,7 @@
             currentStep: 0,
             isSubmitting: false,
             isVerifyingPayment: false,
+            isPaymentSuccessful: false, // Flag to prevent race condition with payment.failed
             addresses: userAddresses,
             hasCartIssues: hasCartIssues,
             walletBalance: <%= walletBalance %>,
@@ -800,6 +801,7 @@
                     description: "Secure Order Payment",
                     order_id: orderInfo.razorpayOrder.id,
                     handler: async (response) => {
+                        this.isPaymentSuccessful = true; // Block failure handler
                         await this.verifyOnlinePayment(response, orderInfo.orderId);
                     },
                     prefill: {
@@ -824,6 +826,7 @@
                 try {
                     const rzp = new Razorpay(options);
                     rzp.on('payment.failed', (response) => {
+                        if (this.isPaymentSuccessful) return;
                         this.isSubmitting = false;
                         window.location.href = `/checkout/payment-failure?orderId=${orderInfo.orderId}`;
                     });

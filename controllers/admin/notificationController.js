@@ -1,4 +1,6 @@
 import Notification from '../../models/notification/Notification.js';
+import SupportTicket from '../../models/support/SupportTicket.js';
+import Order from '../../models/order/order.js';
 
 export const getNotifications = async (req, res) => {
     try {
@@ -42,6 +44,28 @@ export const clearAllNotifications = async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error clearing notifications:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+export const getSidebarCounts = async (req, res) => {
+    try {
+        const [orderCount, returnCount, supportCount] = await Promise.all([
+            Order.countDocuments({ orderStatus: { $in: ['Pending', 'Confirmed'] } }),
+            Order.countDocuments({ orderStatus: 'Return Requested' }),
+            SupportTicket.countDocuments({ status: 'Open' })
+        ]);
+        
+        res.json({ 
+            success: true, 
+            counts: {
+                orders: orderCount,
+                returns: returnCount,
+                support: supportCount
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching sidebar counts:', error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };

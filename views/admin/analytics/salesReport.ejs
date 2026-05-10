@@ -88,11 +88,11 @@
 
             <!-- Period Filters -->
             <div class="bg-white/5 p-1 rounded-full flex gap-1 border border-white/5">
-                <button @click="updateFilter('daily')" :class="filter === 'daily' ? 'active' : ''" class="filter-btn">Day</button>
-                <button @click="updateFilter('weekly')" :class="filter === 'weekly' ? 'active' : ''" class="filter-btn">Week</button>
-                <button @click="updateFilter('monthly')" :class="filter === 'monthly' ? 'active' : ''" class="filter-btn">Month</button>
-                <button @click="updateFilter('yearly')" :class="filter === 'yearly' ? 'active' : ''" class="filter-btn">Year</button>
-                <button @click="showCustom = !showCustom" :class="filter === 'custom' ? 'active' : ''" class="filter-btn">Custom</button>
+                <button @click="updateFilter('daily')" :class="(filter === 'daily' && !showCustom) ? 'active' : ''" class="filter-btn">Day</button>
+                <button @click="updateFilter('weekly')" :class="(filter === 'weekly' && !showCustom) ? 'active' : ''" class="filter-btn">Week</button>
+                <button @click="updateFilter('monthly')" :class="(filter === 'monthly' && !showCustom) ? 'active' : ''" class="filter-btn">Month</button>
+                <button @click="updateFilter('yearly')" :class="(filter === 'yearly' && !showCustom) ? 'active' : ''" class="filter-btn">Year</button>
+                <button @click="showCustom = !showCustom" :class="(filter === 'custom' || showCustom) ? 'active' : ''" class="filter-btn">Custom</button>
             </div>
 
             <!-- Export Dropdown -->

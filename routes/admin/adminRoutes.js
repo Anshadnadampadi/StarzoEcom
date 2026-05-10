@@ -21,7 +21,7 @@ import offerRoutes from './adminOfferRoutes.js';
 import videoRoutes from './adminVideoRoutes.js';
 import salesReportRoutes from './salesReportRoutes.js';
 import adminSettingsRoutes from './adminSettingsRoutes.js';
-import { getNotifications, markAsRead, markAllAsRead, clearAllNotifications } from '../../controllers/admin/notificationController.js';
+import { getNotifications, markAsRead, markAllAsRead, clearAllNotifications, getSidebarCounts } from '../../controllers/admin/notificationController.js';
 
 const router = express.Router();
 
@@ -36,6 +36,7 @@ router.use(adminAuth);
 
 // Notifications API (Protected)
 router.get('/api/notifications', getNotifications);
+router.get('/api/sidebar-counts', getSidebarCounts);
 router.patch('/api/notifications/read-all', markAllAsRead);
 router.delete('/api/notifications/clear-all', clearAllNotifications);
 router.patch('/api/notifications/:id/read', markAsRead);

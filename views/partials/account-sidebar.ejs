@@ -10,14 +10,22 @@
     { id: 'wallet', label: 'My Wallet', href: '/account/wallet' }
   ];
 %>
-<aside class="flex flex-row overflow-x-auto lg:flex-col gap-2 lg:gap-1 lg:space-y-0 pb-4 lg:pb-0 scrollbar-hide" style="scrollbar-width: none; -ms-overflow-style: none;">
+<aside class="flex flex-row overflow-x-auto lg:flex-col gap-1 pb-4 lg:pb-0 scrollbar-hide lg:sticky lg:top-24 h-fit" style="scrollbar-width: none; -ms-overflow-style: none;">
     <style>
         aside::-webkit-scrollbar { display: none; }
     </style>
     <% tabs.forEach(tab => { %>
         <a href="<%= tab.href %>" 
-           class="flex-shrink-0 px-6 py-4 border transition-all text-[10px] font-bold uppercase <%= activeTab === tab.id ? 'bg-white text-black border-white' : 'border-white/[0.05] text-white/50 hover:text-white hover:border-white/20' %>">
-            <%= tab.label %>
+           class="flex-shrink-0 px-6 py-4 border transition-all text-[10px] font-black uppercase tracking-[0.2em] relative group
+                  <%= activeTab === tab.id 
+                    ? 'bg-white/[0.03] text-accent border-white/10' 
+                    : 'border-transparent text-white/40 hover:text-white hover:bg-white/[0.02]' %>">
+            
+            <!-- Active/Hover Indicator -->
+            <div class="absolute left-0 top-0 bottom-0 w-[2px] transition-all duration-300
+                        <%= activeTab === tab.id ? 'bg-accent' : 'bg-transparent group-hover:bg-white/20' %>"></div>
+            
+            <span class="relative z-10"><%= tab.label %></span>
         </a>
     <% }) %>
 </aside>

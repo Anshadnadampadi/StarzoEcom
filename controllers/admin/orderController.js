@@ -2,7 +2,8 @@ import Order from '../../models/order/order.js';
 import { 
     getOrdersService, 
     updateOrderStatusService, 
-    updateItemReturnStatusService 
+    updateItemReturnStatusService,
+    syncOrderStatus
 } from '../../services/admin/orderService.js';
 
 export const getOrders = async (req, res) => {
@@ -48,16 +49,24 @@ export const getOrderDetails = async (req, res) => {
         const orderId = req.params.id;
         const order = await Order.findById(orderId)
             .populate('user', 'firstName lastName name email')
-            .populate('items.product')
-            .lean();
+            .populate('items.product');
 
         if (!order) {
             return res.status(404).render('errors/error', { message: 'Order not found' });
         }
 
+        // Self-healing: Sync status if out of sync
+        const originalStatus = order.orderStatus;
+        syncOrderStatus(order);
+        if (order.orderStatus !== originalStatus) {
+            await order.save();
+        }
+
+        const orderData = order.toObject(); // Use toObject for the view
+
         res.render('admin/order-details', {
-            title: `Order #${order.orderId}`,
-            order,
+            title: `Order #${orderData.orderId}`,
+            order: orderData,
             breadcrumbs: [
                 { label: 'Orders', url: '/admin/orders' },
                 { label: `Order #${order.orderId}`, url: `/admin/orders/${order._id}` }

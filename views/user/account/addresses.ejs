@@ -208,11 +208,11 @@
     <div x-show="confirmDeleteOpen" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-6 backdrop-blur-md bg-black/60">
         <div class="bg-black border border-white/10 w-full max-w-sm p-10 text-center space-y-8 shadow-[0_40px_100px_rgba(0,0,0,0.8)]">
             <div class="space-y-4">
-                <h3 class="text-white text-xl font-bold uppercase tracking-tight">Purge Location?</h3>
+                <h3 class="text-white text-xl font-bold uppercase tracking-tight">Delete Location?</h3>
                 <p class="text-white/40 text-[10px] leading-relaxed uppercase tracking-widest">This action will permanently delete this delivery point from your vault.</p>
             </div>
             <div class="flex gap-4">
-                <button @click="executeDelete" class="flex-1 bg-status-danger text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Destroy</button>
+                <button @click="executeDelete" class="flex-1 bg-status-danger text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Delete</button>
                 <button @click="confirmDeleteOpen = false" class="flex-1 border border-white/5 text-white/40 py-4 text-[10px] font-black uppercase tracking-widest hover:border-white hover:text-white transition-all">Cancel</button>
             </div>
         </div>
@@ -375,7 +375,7 @@ function addressManager() {
                 
                 if (result.success) {
                     window.dispatchEvent(new CustomEvent('show-toast', { 
-                        detail: { message: 'Location purged successfully.', type: 'info' } 
+                        detail: { message: 'Location deleted successfully.', type: 'info' } 
                     }));
                     setTimeout(() => window.location.reload(), 1000);
                 } else {
@@ -383,7 +383,7 @@ function addressManager() {
                 }
             } catch (err) {
                 window.dispatchEvent(new CustomEvent('show-toast', { 
-                    detail: { message: err.message || 'Purge failed.', type: 'error' } 
+                    detail: { message: err.message || 'delete failed.', type: 'error' } 
                 }));
             } finally {
                 this.confirmDeleteOpen = false;

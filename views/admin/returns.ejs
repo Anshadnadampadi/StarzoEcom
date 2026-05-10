@@ -31,7 +31,7 @@
         </div>
 
         <!-- Stats summary -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             <div class="dashboard-card p-6 flex items-center gap-6 bg-white/[0.04]">
                 <div class="stat-icon bg-status-warning/20 text-status-warning">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -49,6 +49,16 @@
                 <div>
                     <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Approved</p>
                     <p class="text-2xl font-bold text-white"><%= stats.approved %></p>
+                </div>
+            </div>
+
+            <div class="dashboard-card p-6 flex items-center gap-6">
+                <div class="stat-icon bg-status-danger/20 text-status-danger">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </div>
+                <div>
+                    <p class="text-white/30 text-[10px] font-bold uppercase tracking-widest mb-1">Rejected</p>
+                    <p class="text-2xl font-bold text-white"><%= stats.rejected || 0 %></p>
                 </div>
             </div>
 

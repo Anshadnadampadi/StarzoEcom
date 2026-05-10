@@ -210,8 +210,13 @@
                 get razorpayKey() { return window.__RZPKEY__ || ''; },
 
                 openModal() {
-                    this.topupAmount = '';
+                    // Try to pre-fill from URL if we are on a failure page
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlAmount = urlParams.get('amount');
+                    
+                    this.topupAmount = urlAmount || '';
                     this.isProcessing = false;
+                    this.isSuccess = false; // Reset success flag
                     this.showModal = true;
                     document.body.style.overflow = 'hidden';
                 },
@@ -265,13 +270,19 @@
                         amount: order.amount, currency: order.currency,
                         name: 'STARZO MOBILES', description: 'Wallet Top-Up',
                         order_id: order.id,
-                        handler: async (r) => { await this.verifyTopup(r); },
+                        handler: async (r) => { 
+                            this.isSuccess = true; 
+                            await this.verifyTopup(r); 
+                        },
                         modal: { ondismiss: () => { this.isProcessing = false; } },
                         theme: { color: '#ff6a00' }
                     };
                     this.closeModal();
                     const rzp = new Razorpay(options);
                     rzp.on('payment.failed', (response) => {
+                        // Prevent redirecting to failure if verification is already in progress or succeeded
+                        if (this.isSuccess) return;
+                        
                         this.isProcessing = false;
                         window.location.href = `/account/wallet/topup/failure?amount=${this.topupAmount}&error=${encodeURIComponent(response.error.description)}`;
                     });
@@ -279,6 +290,7 @@
                 },
 
                 async verifyTopup(r) {
+                    this.isSuccess = true; // Mark early to block failure redirects
                     try {
                         const res = await fetch('/account/wallet/topup/verify', {
                             method: 'POST',
@@ -287,8 +299,9 @@
                         });
                         const data = await res.json();
                         if (data.success) {
+                            window.dispatchEvent(new CustomEvent('wallet-topup-success'));
                             window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Wallet topped up successfully!', type: 'success' } }));
-                            setTimeout(() => window.location.href = '/account/wallet', 1500);
+                            setTimeout(() => window.location.href = '/account/wallet', 800);
                         } else { throw new Error(data.message); }
                     } catch(err) {
                         window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: err.message, type: 'error' } }));

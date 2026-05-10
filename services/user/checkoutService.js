@@ -173,7 +173,11 @@ export const placeOrderService = async (userId, orderData) => {
     const existingPendingOrders = await Order.find({ 
         user: userId, 
         orderStatus: 'Pending', 
-        paymentMethod: 'ONLINE PAYMENT' 
+        paymentMethod: 'ONLINE PAYMENT',
+        $or: [
+            { paymentStatus: 'Pending' },
+            { paymentStatus: 'Failed' }
+        ]
     });
     
     for (const oldOrder of existingPendingOrders) {
@@ -361,8 +365,12 @@ export const retryPaymentService = async (orderId, userId) => {
 };
 
 export const revertFailedOrderService = async (orderId, userId) => {
-    // Find the order that is still pending
-    const order = await Order.findOne({ orderId, user: userId, paymentStatus: 'Pending' });
+    // Find the order that is still pending or failed
+    const order = await Order.findOne({ 
+        orderId, 
+        user: userId, 
+        $or: [{ paymentStatus: 'Pending' }, { paymentStatus: 'Failed' }] 
+    });
     if (!order) {
         return { success: true, message: 'Order already processed or not found.' };
     }
@@ -384,11 +392,17 @@ export const revertFailedOrderService = async (orderId, userId) => {
     }
 
     // Restore Coupon usage
+    let couponIdToRestore = null;
     if (order.couponCode) {
         const coupon = await Coupon.findOne({ code: order.couponCode });
         if (coupon) {
-            coupon.usedBy = coupon.usedBy.filter(id => id.toString() !== userId.toString());
-            await coupon.save();
+            // Remove only ONE instance of the user's usage (fix for multiple usage coupons)
+            const usageIndex = coupon.usedBy.findIndex(id => id.toString() === userId.toString());
+            if (usageIndex > -1) {
+                coupon.usedBy.splice(usageIndex, 1);
+                await coupon.save();
+                couponIdToRestore = coupon._id;
+            }
         }
     }
 
@@ -405,10 +419,17 @@ export const revertFailedOrderService = async (orderId, userId) => {
                     product: item.product,
                     variant: item.variant,
                     qty: item.qty,
-                    price: item.price
+                    price: item.price,
+                    originalPrice: item.price // Fallback
                 });
             }
         }
+        
+        // Restore the coupon back to the cart
+        if (couponIdToRestore) {
+            cart.coupon = couponIdToRestore;
+        }
+        
         await cart.save();
         await cartService.updateCartTotals(userId);
     }

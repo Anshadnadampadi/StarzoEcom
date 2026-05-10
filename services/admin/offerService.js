@@ -91,7 +91,7 @@ export const createOfferService = async (data) => {
 };
 
 export const getOffersService = async (query = {}) => {
-    const { search = "", page = 1, limit = 10 } = query;
+    const { search = "", page = 1, limit = 5 } = query;
     const filter = {
         name: { $regex: search, $options: "i" }
     };

@@ -1,42 +1,54 @@
 <!-- views/user/topup-failure.ejs -->
 <%- contentFor('body') %>
 
-<div class="min-h-[85vh] flex items-center justify-center p-4 bg-black">
+<div class="min-h-[85vh] flex items-center justify-center p-4 bg-black" x-data="{ state: 'failed' }" @wallet-topup-success.window="state = 'success'">
     <div class="max-w-lg w-full bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden">
         
-        <!-- Subtle Danger Glow -->
-        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-status-danger/20 blur-[80px] pointer-events-none"></div>
+        <!-- Subtle Glow -->
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 blur-[80px] pointer-events-none transition-colors duration-500"
+             :class="state === 'success' ? 'bg-status-success/20' : 'bg-status-danger/20'"></div>
 
-        <!-- Failure Icon -->
-        <div class="w-20 h-20 bg-status-danger/10 border border-status-danger/20 rounded-full flex items-center justify-center mx-auto mb-8 relative z-10 shadow-[0_0_20px_rgba(255,59,48,0.2)]">
-            <svg class="w-10 h-10 text-status-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Icon -->
+        <div class="w-20 h-20 border rounded-full flex items-center justify-center mx-auto mb-8 relative z-10 transition-all duration-500"
+             :class="state === 'success' ? 'bg-status-success/10 border-status-success/20 shadow-[0_0_20px_rgba(52,199,89,0.2)]' : 'bg-status-danger/10 border-status-danger/20 shadow-[0_0_20px_rgba(255,59,48,0.2)]'">
+            
+            <!-- Failure Icon -->
+            <svg x-show="state === 'failed'" class="w-10 h-10 text-status-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                 <line x1="12" y1="9" x2="12" y2="13"></line>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
+
+            <!-- Success Icon -->
+            <svg x-show="state === 'success'" x-cloak class="w-10 h-10 text-status-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
         </div>
 
-        <h1 class="text-3xl md:text-4xl font-display font-black tracking-tight text-white mb-3 relative z-10">Top-Up Failed</h1>
-        <p class="text-white/60 mb-8 max-w-sm mx-auto relative z-10 text-sm leading-relaxed">
-            The liquidity transmission was interrupted by the secure gateway. <br>
-            No funds have been deducted from your account.
+        <h1 class="text-3xl md:text-4xl font-display font-black tracking-tight text-white mb-3 relative z-10 transition-all"
+            x-text="state === 'success' ? 'Top-Up Successful' : 'Top-Up Failed'"></h1>
+        
+        <p class="text-white/60 mb-8 max-w-sm mx-auto relative z-10 text-sm leading-relaxed"
+           x-text="state === 'success' ? 'The liquidity transmission has been successfully verified. Your wallet is being updated.' : 'The liquidity transmission was interrupted by the secure gateway. No funds have been deducted.'">
         </p>
 
         <!-- Error Summary Card -->
         <div class="bg-black border border-white/10 rounded-xl p-6 text-left mb-8 relative z-10 shadow-inner">
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-white/5">
                 <span class="text-white/40 text-xs font-semibold uppercase tracking-wider">Protocol Status</span>
-                <span class="text-status-danger font-bold text-xs uppercase tracking-widest">Transaction Aborted</span>
+                <span class="font-bold text-xs uppercase tracking-widest transition-colors"
+                      :class="state === 'success' ? 'text-status-success' : 'text-status-danger'"
+                      x-text="state === 'success' ? 'Transaction Verified' : 'Transaction Aborted'"></span>
             </div>
             
             <div class="flex justify-between items-center">
-                <span class="text-white/40 text-xs font-semibold uppercase tracking-wider">Attempted Magnitude</span>
+                <span class="text-white/40 text-xs font-semibold uppercase tracking-wider">Magnitude</span>
                 <span class="text-white text-xl font-black tracking-tighter">₹<%= typeof amount !== 'undefined' ? amount.toLocaleString() : '---' %></span>
             </div>
         </div>
 
         <!-- Actions -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+        <div x-show="state === 'failed'" class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
             <button onclick="window.dispatchEvent(new CustomEvent('open-topup-modal'))" class="w-full sm:w-auto px-10 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-[0.2em] hover:bg-white hover:text-black rounded-sm transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)]">
                 Try Again
             </button>
@@ -44,9 +56,19 @@
                 Wallet Dashboard
             </a>
         </div>
+
+        <div x-show="state === 'success'" x-cloak class="relative z-10">
+            <div class="flex items-center justify-center gap-3 text-status-success text-xs font-black uppercase tracking-widest animate-pulse">
+                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Redirecting to Wallet...
+            </div>
+        </div>
         
-        <p class="mt-10 text-white/20 text-[8px] font-black uppercase tracking-[0.4em] relative z-10">
-            Encrypted Gateway Verification Failed.
+        <p class="mt-10 text-white/20 text-[8px] font-black uppercase tracking-[0.4em] relative z-10"
+           x-text="state === 'success' ? 'Encrypted Gateway Verification Successful' : 'Encrypted Gateway Verification Failed.'">
         </p>
     </div>
 </div>

@@ -97,13 +97,19 @@ export const verifyTopupPayment = async (req, res) => {
                 wallet = new Wallet({ user: userId, balance: 0, transactions: [] });
             }
 
+            // Check if this payment has already been processed (idempotency)
+            const alreadyProcessed = wallet.transactions.some(tx => tx.txnId === razorpay_payment_id);
+            if (alreadyProcessed) {
+                return res.status(200).json({ success: true, message: "Payment already processed" });
+            }
+
             const topupAmount = parseFloat(amount);
             wallet.balance += topupAmount;
             wallet.transactions.push({
                 amount: topupAmount,
                 type: 'credit',
                 description: "Wallet Top-up via Razorpay",
-                txnId: `TXN-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+                txnId: razorpay_payment_id, // Use actual payment ID for tracking and idempotency
                 status: 'Success',
                 timestamp: new Date()
             });
