@@ -2,15 +2,28 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
 
-// File filter (allow images and videos)
-const fileFilter = (req, file, cb) => {
-  const allowedImageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-  const allowedVideoTypes = ["video/mp4", "video/mpeg", "video/ogg", "video/webm", "video/quicktime"];
+// File filters
+const imageFilter = (req, file, cb) => {
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+  const extension = file.originalname.split('.').pop().toLowerCase();
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "gif", "svg"];
 
-  if (allowedImageTypes.includes(file.mimetype) || allowedVideoTypes.includes(file.mimetype)) {
+  if (allowedTypes.includes(file.mimetype) && allowedExtensions.includes(extension)) {
     cb(null, true);
   } else {
-    cb(new Error("Only image and video files are allowed"), false);
+    cb(new Error("Only image files (JPG, PNG, WEBP, GIF, SVG) are allowed"), false);
+  }
+};
+
+const videoFilter = (req, file, cb) => {
+  const allowedTypes = ["video/mp4", "video/mpeg", "video/ogg", "video/webm", "video/quicktime"];
+  const extension = file.originalname.split('.').pop().toLowerCase();
+  const allowedExtensions = ["mp4", "mpeg", "ogg", "webm", "mov"];
+
+  if (allowedTypes.includes(file.mimetype) && allowedExtensions.includes(extension)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only video files (MP4, WEBM, OGG, MOV) are allowed"), false);
   }
 };
 
@@ -29,13 +42,7 @@ const videoStorage = new CloudinaryStorage({
 
 export const uploadVideo = multer({
   storage: videoStorage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("video/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only video files are allowed here"), false);
-    }
-  },
+  fileFilter: videoFilter,
   limits: {
     fileSize: 50 * 1024 * 1024 // 50MB for videos
   }
@@ -53,7 +60,7 @@ const profileStorage = new CloudinaryStorage({
 
 export const uploadProfileImage = multer({
   storage: profileStorage,
-  fileFilter: fileFilter,
+  fileFilter: imageFilter,
   limits: {
     fileSize: 2 * 1024 * 1024 // 2MB
   }
@@ -71,7 +78,7 @@ const categoryStorage = new CloudinaryStorage({
 
 export const uploadCategoryIcon = multer({
   storage: categoryStorage,
-  fileFilter: fileFilter,
+  fileFilter: imageFilter,
   limits: {
     fileSize: 1 * 1024 * 1024 // 1MB
   }
@@ -89,7 +96,7 @@ const productStorage = new CloudinaryStorage({
 
 export const uploadProductImage = multer({
   storage: productStorage,
-  fileFilter: fileFilter,
+  fileFilter: imageFilter,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB per file
   }

@@ -152,6 +152,18 @@
                     handleFileChange(e) {
                         const files = Array.from(e.target.files);
                         if (files.length === 0) return;
+
+                        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                        const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
+                        
+                        if (invalidFiles.length > 0) {
+                            window.dispatchEvent(new CustomEvent('show-toast', { 
+                                detail: { message: 'Only images (JPG, PNG, WEBP, GIF) are allowed.', type: 'error' } 
+                            }));
+                            e.target.value = '';
+                            return;
+                        }
+
                         if (this.previews.length + files.length > 5) {
                             window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Maximum 5 assets allowed.', type: 'error' } }));
                             return;

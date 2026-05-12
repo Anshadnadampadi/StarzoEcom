@@ -111,6 +111,7 @@ const userSessionMiddleware = session({
 const adminSessionMiddleware = session({
     ...commonSessionOptions,
     name: "adminSid",
+    resave: true,  // Always resave to prevent silent TTL expiry mid-session
     store: MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
         collectionName: 'adminSessions',
@@ -130,11 +131,45 @@ app.use((req, res, next) => {
 
 
 
-app.use(passport.initialize());
-app.use(passport.session());
+// Passport is only for user (Google OAuth) auth — do NOT run it for admin routes
+// to prevent session interference with the admin session store.
+app.use((req, res, next) => {
+    if (req.path.startsWith('/admin')) return next();
+    passport.initialize()(req, res, next);
+});
+app.use((req, res, next) => {
+    if (req.path.startsWith('/admin')) return next();
+    passport.session()(req, res, next);
+});
 app.use(checkBlocked);
 
-app.use(setViewLocals);
+// setViewLocals fetches cart/wishlist counts — only meaningful for user-facing pages
+app.use((req, res, next) => {
+    if (req.path.startsWith('/admin')) return next();
+    return setViewLocals(req, res, next);
+});
+
+// For admin routes: set minimal locals (toast only, no DB queries)
+app.use((req, res, next) => {
+    if (!req.path.startsWith('/admin')) return next();
+    res.locals.user = null;
+    res.locals.cartCount = 0;
+    res.locals.wishlistCount = 0;
+    res.locals.breadcrumbs = [];
+    if (req.session && req.session.toast) {
+        res.locals.toast = req.session.toast;
+        delete req.session.toast;
+    } else {
+        res.locals.toast = null;
+    }
+    if (req.query.msg) {
+        res.locals.toast = {
+            message: req.query.msg,
+            type: req.query.icon || 'info'
+        };
+    }
+    next();
+});
 
 console.log(process.env.MONGO_URI)
 app.use(morgan('dev'))

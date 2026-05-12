@@ -148,6 +148,29 @@
                                     <% } else if (item.status === 'Return Rejected') { %>
                                         <span class="text-status-danger text-[8px] font-bold uppercase tracking-widest border border-status-danger/30 px-2 py-0.5 bg-status-danger/5 mt-1 inline-block">Return Rejected</span>
                                     <% } %>
+
+                                    <% if (!['Cancelled', 'Returned', 'Return Requested', 'Return Approved', 'Return Picked', 'Return Rejected'].includes(item.status)) { %>
+                                        <div class="mt-4 flex flex-col gap-2">
+                                            <p class="text-white/20 text-[8px] uppercase tracking-widest">Update Logistics Status</p>
+                                            <div class="flex gap-2">
+                                                <select id="itemStatus-<%= item._id %>" class="bg-black border border-white/10 px-3 py-1.5 text-[8px] font-bold tracking-widest uppercase text-white focus:outline-none focus:border-accent transition-all rounded-sm">
+                                                    <% ['Ordered', 'Shipped', 'Delivered', 'Cancelled'].forEach(s => { 
+                                                        const statusHierarchy = ['Ordered', 'Shipped', 'Delivered'];
+                                                        const currentIndex = statusHierarchy.indexOf(item.status || 'Ordered');
+                                                        const targetIndex = statusHierarchy.indexOf(s);
+                                                        const isAllowed = s === 'Cancelled' || targetIndex >= currentIndex;
+                                                    %>
+                                                        <option value="<%= s %>" <%= (item.status || 'Ordered') === s ? 'selected' : '' %> <%= !isAllowed ? 'disabled' : '' %>>
+                                                            <%= s %>
+                                                        </option>
+                                                    <% }) %>
+                                                </select>
+                                                <button onclick="updateItemStatus('<%= item._id %>', document.getElementById('itemStatus-<%= item._id %>').value)" class="bg-white/5 border border-white/10 text-white hover:bg-accent hover:text-black transition-all px-3 py-1.5 text-[8px] font-bold tracking-widest uppercase rounded-sm">
+                                                    Apply
+                                                </button>
+                                            </div>
+                                        </div>
+                                    <% } %>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -320,6 +343,43 @@
             } catch (error) {
                 window.dispatchEvent(new CustomEvent('show-toast', { 
                     detail: { message: error.message || 'Protocol failure. Item return status update aborted.', type: 'error' } 
+                }));
+            }
+        }
+    }
+
+    async function updateItemStatus(itemId, status) {
+        const orderId = '<%= order._id %>';
+        const confirmed = await window.confirmAction({
+            title: `Update Item to ${status}?`,
+            message: `Execution of this operation will transition this specific item's status to: ${status}`,
+            type: 'warning'
+        });
+
+        if (confirmed) {
+            try {
+                const response = await fetch('/admin/orders/item-status', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, itemId, status })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    window.dispatchEvent(new CustomEvent('show-toast', { 
+                        detail: { message: data.message || 'Item status updated successfully.', type: 'success' } 
+                    }));
+                    
+                    const res = await fetch(window.location.href);
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    document.getElementById('order-container').innerHTML = doc.getElementById('order-container').innerHTML;
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-toast', { 
+                    detail: { message: error.message || 'Transmission failed. Unable to update item status.', type: 'error' } 
                 }));
             }
         }

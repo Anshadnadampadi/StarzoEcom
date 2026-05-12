@@ -626,7 +626,15 @@
         
         // Badges
         if (p.isNew) node.querySelector('.badge-new').style.display = 'block';
-        if (hasOffer) node.querySelector('.badge-offer').style.display = 'block';
+        if (hasOffer) {
+            const offerBadge = node.querySelector('.badge-offer');
+            if (p.bestOffer) {
+                offerBadge.textContent = p.bestOffer.discountType === 'percentage' 
+                    ? `${p.bestOffer.discountValue}% OFF` 
+                    : `₹${p.bestOffer.discountValue.toLocaleString()} OFF`;
+            }
+            offerBadge.style.display = 'block';
+        }
 
         // Details
         node.querySelector(".brand-name").textContent = p.brand;

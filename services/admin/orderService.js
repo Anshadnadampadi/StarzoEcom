@@ -71,6 +71,8 @@ export const syncOrderStatus = (order) => {
     
     // Status definitions
     const isTerminal = (s) => ['Returned', 'Cancelled', 'Return Rejected'].includes(s);
+    const nonTerminalItems = items.filter(i => !isTerminal(i.status));
+    
     const allItemsTerminal = items.every(i => isTerminal(i.status));
     const allItemsCancelled = items.every(i => i.status === 'Cancelled');
     const allItemsRejected = items.every(i => i.status === 'Return Rejected');
@@ -99,11 +101,124 @@ export const syncOrderStatus = (order) => {
         order.orderStatus = 'Return Approved';
     } else if (anyItemPicked) {
         order.orderStatus = 'Return Picked';
-    } else if (anyItemReturned) {
-        order.orderStatus = 'Partially Returned';
-    } else if (anyItemRejected) {
-        order.orderStatus = 'Return Rejected';
+    } else {
+        // Forward logistics synchronization
+        const allNonTerminalDelivered = nonTerminalItems.length > 0 && nonTerminalItems.every(i => i.status === 'Delivered');
+        const anyNonTerminalShipped = nonTerminalItems.some(i => i.status === 'Shipped' || i.status === 'Delivered');
+        const anyNonTerminalOrdered = nonTerminalItems.some(i => i.status === 'Ordered');
+
+        if (allNonTerminalDelivered) {
+            order.orderStatus = 'Delivered';
+        } else if (anyNonTerminalShipped) {
+            order.orderStatus = 'Shipped';
+        } else if (anyNonTerminalOrdered) {
+            if (order.orderStatus === 'Pending' || order.orderStatus === 'Confirmed') {
+                // Keep existing confirmed status
+            } else {
+                order.orderStatus = 'Processing';
+            }
+        }
+
+        // Secondary checks for partial returns
+        if (anyItemReturned) {
+            order.orderStatus = 'Partially Returned';
+        } else if (anyItemRejected) {
+            order.orderStatus = 'Return Rejected';
+        }
     }
+};
+
+export const updateItemStatusService = async (orderId, itemId, status) => {
+    const order = await Order.findById(orderId);
+    if (!order) return { success: false, message: 'Order not found', status: 404 };
+
+    const item = order.items.find(i => i._id.toString() === itemId);
+    if (!item) return { success: false, message: 'Item not found', status: 404 };
+
+    const oldStatus = item.status;
+    if (oldStatus === status) return { success: true, message: 'Status is already set to ' + status };
+
+    // Terminal check
+    if (['Cancelled', 'Returned'].includes(oldStatus)) {
+        return { success: false, message: `Cannot update status for a ${oldStatus} item.`, status: 400 };
+    }
+
+    // Hierarchy check
+    const statusHierarchy = ['Ordered', 'Shipped', 'Delivered'];
+    const oldIndex = statusHierarchy.indexOf(oldStatus);
+    const newIndex = statusHierarchy.indexOf(status);
+
+    if (status !== 'Cancelled' && oldIndex !== -1 && newIndex !== -1 && newIndex < oldIndex) {
+        return { 
+            success: false, 
+            message: `Invalid transition: Item moved from ${oldStatus} to ${status} is not allowed.`,
+            status: 400
+        };
+    }
+
+    // Special case for Cancelled
+    if (status === 'Cancelled') {
+        if (oldStatus === 'Delivered') {
+            return { success: false, message: 'Delivered items cannot be cancelled. Use return process.', status: 400 };
+        }
+        
+        item.status = 'Cancelled';
+        
+        // Refund if paid
+        if (order.paymentStatus === 'Paid') {
+            const refundAmount = calculateItemRefund(item, order.subtotal, order.discount);
+            if (refundAmount > 0) {
+                const Wallet = mongoose.model('Wallet');
+                let wallet = await Wallet.findOne({ user: order.user });
+                if (!wallet) wallet = new Wallet({ user: order.user, balance: 0, transactions: [] });
+                
+                wallet.balance += refundAmount;
+                wallet.transactions.push({
+                    amount: refundAmount,
+                    type: 'credit',
+                    description: `Refund for Cancelled Item in Order #${order.orderId}`
+                });
+                await wallet.save();
+            }
+        }
+
+        // Stock restoration
+        const product = await Product.findById(item.product);
+        if (product) {
+            product.stock += item.qty;
+            if (item.variant && product.variants && product.variants.length > 0) {
+                const variantIndex = product.variants.findIndex(v => {
+                    if (typeof item.variant === 'object' && item.variant !== null) {
+                        return v.color === item.variant.color && 
+                               v.storage === item.variant.storage && 
+                               v.ram === item.variant.ram;
+                    }
+                    return v._id.toString() === item.variant.toString();
+                });
+                if (variantIndex > -1) {
+                    product.variants[variantIndex].stock += item.qty;
+                }
+            }
+            await product.save();
+        }
+    } else {
+        item.status = status;
+        
+        // If delivered and COD, update payment if all items terminal/paid
+        if (status === 'Delivered' && order.paymentMethod === 'CASH ON DELIVERY') {
+            // Check if all items are now terminal or delivered
+            const allItemsPaidFor = order.items.every(i => ['Delivered', 'Cancelled', 'Returned'].includes(i.status));
+            if (allItemsPaidFor) {
+                order.paymentStatus = 'Paid';
+            }
+        }
+    }
+
+    syncOrderStatus(order);
+    await recalculateOrderTotals(order);
+    await order.save();
+
+    return { success: true, message: `Item status updated to ${status} successfully.` };
 };
 
 export const updateOrderStatusService = async (orderId, status) => {

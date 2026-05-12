@@ -3,6 +3,7 @@ import {
     getOrdersService, 
     updateOrderStatusService, 
     updateItemReturnStatusService,
+    updateItemStatusService,
     syncOrderStatus
 } from '../../services/admin/orderService.js';
 
@@ -125,4 +126,33 @@ export const updateItemReturnStatus = async (req, res) => {
     }
 };
 
+export const updateItemStatus = async (req, res) => {
+    try {
+        const { orderId, itemId, status } = req.body;
+        const result = await updateItemStatusService(orderId, itemId, status);
 
+        if (!result.success) {
+            return res.status(result.status || 400).json(result);
+        }
+
+        // Notify User
+        const order = await Order.findById(orderId).populate('items.product').select('user orderId items');
+        if (order) {
+            const item = order.items.find(i => i._id.toString() === itemId);
+            const productName = item && item.product ? item.product.name : 'an item';
+            
+            await sendUserNotification(order.user, {
+                type: 'order_status',
+                title: 'Item Update',
+                message: `Product "${productName}" in your order #${order.orderId} is now ${status}`,
+                orderId: orderId,
+                status: status
+            });
+        }
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error updating item status:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};

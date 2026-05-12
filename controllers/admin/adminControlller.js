@@ -53,7 +53,18 @@ export const postAdminLogin = async (req, res) => {
       role: "admin"
     };
 
-    return res.redirect("/admin/dashboard");
+    // Explicitly save session before redirect to guarantee persistence
+    req.session.save((err) => {
+      if (err) {
+        console.error("[ADMIN LOGIN] Session save failure:", err);
+        return res.status(500).render("admin/auth/login", {
+          title: "Admin Login",
+          error: "Session initialization failed. Please try again.",
+          layout: false
+        });
+      }
+      return res.redirect("/admin/dashboard");
+    });
 
   } catch (error) {
     console.log(error);
@@ -429,8 +440,15 @@ export const postBlock = async (req, res) => {
     try {
         const id = req.params.id;
         console.log(`[ACL COMMAND] Admin initiating block for User ID: ${id}`);
-        await User.findByIdAndUpdate(id, { status: 0, isBlocked: true });
+        const result = await blockUserService(id);
         
+        if (!result.success) {
+            if (req.headers.accept?.includes('application/json')) {
+                return res.status(400).json({ success: false, message: "Could not restrict user." });
+            }
+            return res.redirect("/admin/customers?msg=Error blocking user&icon=error");
+        }
+
         if (req.headers.accept?.includes('application/json')) {
             return res.json({ success: true, message: "User identity has been restricted." });
         }
@@ -447,7 +465,14 @@ export const postBlock = async (req, res) => {
 export const postUnblock = async (req, res) => {
     try {
         const id = req.params.id;
-        await User.findByIdAndUpdate(id, { status: 1, isBlocked: false });
+        const result = await unblockUserService(id);
+
+        if (!result.success) {
+            if (req.headers.accept?.includes('application/json')) {
+                return res.status(400).json({ success: false, message: "Could not restore user." });
+            }
+            return res.redirect("/admin/customers?msg=Error unblocking user&icon=error");
+        }
 
         if (req.headers.accept?.includes('application/json')) {
             return res.json({ success: true, message: "User identity has been restored." });

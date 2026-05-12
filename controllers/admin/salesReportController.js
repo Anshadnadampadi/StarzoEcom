@@ -224,6 +224,17 @@ async function generateExcelReport(res, orders, stats, period, filter) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sales Report');
 
+    // Add metadata at the top
+    worksheet.addRow(['STARZO MOBILES SALES REPORT']).font = { bold: true, size: 16 };
+    worksheet.addRow([`Generated At: ${new Date().toLocaleString()}`]).font = { italic: true };
+    
+    const periodStr = period.start && period.end 
+        ? `${period.start.toLocaleDateString()} - ${period.end.toLocaleDateString()}`
+        : filter.toUpperCase();
+    worksheet.addRow([`Report Period: ${periodStr}`]).font = { bold: true };
+    worksheet.addRow([]); // Spacer
+
+    // Define columns
     worksheet.columns = [
         { header: 'Order ID', key: 'orderId', width: 20 },
         { header: 'Date', key: 'date', width: 15 },
@@ -234,6 +245,17 @@ async function generateExcelReport(res, orders, stats, period, filter) {
         { header: 'Discount', key: 'discount', width: 15 },
         { header: 'Status', key: 'status', width: 15 }
     ];
+
+    // Style the header row (which is now row 5 because of 4 rows of metadata)
+    const headerRow = worksheet.getRow(5);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.eachCell((cell) => {
+        cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF333333' }
+        };
+    });
 
     orders.forEach(order => {
         const methodMap = {
@@ -256,15 +278,14 @@ async function generateExcelReport(res, orders, stats, period, filter) {
 
     // Add summary row
     worksheet.addRow([]);
-    worksheet.addRow({
+    const totalRow = worksheet.addRow({
         orderId: 'TOTAL',
         totalAmount: stats.totalRevenue,
         discount: stats.totalDiscount
     });
-
-    // Formatting
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(worksheet.rowCount).font = { bold: true };
+    totalRow.font = { bold: true };
+    totalRow.getCell('totalAmount').numFmt = '₹#,##0';
+    totalRow.getCell('discount').numFmt = '₹#,##0';
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="Sales-Report-${filter}-${new Date().getTime()}.xlsx"`);

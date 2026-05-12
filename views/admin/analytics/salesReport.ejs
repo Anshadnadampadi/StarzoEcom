@@ -51,11 +51,56 @@
 <div class="space-y-8" x-data="{ 
     filter: '<%= filter %>',
     showCustom: <%= filter === 'custom' %>,
+    dateErrors: { start: '', end: '' },
+    today: '',
+    init() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        this.today = `${year}-${month}-${day}`;
+
+        // Default empty custom inputs to today for better UX
+        const startInput = document.getElementsByName('startDate')[0];
+        const endInput = document.getElementsByName('endDate')[0];
+        if (startInput && !startInput.value) startInput.value = this.today;
+        if (endInput && !endInput.value) endInput.value = this.today;
+    },
     updateFilter(val) {
         if(val === 'custom') {
             this.showCustom = true;
         } else {
             window.location.href = `/admin/sales-report?filter=${val}`;
+        }
+    },
+    validateDates() {
+        this.dateErrors = { start: '', end: '' };
+        let isValid = true;
+        const start = document.getElementsByName('startDate')[0].value;
+        const end = document.getElementsByName('endDate')[0].value;
+
+        if (!start) {
+            this.dateErrors.start = 'Start date is required';
+            isValid = false;
+        }
+        if (!end) {
+            this.dateErrors.end = 'End date is required';
+            isValid = false;
+        }
+        if (start && end && start > end) {
+            this.dateErrors.start = 'Start must be before End';
+            isValid = false;
+        }
+        if (end && end > this.today) {
+            this.dateErrors.end = 'Cannot be in the future';
+            isValid = false;
+        }
+        return isValid;
+    },
+    handleCustomSubmit(e) {
+        if (!this.validateDates()) {
+            e.preventDefault();
+            return false;
         }
     }
 }">
@@ -113,17 +158,25 @@
 
     <!-- Custom Date Range Form (Hidden by default) -->
     <div x-show="showCustom" x-collapse class="bg-white/5 border border-white/5 p-6 rounded-lg">
-        <form action="/admin/sales-report" method="GET" class="flex flex-wrap gap-6 items-end">
+        <form action="/admin/sales-report" method="GET" @submit="handleCustomSubmit" class="flex flex-wrap gap-6 items-end">
             <input type="hidden" name="filter" value="custom">
             <div class="space-y-2">
                 <label class="stat-label">Start Date</label>
-                <input type="date" name="startDate" value="<%= startDate %>" class="block bg-black border border-white/10 text-white text-xs px-4 py-2 focus:border-accent outline-none rounded-sm">
+                <input type="date" name="startDate" value="<%= startDate %>" 
+                       :max="today"
+                       :class="dateErrors.start ? 'border-status-danger' : 'border-white/10'"
+                       class="block bg-black border text-white text-xs px-4 py-2 focus:border-accent outline-none rounded-sm">
+                <p x-show="dateErrors.start" x-text="dateErrors.start" class="text-[9px] text-status-danger font-bold uppercase tracking-widest mt-1"></p>
             </div>
             <div class="space-y-2">
                 <label class="stat-label">End Date</label>
-                <input type="date" name="endDate" value="<%= endDate %>" class="block bg-black border border-white/10 text-white text-xs px-4 py-2 focus:border-accent outline-none rounded-sm">
+                <input type="date" name="endDate" value="<%= endDate %>" 
+                       :max="today"
+                       :class="dateErrors.end ? 'border-status-danger' : 'border-white/10'"
+                       class="block bg-black border text-white text-xs px-4 py-2 focus:border-accent outline-none rounded-sm">
+                <p x-show="dateErrors.end" x-text="dateErrors.end" class="text-[9px] text-status-danger font-bold uppercase tracking-widest mt-1"></p>
             </div>
-            <button type="submit" class="px-8 py-2 bg-white text-black text-[11px] font-bold uppercase tracking-widest hover:bg-accent hover:text-white transition-all rounded-sm">Generate Report</button>
+            <button type="submit" class="px-8 py-2 bg-white text-black text-[11px] font-bold uppercase tracking-widest hover:bg-accent hover:text-white transition-all rounded-sm mb-[2px]">Generate Report</button>
         </form>
     </div>
 

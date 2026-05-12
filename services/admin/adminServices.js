@@ -182,10 +182,6 @@ export const blockUserService = async (userId) => {
 
     if (!user) return { success: false };
 
-    if (user.status !== 1) {
-        return { success: false };
-    }
-
     user.status = 0;
     user.isBlocked = true;
     await user.save();
@@ -200,10 +196,6 @@ export const unblockUserService = async (userId) => {
     const user = await User.findById(userId);
 
     if (!user) return { success: false };
-
-    if (user.status !== 0) {
-        return { success: false };
-    }
 
     user.status = 1;
     user.isBlocked = false;
