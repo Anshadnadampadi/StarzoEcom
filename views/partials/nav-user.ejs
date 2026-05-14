@@ -1,8 +1,16 @@
 <!-- views/partials/nav-user.ejs -->
 <nav x-data="{ mobileMenu: false }" class="h-20 glass border-b border-black-border sticky top-0 z-40 flex items-center justify-between px-6 lg:px-12">
 
-    <!-- Logo -->
-    <div class="flex items-center gap-8">
+    <!-- Logo & Mobile Toggle -->
+    <div class="flex items-center gap-4 lg:gap-8">
+        <!-- Modern Mobile Toggle -->
+        <button @click="mobileMenu = true" 
+                class="lg:hidden w-10 h-10 flex items-center justify-center rounded-sm text-white/60 hover:text-white transition-all active:scale-95">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+
         <a href="/" class="text-white font-bold tracking-widest text-xl">STARZO</a>
 
         <!-- Desktop Menu -->
@@ -18,8 +26,11 @@
         </div>
     </div>
 
+
     <!-- Actions -->
     <div class="flex items-center gap-6">
+
+
         <!-- Search -->
         <div class="relative group hidden md:block">
             <form action="/search" method="GET">
@@ -106,121 +117,127 @@
             </div>
         </div>
 
-        <!-- Modern Mobile Toggle -->
-        <button @click="mobileMenu = true" 
-                class="lg:hidden w-10 h-10 flex items-center justify-center rounded-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all active:scale-95">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8h16M4 16h16"></path>
-            </svg>
-        </button>
+
     </div>
 
-    <!-- Modern Glass Mobile Menu Drawer -->
+    <!-- Modern Flipkart-Style Mobile Menu Drawer -->
     <div x-show="mobileMenu" 
          x-cloak
          class="fixed inset-0 z-[100] lg:hidden">
         
-        <!-- Ultra-Glass Backdrop -->
+        <!-- Backdrop -->
         <div x-show="mobileMenu"
-             x-transition:enter="transition ease-out duration-500"
+             x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-400"
+             x-transition:leave="transition ease-in duration-300"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              @click="mobileMenu = false"
-             class="absolute inset-0 bg-black/40 backdrop-blur-md"></div>
+             class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
         
-        <!-- Glass Drawer -->
+        <!-- Drawer (Left Aligned) -->
         <div x-show="mobileMenu"
-             x-transition:enter="transition ease-out duration-500 cubic-bezier(0.32, 0.72, 0, 1)"
-             x-transition:enter-start="translate-x-full"
+             x-transition:enter="transition ease-out duration-300 cubic-bezier(0, 0, 0.2, 1)"
+             x-transition:enter-start="-translate-x-full"
              x-transition:enter-end="translate-x-0"
-             x-transition:leave="transition ease-in duration-400 cubic-bezier(0.32, 0.72, 0, 1)"
+             x-transition:leave="transition ease-in duration-250 cubic-bezier(0.4, 0, 1, 1)"
              x-transition:leave-start="translate-x-0"
-             x-transition:leave-end="translate-x-full"
-             class="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-black/60 backdrop-blur-2xl border-l border-white/10 p-8 flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
+             x-transition:leave-end="-translate-x-full"
+             class="absolute left-0 top-0 bottom-0 w-[280px] bg-[#0d0d0d] flex flex-col shadow-2xl">
             
-            <!-- Animated Background Gradient -->
-            <div class="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full blur-[100px] -z-10 animate-pulse"></div>
-
-            <div class="flex justify-between items-center mb-12">
-                <span class="text-white font-black tracking-[0.25em] text-xl">STARZO<span class="text-accent text-[10px] ml-1">PRO</span></span>
-                <button @click="mobileMenu = false" class="text-white/40 hover:text-white p-2 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            <!-- Flipkart-Style Blue Header -->
+            <div class="bg-accent px-6 py-8 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center border border-white/30 overflow-hidden">
+                    <% if (locals.user && locals.user.profileImage) { %>
+                        <img src="<%= locals.user.profileImage %>" class="w-full h-full object-cover">
+                    <% } else { %>
+                        <i class="fas fa-user text-white text-xl"></i>
+                    <% } %>
+                </div>
+                <div>
+                    <p class="text-black/60 text-[10px] font-black uppercase tracking-widest mb-0.5">Welcome,</p>
+                    <p class="text-black font-black text-sm uppercase tracking-tight">
+                        <%= (locals.user && (locals.user.firstName || locals.user.name)) ? (locals.user.firstName || locals.user.name) : 'Explorer' %>
+                    </p>
+                </div>
+                <button @click="mobileMenu = false" class="ml-auto text-black/40 hover:text-black">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
 
-            <!-- Profile Summary (Glass Card) -->
-            <div class="flex items-center gap-4 mb-12 p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm relative group overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <% if (locals.user && locals.user.profileImage) { %>
-                    <img src="<%= locals.user.profileImage %>" class="w-14 h-14 rounded-full object-cover border-2 border-accent/20">
-                <% } else { %>
-                    <div class="w-14 h-14 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent uppercase font-black text-xl">
-                        <%= (locals.user && locals.user.email) ? locals.user.email[0] : (locals.user && locals.user.firstName ? locals.user.firstName[0] : 'U') %>
-                    </div>
-                <% } %>
-                <div class="relative z-10">
-                    <p class="text-xs font-black text-white uppercase tracking-[0.15em] mb-1"><%= (locals.user && (locals.user.firstName || locals.user.name)) ? (locals.user.firstName || locals.user.name) : 'User' %></p>
-                    <a href="/profile" @click="mobileMenu = false" class="text-[9px] text-accent font-bold uppercase tracking-[0.2em] flex items-center gap-1 group">
-                        Identity Settings
-                        <i class="fas fa-chevron-right text-[7px] group-hover:translate-x-1 transition-transform"></i>
-                    </a>
+            <div class="flex-1 overflow-y-auto py-4">
+                <!-- Navigation Sections -->
+                <div class="px-6 py-4 border-b border-white/5">
+                    <p class="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 mb-6">Main Marketplace</p>
+                    <nav class="space-y-6">
+                        <a href="/" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-house w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">Home</span>
+                        </a>
+                        <a href="/products" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-mobile-screen w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">All Phones</span>
+                        </a>
+                        <a href="/deals" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-tags w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">Hot Deals</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="px-6 py-6 border-b border-white/5">
+                    <p class="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 mb-6">Personal Vault</p>
+                    <nav class="space-y-6">
+                        <a href="/profile" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-user-gear w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">My Profile</span>
+                        </a>
+                        <a href="/account/orders" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-box-archive w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">My Orders</span>
+                        </a>
+                        <a href="/account/wallet" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-wallet w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">Wallet Balance</span>
+                        </a>
+                        <a href="/wishlist" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-heart w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">Wishlist</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="px-6 py-6">
+                    <p class="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 mb-6">Assistance</p>
+                    <nav class="space-y-6">
+                        <a href="/support" @click="mobileMenu = false" class="flex items-center gap-4 text-white/80 hover:text-accent transition-colors">
+                            <i class="fas fa-headset w-5 text-sm"></i>
+                            <span class="text-xs font-bold uppercase tracking-widest">Customer Support</span>
+                        </a>
+                    </nav>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-8 mb-12">
-                <div class="space-y-6">
-                    <p class="text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Navigation</p>
-                    <a href="/products" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic hover:text-accent transition-colors flex justify-between items-center group">
-                        All Phones
-                        <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0"></i>
-                    </a>
-                    <a href="/deals" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic hover:text-accent transition-colors flex justify-between items-center group">
-                        Deals
-                        <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0"></i>
-                    </a>
-                    <a href="/support" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic hover:text-accent transition-colors flex justify-between items-center group">
-                        Support
-                        <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0"></i>
-                    </a>
-                </div>
-
-                <div class="h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent my-2"></div>
-                
-                <div class="space-y-6">
-                    <p class="text-[9px] font-black uppercase tracking-[0.3em] text-white/30">Inventory</p>
-                    <a href="/cart" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic flex justify-between items-center group hover:text-accent transition-colors">
-                        Cart
-                        <span id="cart-badge-mobile" class="text-[10px] bg-accent text-black px-2.5 py-1 rounded-sm font-black tracking-tighter"><%= typeof cartCount !== 'undefined' ? cartCount : 0 %></span>
-                    </a>
-                    <a href="/wishlist" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic flex justify-between items-center group hover:text-accent transition-colors">
-                        Wishlist
-                        <span id="wishlist-badge-mobile" class="text-[10px] bg-accent text-black px-2.5 py-1 rounded-sm font-black tracking-tighter"><%= typeof wishlistCount !== 'undefined' ? wishlistCount : 0 %></span>
-                    </a>
-                    <a href="/account/orders" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic flex justify-between items-center group hover:text-accent transition-colors">
-                        Orders
-                        <i class="fas fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0"></i>
-                    </a>
-                    <a href="/account/wallet" @click="mobileMenu = false" class="text-2xl font-black tracking-tighter text-white uppercase italic flex justify-between items-center group hover:text-accent transition-colors">
-                        Wallet
-                        <i class="fas fa-chevron-right text-xs opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="mt-auto pt-8 border-t border-white/5 relative">
-                <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+            <div class="mt-auto p-6 border-t border-white/5">
                 <a href="/auth/logout"
                    @click.prevent="window.confirmAction({ title: 'Logout?', message: 'Are you sure you want to end your session?', confirmText: 'Logout', cancelText: 'Cancel', type: 'danger' }).then(confirmed => { if(confirmed) window.location.href='/auth/logout' })"
-                   class="flex items-center gap-3 text-status-danger font-black text-[10px] uppercase tracking-[0.3em] group">
-                   <div class="w-8 h-8 rounded-full bg-status-danger/10 flex items-center justify-center group-hover:bg-status-danger group-hover:text-white transition-all">
-                       <i class="fas fa-sign-out-alt text-xs"></i>
-                   </div>
-                   Sign Out Protocol
+                   class="flex items-center gap-4 text-status-danger group">
+                    <i class="fas fa-power-off text-sm"></i>
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em]">Logout System</span>
                 </a>
             </div>
         </div>
     </div>
-</nav>
+</nav>
+
+<!-- Mobile Search Bar (Flipkart Style) -->
+<div class="lg:hidden bg-black px-6 pb-4 border-b border-white/5">
+    <form action="/search" method="GET" class="relative">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">
+            <i class="fas fa-search text-xs"></i>
+        </span>
+        <input type="text" name="q" placeholder="Search for phones, brands and more" 
+               class="w-full bg-white/5 border border-white/10 rounded-sm py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-accent/50 transition-all">
+    </form>
+</div>

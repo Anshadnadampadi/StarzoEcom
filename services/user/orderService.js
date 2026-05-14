@@ -4,7 +4,7 @@ import Wallet from '../../models/user/Wallet.js';
 import User from '../../models/user/User.js';
 import { isSameVariant } from '../../utils/productHelpers.js';
 import { createAdminNotification } from '../../utils/notificationHelper.js';
-import { recalculateOrderTotals, calculateItemRefund } from '../../utils/orderCalculations.js';
+import { recalculateOrderTotals } from '../../utils/orderCalculations.js';
 
 // recalculateOrderTotals moved to utils/orderCalculations.js
 
@@ -130,10 +130,22 @@ export const cancelOrderItemService = async (userId, orderId, itemId) => {
     const item = order.items[itemIndex];
     if (item.status === 'Cancelled') return { success: false, message: 'Item already cancelled', status: 400 };
 
+    const oldTotalAmount = order.totalAmount;
     item.status = 'Cancelled';
-    const refundAmount = calculateItemRefund(item, order.subtotal, order.discount);
 
-    if (order.paymentStatus === 'Paid') {
+    await recalculateOrderTotals(order);
+    const newTotalAmount = order.totalAmount;
+
+    let refundAmount = oldTotalAmount - newTotalAmount;
+
+    if (refundAmount < 0) {
+        refundAmount = 0;
+        if (order.paymentMethod !== 'CASH ON DELIVERY') {
+            order.totalAmount = oldTotalAmount;
+        }
+    }
+
+    if (refundAmount > 0 && order.paymentStatus === 'Paid') {
         let wallet = await Wallet.findOne({ user: userId });
         if (!wallet) wallet = new Wallet({ user: userId, balance: 0, transactions: [] });
         
@@ -165,9 +177,8 @@ export const cancelOrderItemService = async (userId, orderId, itemId) => {
         if (order.paymentStatus === 'Paid') order.paymentStatus = 'Refunded';
     }
 
-    await recalculateOrderTotals(order);
     await order.save();
-    return { success: true, message: 'Item cancelled successfully and refund processed to wallet.' };
+    return { success: true, message: 'Item cancelled successfully' + (refundAmount > 0 ? ' and refund processed to wallet.' : '.') };
 };
 
 export const requestReturnService = async (userId, orderId, reason) => {
@@ -205,10 +216,6 @@ export const returnOrderItemService = async (userId, orderId, itemId, reason) =>
     const order = await Order.findOne({ _id: orderId, user: userId });
     if (!order) return { success: false, message: 'Order not found', status: 404 };
 
-    if (order.orderStatus !== 'Delivered' && order.orderStatus !== 'Partially Returned') {
-        return { success: false, message: 'Returns can only be requested for delivered orders.', status: 400 };
-    }
-
     const item = order.items.find(i => i._id.toString() === itemId);
     if (!item) return { success: false, message: 'Item not found', status: 404 };
 
@@ -219,9 +226,8 @@ export const returnOrderItemService = async (userId, orderId, itemId, reason) =>
     item.status = 'Return Requested';
     item.returnReason = reason;
 
-    if (order.orderStatus === 'Delivered' || order.orderStatus === 'Partially Returned') {
-        order.orderStatus = 'Return Requested';
-    }
+    // Any return request puts the overall order into Return Requested state
+    order.orderStatus = 'Return Requested';
 
     await order.save();
 

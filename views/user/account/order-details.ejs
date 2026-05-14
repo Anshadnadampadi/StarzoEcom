@@ -3,22 +3,22 @@
 
 <div class="min-h-screen bg-black py-24" id="order-container">
     <div class="max-w-screen-xl mx-auto px-6 lg:px-8">
-        <div class="mb-16 flex items-end justify-between gap-8 fade-up">
-            <div>
-                <a href="/account/orders" class="text-accent text-[10px] font-bold tracking-widest uppercase mb-8 inline-block hover:underline">← Back to orders</a>
-                <h1 class="text-white text-display font-bold tracking-tight uppercase font-display">ORDER #<%= order.orderId %>.</h1>
-                <p class="text-text-muted text-label font-bold uppercase mt-2">Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
+        <div class="mb-10 md:mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 fade-up">
+            <div class="text-center md:text-left">
+                <a href="/account/orders" class="text-accent text-[10px] font-bold tracking-widest uppercase mb-6 inline-block hover:underline">← Back to orders</a>
+                <h1 class="text-white text-2xl md:text-4xl font-bold tracking-tight uppercase font-display">ORDER #<%= order.orderId %>.</h1>
+                <p class="text-text-muted text-[10px] font-bold uppercase mt-2">Placed on <%= new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
             </div>
-            <div class="flex flex-wrap gap-4 justify-end">
+            <div class="flex flex-wrap gap-3 justify-center md:justify-end">
                 <% 
                    const allowedInvoiceStatuses = ['Confirmed', 'Processing', 'Shipped', 'Delivered', 'Partially Returned', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned'];
                    const hasReturnedItems = order.items.some(i => i.status === 'Returned');
                 %>
 
                 <% if (allowedInvoiceStatuses.includes(order.orderStatus)) { %>
-                    <a href="/account/orders/<%= order._id %>/invoice" class="bg-white text-black text-[10px] font-bold tracking-widest uppercase px-8 py-4 hover:bg-accent transition-all flex items-center gap-2">
+                    <a href="/account/orders/<%= order._id %>/invoice" class="bg-white text-black text-[9px] md:text-[10px] font-bold tracking-widest uppercase px-6 md:px-8 py-3 md:py-4 hover:bg-accent transition-all flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        Download Invoice
+                        Invoice
                     </a>
                 <% } %>
 
@@ -28,18 +28,15 @@
                         Download Credit Note
                     </a>
                 <% } %>
-
                 <% if (['Pending', 'Confirmed', 'Processing'].includes(order.orderStatus)) { %>
-                    <button onclick="confirmCancel('<%= order._id %>')" class="text-status-danger text-[10px] font-bold tracking-widest uppercase border border-status-danger/30 px-8 py-4 hover:bg-status-danger hover:text-white transition-all">Cancel Order</button>
+                    <button onclick="confirmCancel('<%= order._id %>')" class="text-status-danger text-[9px] md:text-[10px] font-bold tracking-widest uppercase border border-status-danger/30 px-6 md:px-8 py-3 md:py-4 hover:bg-status-danger hover:text-white transition-all">Cancel</button>
                 <% } %>
-
                 <% if (order.orderStatus === 'Delivered') { %>
-                    <button onclick="confirmReturn('<%= order._id %>')" class="text-status-warning text-[10px] font-bold tracking-widest uppercase border border-status-warning/30 px-8 py-4 hover:bg-status-warning hover:text-white transition-all">Return Order</button>
+                    <button onclick="confirmReturn('<%= order._id %>')" class="text-status-warning text-[9px] md:text-[10px] font-bold tracking-widest uppercase border border-status-warning/30 px-6 md:px-8 py-3 md:py-4 hover:bg-status-warning hover:text-white transition-all">Return</button>
                 <% } %>
-
                 <% if ((order.orderStatus === 'Pending' || order.orderStatus === 'Confirmed') && (order.paymentStatus === 'Pending' || order.paymentStatus === 'Failed') && order.paymentMethod === 'ONLINE PAYMENT') { %>
                     <button onclick="retryPayment('<%= order.orderId %>')" 
-                        class="bg-accent text-black text-[10px] font-bold tracking-widest uppercase px-10 py-4 hover:bg-white transition-all shadow-[0_0_20px_rgba(255,106,0,0.2)]">
+                        class="bg-accent text-black text-[9px] md:text-[10px] font-bold tracking-widest uppercase px-8 md:px-10 py-3 md:py-4 hover:bg-white transition-all shadow-[0_0_20px_rgba(255,106,0,0.2)]">
                         Retry Payment
                     </button>
                 <% } %>
@@ -85,7 +82,7 @@
                                 itemStages[2] = { name: 'Rejected', desc: 'Return declined', date: order.updatedAt, active: true, color: 'text-status-danger' };
                             }
                         } else if (!isCancelled) {
-                            const effectiveStatus = item.status === 'Ordered' ? (['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'].includes(order.orderStatus) ? order.orderStatus : 'Ordered') : item.status;
+                            const effectiveStatus = item.status || 'Ordered';
                             itemStages = [
                                 { name: 'Confirmed', desc: 'Order received', date: order.createdAt, active: true },
                                 { name: 'Processing', desc: 'Being packed', date: ['Processing', 'Shipped', 'Delivered'].includes(effectiveStatus) ? order.updatedAt : null, active: ['Processing', 'Shipped', 'Delivered'].includes(effectiveStatus) },
@@ -118,7 +115,7 @@
                                                 </button>
                                             <% } %>
 
-                                            <% if ((order.orderStatus === 'Delivered' || order.orderStatus === 'Partially Returned') && item.status === 'Delivered') { %>
+                                            <% if (item.status === 'Delivered') { %>
                                                 <button onclick="confirmReturnItem('<%= order._id %>', '<%= item._id %>', '<%= productTitle %>')" 
                                                     class="text-[9px] font-bold text-status-warning uppercase tracking-[0.2em] hover:underline transition-all flex items-center gap-1">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v4a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2h3m4 3l5 5m0 0l-5 5m5-5H8"></path></svg>
@@ -197,7 +194,7 @@
                                 <p class="text-white/30 text-[9px] font-bold uppercase tracking-widest mb-1">Grand Total</p>
                                 <p class="text-white text-[10px] font-bold uppercase"><%= order.paymentMethod %> / <%= order.paymentStatus %></p>
                             </div>
-                            <span class="text-accent font-mono text-4xl font-bold">₹<%= order.totalAmount.toLocaleString() %></span>
+                            <span class="text-accent font-mono text-2xl md:text-4xl font-bold">₹<%= order.totalAmount.toLocaleString() %></span>
                         </div>
                     </div>
                 </div>

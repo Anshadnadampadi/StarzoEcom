@@ -19,13 +19,23 @@
     .balance-card {
         background: rgba(255, 255, 255, 0.02);
         border: 1px solid rgba(255, 255, 255, 0.05);
-        padding: 3.5rem;
-        margin-bottom: 4rem;
+        padding: 2rem;
+        margin-bottom: 2.5rem;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        gap: 2rem;
         position: relative;
         overflow: hidden;
+    }
+
+    @media (min-width: 768px) {
+        .balance-card {
+            padding: 3.5rem;
+            margin-bottom: 4rem;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
     }
 
     .balance-card::before {
@@ -51,11 +61,18 @@
     }
 
     .balance-amount {
-        font-size: 4.5rem;
+        font-size: 2.5rem;
         font-weight: 900;
         letter-spacing: -0.03em;
         color: #ffffff;
         font-family: 'Outfit', sans-serif;
+        line-height: 1;
+    }
+
+    @media (min-width: 768px) {
+        .balance-amount {
+            font-size: 4.5rem;
+        }
     }
 
     .btn-add-money {
@@ -88,18 +105,18 @@
 
     .transaction-table th {
         text-align: left;
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 900;
         text-transform: uppercase;
         letter-spacing: 0.2em;
         color: rgba(255, 255, 255, 0.4);
-        padding: 2.2rem 0;
+        padding: 1.5rem 0.75rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         font-family: 'Outfit', sans-serif;
     }
 
     .transaction-table td {
-        padding: 2.2rem 0;
+        padding: 1.5rem 0.75rem;
         font-size: 11px;
         color: rgba(255, 255, 255, 0.6);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -237,25 +254,27 @@
             <!-- Content Area -->
             <div class="lg:col-span-3">
                 
-                <div class="mb-16">
-                    <h1 class="display-heading text-6xl mb-4">My <span class="text-accent italic">Wallet.</span></h1>
+                <div class="mb-12 md:mb-16 text-center md:text-left">
+                    <h1 class="display-heading text-4xl md:text-6xl mb-4">My <span class="text-accent italic">Wallet.</span></h1>
                     <p class="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Integrated Credit protocol & Transaction history</p>
                 </div>
 
                 <!-- Balance Section -->
                 <div class="balance-card">
-                    <div class="space-y-2">
+                    <div class="space-y-2 text-center md:text-left">
                         <span class="label-xs">Active Liquidity</span>
                         <div class="balance-amount">₹<%= (wallet ? wallet.balance : 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }) %></div>
                     </div>
-                    <button @click="window.dispatchEvent(new CustomEvent('open-topup-modal'))" class="btn-add-money">Top Up Wallet</button>
+                    <div class="flex justify-center md:block">
+                        <button @click="window.dispatchEvent(new CustomEvent('open-topup-modal'))" class="btn-add-money w-full sm:w-auto">Top Up Wallet</button>
+                    </div>
                 </div>
 
                 <!-- History Section -->
                 <div class="mt-20">
-                    <div class="flex items-center justify-between border-b border-white/5 pb-10 mb-10">
-                        <h2 class="display-heading text-3xl">Transaction <span class="text-accent italic">History.</span></h2>
-                        <span class="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]"><%= totalTransactions %> Events Logged</span>
+                    <div class="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 pb-8 md:pb-10 mb-10 gap-4">
+                        <h2 class="display-heading text-2xl md:text-3xl text-center md:text-left">Transaction <span class="text-accent italic">History.</span></h2>
+                        <span class="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] text-center md:text-right"><%= totalTransactions %> Events Logged</span>
                     </div>
                     
                     <div class="overflow-x-auto custom-scrollbar">

@@ -1,7 +1,7 @@
 <!-- views/partials/toast.ejs -->
 <div x-data="toastComponent()" 
      x-show="show" 
-     style="position: fixed; top: 2rem; right: 2rem; z-index: 100000; min-width: 360px; pointer-events: none; display: none;"
+     class="fixed top-4 right-4 md:top-8 md:right-8 z-[100000] w-[calc(100vw-2rem)] md:w-auto md:min-w-[360px] pointer-events-none"
      :style="{ display: show ? 'block' : 'none' }"
      x-transition:enter="transition ease-out duration-500"
      x-transition:enter-start="opacity-0 transform translate-x-12 scale-95"

@@ -18,8 +18,8 @@
                         <span class="text-white">Profile</span>
                     </nav> -->
                     <h1
-                        class="text-white text-display font-display font-black tracking-tighter uppercase leading-[0.9]">
-                        <br><span class="text-accent underline decoration-4 underline-offset-8"></span>
+                        class="text-white text-3xl md:text-5xl lg:text-7xl font-display font-black tracking-tighter uppercase leading-[0.9]">
+                        User<br><span class="text-accent underline decoration-4 underline-offset-8">Profile.</span>
                     </h1>
                 </div>
                 <div class="flex items-center gap-6">
@@ -32,8 +32,8 @@
                     </div>
                     <a href="/auth/logout"
                         @click.prevent="if(await window.confirmAction({ title: 'Logout?', message: 'Are you sure you want to end your session?', confirmText: 'Logout', cancelText: 'Cancel', type: 'danger' })) window.location.href='/auth/logout'"
-                        class="group flex items-center gap-4 bg-accent px-10 py-5 hover:bg-white transition-all duration-500 shadow-[0_10px_30px_rgba(255,106,0,0.3)]">
-                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-black">Sign Out</span>
+                        class="group flex items-center gap-4 bg-accent px-6 md:px-10 py-4 md:py-5 hover:bg-white transition-all duration-500 shadow-[0_10px_30px_rgba(255,106,0,0.3)]">
+                        <span class="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-black">Sign Out</span>
                         <svg class="w-4 h-4 text-black transform group-hover:translate-x-1 transition-transform"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -53,13 +53,21 @@
 
                         <!-- Profile Avatar & Key Stats -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 fade-up" style="animation-delay: 200ms">
-                            <!-- Avatar Upload -->
+                             <!-- Avatar Upload -->
                             <div
-                                class="md:col-span-1 flex flex-col items-center justify-center p-10 bg-black-elevated border border-black-border relative group overflow-hidden transition-all hover:border-accent/40">
+                                class="md:col-span-1 flex flex-col items-center justify-center p-6 md:p-10 bg-black-elevated border border-black-border relative group overflow-hidden transition-all hover:border-accent/40 rounded-sm">
                                 <div
-                                    class="relative w-40 h-40 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-accent transition-all duration-500 shadow-2xl">
+                                    class="relative w-40 h-40 rounded-full overflow-hidden border-2 border-white/10 group-hover:border-accent transition-all duration-500 shadow-2xl bg-black">
+                                    
+                                    <div id="profile-fallback" 
+                                        class="w-full h-full bg-accent/10 flex items-center justify-center text-accent uppercase font-black text-6xl"
+                                        style="<%= (user && user.profileImage) ? 'display: none;' : 'display: flex;' %>">
+                                        <%= (user && user.firstName) ? user.firstName[0] : (user && user.email ? user.email[0] : 'U') %>
+                                    </div>
                                     <img id="profile-preview"
-                                        src="<%= user.profileImage || '/images/default-avatar.png' %>"
+                                        src="<%= user.profileImage || '' %>"
+                                        onerror="this.style.display='none'; document.getElementById('profile-fallback').style.display='flex';"
+                                        style="<%= (!user || !user.profileImage) ? 'display: none;' : 'display: block;' %>"
                                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
 
                                     <div
@@ -84,6 +92,7 @@
                                         Photo</p>
                                     <p class="text-[8px] font-bold uppercase tracking-widest text-white/30">JPG, PNG
                                         (Max 2MB)</p>
+                                    <button x-show="hasCustomAvatar" @click="removeAvatar()" class="text-[9px] font-bold uppercase tracking-widest text-status-danger hover:text-white mt-2 transition-colors">Remove Photo</button>
                                 </div>
 
                                 <!-- Premium Loader Overlay -->
@@ -96,7 +105,7 @@
                             </div>
 
                             <!-- Referral Section -->
-                            <div class="md:col-span-2 flex flex-col justify-center bg-black-elevated border border-black-border p-12 relative overflow-hidden group rounded-sm transition-all hover:border-accent/30">
+                            <div class="md:col-span-2 flex flex-col justify-center bg-black-elevated border border-black-border p-6 md:p-12 relative overflow-hidden group rounded-sm transition-all hover:border-accent/30">
                                 <div
                                     class="absolute right-0 top-0 w-64 h-64 bg-accent/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2">
                                 </div>
@@ -104,9 +113,9 @@
                                 <div class="relative z-10 flex flex-col md:flex-row gap-12 items-center">
                                     <div class="flex-1 space-y-6">
                                         <h3
-                                            class="text-white text-4xl font-display font-black tracking-tighter uppercase leading-none">
+                                            class="text-white text-2xl md:text-4xl font-display font-black tracking-tighter uppercase leading-none text-center md:text-left">
                                             Build Your<br><span class="text-accent italic">REFERRALS</span></h3>
-                                        <p class="text-white/40 text-xs leading-relaxed max-w-sm">Expand the Mobiverse.
+                                        <p class="text-white/40 text-[10px] md:text-xs leading-relaxed max-w-sm text-center md:text-left mx-auto md:mx-0">Expand the Mobiverse.
                                             Every
                                             user who signs up with your unique protocol code generates credits for your
                                             vault.
@@ -120,7 +129,7 @@
                                                 Code</span>
                                             <div class="flex items-center gap-6 mb-6">
                                                 <span
-                                                    class="text-white text-4xl font-mono font-black tracking-[0.1em] selection:bg-accent selection:text-black">
+                                                    class="text-white text-2xl md:text-4xl font-mono font-black tracking-[0.1em] selection:bg-accent selection:text-black">
                                                     <%= user.referralCode %>
                                                 </span>
                                                 <button @click="copyToClipboard('<%= user.referralCode %>')"
@@ -157,7 +166,7 @@
                         <div class="space-y-8 fade-up" style="animation-delay: 300ms">
                             <div class="flex justify-between items-end border-b border-black-border pb-6">
                                 <h2
-                                    class="text-white text-2xl font-display font-black tracking-tighter uppercase leading-none">
+                                    class="text-white text-xl md:text-2xl font-display font-black tracking-tighter uppercase leading-none">
                                     The <span
                                         class="text-accent underline decoration-2 underline-offset-4 font-mono">Profile.</span>
                                 </h2>
@@ -176,7 +185,7 @@
                                         <label
                                             class="text-white/20 text-[9px] font-black uppercase tracking-widest block mb-2 group-hover:text-accent transition-colors">Identification</label>
                                         <div class="flex items-center justify-between">
-                                            <p class="text-white text-lg font-bold uppercase tracking-tight">
+                                            <p class="text-white text-base md:text-lg font-bold uppercase tracking-tight">
                                                 <%= (user.firstName || user.name) %>
                                                     <%= (user.lastName || '' ) %>
                                             </p>
@@ -190,7 +199,7 @@
                                             class="text-white/20 text-[9px] font-black uppercase tracking-widest block mb-2 group-hover:text-accent transition-colors">Comms
                                             Link</label>
                                         <div class="flex items-center justify-between">
-                                            <p class="text-white text-lg font-bold tabular-nums">
+                                            <p class="text-white text-base md:text-lg font-bold tabular-nums">
                                                 <%= user.phone || '+ -- --- --- ----' %>
                                             </p>
                                             <span
@@ -207,7 +216,7 @@
                                             Access</label>
                                         <div class="flex items-center justify-between">
                                             <div class="space-y-1">
-                                                <p class="text-white text-lg font-bold lowercase tracking-tight">
+                                                <p class="text-white text-base md:text-lg font-bold lowercase tracking-tight">
                                                     <%= user.email %>
                                                 </p>
                                                 <div class="flex items-center gap-2">
@@ -507,6 +516,7 @@
                 otpValue: ['', '', '', '', '', ''],
                 isSubmitting: false,
                 isUploading: false,
+                hasCustomAvatar: <%- (user.profileImage && user.profileImage !== '' && user.profileImage !== '/images/default-avatar.png') ? 'true' : 'false' %>,
                 cropper: null,
                 selectedImageUri: null,
                 passwordForm: { current: '', new: '', confirm: '' },
@@ -611,7 +621,11 @@
                             const data = await res.json();
 
                             if (data.success) {
-                                document.getElementById('profile-preview').src = data.imageUrl + '?t=' + new Date().getTime(); // bypass cache
+                                const img = document.getElementById('profile-preview');
+                                img.src = data.imageUrl + '?t=' + new Date().getTime(); // bypass cache
+                                img.style.display = 'block';
+                                document.getElementById('profile-fallback').style.display = 'none';
+                                this.hasCustomAvatar = true;
                                 window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Identity visualization updated.', type: 'success' } }));
                                 this.closeModal('cropImage');
                             } else {
@@ -623,6 +637,31 @@
                             this.isUploading = false;
                         }
                     }, 'image/jpeg', 0.9);
+                },
+
+                async removeAvatar() {
+                    if(!await window.confirmAction({ title: 'Remove Photo?', message: 'Are you sure you want to remove your profile photo?', confirmText: 'Remove', cancelText: 'Cancel', type: 'danger' })) return;
+                    
+                    this.isUploading = true;
+                    try {
+                        const res = await fetch('/upload-profile', { method: 'DELETE' });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            const img = document.getElementById('profile-preview');
+                            img.style.display = 'none';
+                            img.src = '';
+                            document.getElementById('profile-fallback').style.display = 'flex';
+                            this.hasCustomAvatar = false;
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Profile photo removed.', type: 'success' } }));
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    } catch (err) {
+                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: err.message, type: 'error' } }));
+                    } finally {
+                        this.isUploading = false;
+                    }
                 },
 
                 async submitProfileUpdate(e) {

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import Order from '../../models/order/order.js';
 import Product from '../../models/product/product.js';
 import { isSameVariant } from '../../utils/productHelpers.js';
-import { recalculateOrderTotals, calculateItemRefund } from '../../utils/orderCalculations.js';
+import { recalculateOrderTotals } from '../../utils/orderCalculations.js';
 
 // recalculateOrderTotals moved to utils/orderCalculations.js
 
@@ -156,6 +156,17 @@ export const updateItemStatusService = async (orderId, itemId, status) => {
         };
     }
 
+    const logisticsStages = ['Ordered', 'Shipped', 'Delivered', 'Confirmed', 'Processing'];
+    if (logisticsStages.includes(status) && order.paymentMethod !== 'CASH ON DELIVERY' && order.paymentStatus !== 'Paid') {
+        return { 
+            success: false, 
+            message: `ACCESS DENIED: Order #${order.orderId} has not been paid. Online payments must be 'Paid' before advancing item to ${status}.`,
+            status: 400 
+        };
+    }
+
+    const oldTotalAmount = order.totalAmount;
+
     // Special case for Cancelled
     if (status === 'Cancelled') {
         if (oldStatus === 'Delivered') {
@@ -164,22 +175,30 @@ export const updateItemStatusService = async (orderId, itemId, status) => {
         
         item.status = 'Cancelled';
         
-        // Refund if paid
-        if (order.paymentStatus === 'Paid') {
-            const refundAmount = calculateItemRefund(item, order.subtotal, order.discount);
-            if (refundAmount > 0) {
-                const Wallet = mongoose.model('Wallet');
-                let wallet = await Wallet.findOne({ user: order.user });
-                if (!wallet) wallet = new Wallet({ user: order.user, balance: 0, transactions: [] });
-                
-                wallet.balance += refundAmount;
-                wallet.transactions.push({
-                    amount: refundAmount,
-                    type: 'credit',
-                    description: `Refund for Cancelled Item in Order #${order.orderId}`
-                });
-                await wallet.save();
+        await recalculateOrderTotals(order);
+        const newTotalAmount = order.totalAmount;
+        let refundAmount = oldTotalAmount - newTotalAmount;
+
+        if (refundAmount < 0) {
+            refundAmount = 0;
+            if (order.paymentMethod !== 'CASH ON DELIVERY') {
+                order.totalAmount = oldTotalAmount;
             }
+        }
+
+        // Refund if paid
+        if (refundAmount > 0 && order.paymentStatus === 'Paid') {
+            const Wallet = mongoose.model('Wallet');
+            let wallet = await Wallet.findOne({ user: order.user });
+            if (!wallet) wallet = new Wallet({ user: order.user, balance: 0, transactions: [] });
+            
+            wallet.balance += refundAmount;
+            wallet.transactions.push({
+                amount: refundAmount,
+                type: 'credit',
+                description: `Refund for Cancelled Item in Order #${order.orderId}`
+            });
+            await wallet.save();
         }
 
         // Stock restoration
@@ -215,7 +234,9 @@ export const updateItemStatusService = async (orderId, itemId, status) => {
     }
 
     syncOrderStatus(order);
-    await recalculateOrderTotals(order);
+    if (status !== 'Cancelled') { // We already recalculated if it was Cancelled
+        await recalculateOrderTotals(order);
+    }
     await order.save();
 
     return { success: true, message: `Item status updated to ${status} successfully.` };
@@ -252,7 +273,7 @@ export const updateOrderStatusService = async (orderId, status) => {
     }
 
     const logisticsStages = ['Confirmed', 'Processing', 'Shipped', 'Delivered'];
-    if (logisticsStages.includes(status) && order.paymentMethod === 'ONLINE PAYMENT' && order.paymentStatus !== 'Paid') {
+    if (logisticsStages.includes(status) && order.paymentMethod !== 'CASH ON DELIVERY' && order.paymentStatus !== 'Paid') {
         return { 
             success: false, 
             message: `ACCESS DENIED: Order #${order.orderId} has not been paid. Online payments must be 'Paid' before advancing to ${status}.`,
@@ -260,6 +281,7 @@ export const updateOrderStatusService = async (orderId, status) => {
         };
     }
 
+    const oldTotalAmount = order.totalAmount;
     order.orderStatus = status;
     const newlyTerminalItems = [];
     
@@ -312,13 +334,20 @@ export const updateOrderStatusService = async (orderId, status) => {
     }
 
     if (newlyTerminalItems.length > 0) {
-        let totalRefund = 0;
+        await recalculateOrderTotals(order);
+        const newTotalAmount = order.totalAmount;
+        let totalRefund = oldTotalAmount - newTotalAmount;
+
+        if (totalRefund < 0) {
+            totalRefund = 0;
+            if (order.paymentMethod !== 'CASH ON DELIVERY') {
+                order.totalAmount = oldTotalAmount;
+            }
+        }
+
         const isOnlinePaid = order.paymentStatus === 'Paid';
 
         for (const item of newlyTerminalItems) {
-            if (item.status === 'Returned' || (item.status === 'Cancelled' && isOnlinePaid)) {
-                totalRefund += calculateItemRefund(item, order.subtotal, order.discount);
-            }
 
             const product = await Product.findById(item.product);
             if (product) {
@@ -340,7 +369,7 @@ export const updateOrderStatusService = async (orderId, status) => {
             }
         }
 
-        if (totalRefund > 0) {
+        if (totalRefund > 0 && order.paymentStatus === 'Paid') {
             const Wallet = mongoose.model('Wallet');
             let wallet = await Wallet.findOne({ user: order.user });
             if (!wallet) wallet = new Wallet({ user: order.user, balance: 0, transactions: [] });
@@ -360,7 +389,9 @@ export const updateOrderStatusService = async (orderId, status) => {
         }
     }
 
-    await recalculateOrderTotals(order);
+    if (newlyTerminalItems.length === 0) {
+        await recalculateOrderTotals(order);
+    }
     await order.save();
     return { success: true, message: 'Order status updated successfully' };
 };
@@ -372,23 +403,36 @@ export const updateItemReturnStatusService = async (orderId, itemId, status) => 
     const item = order.items.find(i => i._id.toString() === itemId);
     if (!item) return { success: false, message: 'Item not found', status: 404 };
 
+    const oldTotalAmount = order.totalAmount;
     const oldItemStatus = item.status;
     item.status = status;
 
     if (status === 'Returned' && oldItemStatus !== 'Returned') {
-        const refundAmount = calculateItemRefund(item, order.subtotal, order.discount);
-        const Wallet = mongoose.model('Wallet');
-        let wallet = await Wallet.findOne({ user: order.user });
-        
-        if (!wallet) wallet = new Wallet({ user: order.user, balance: 0, transactions: [] });
-        
-        wallet.balance += refundAmount;
-        wallet.transactions.push({
-            amount: refundAmount,
-            type: 'credit',
-            description: `Refund for Returned Item in Order #${order.orderId}`
-        });
-        await wallet.save();
+        await recalculateOrderTotals(order);
+        const newTotalAmount = order.totalAmount;
+        let refundAmount = oldTotalAmount - newTotalAmount;
+
+        if (refundAmount < 0) {
+            refundAmount = 0;
+            if (order.paymentMethod !== 'CASH ON DELIVERY') {
+                order.totalAmount = oldTotalAmount;
+            }
+        }
+
+        if (refundAmount > 0 && order.paymentStatus === 'Paid') {
+            const Wallet = mongoose.model('Wallet');
+            let wallet = await Wallet.findOne({ user: order.user });
+            
+            if (!wallet) wallet = new Wallet({ user: order.user, balance: 0, transactions: [] });
+            
+            wallet.balance += refundAmount;
+            wallet.transactions.push({
+                amount: refundAmount,
+                type: 'credit',
+                description: `Refund for Returned Item in Order #${order.orderId}`
+            });
+            await wallet.save();
+        }
 
         const product = await Product.findById(item.product);
         if (product) {
@@ -414,7 +458,9 @@ export const updateItemReturnStatusService = async (orderId, itemId, status) => 
     order.markModified('orderStatus');
     order.markModified('items');
 
-    await recalculateOrderTotals(order);
+    if (status !== 'Returned') {
+        await recalculateOrderTotals(order);
+    }
     await order.save();
     return { success: true, message: `Item return status updated to ${status}.` };
 };

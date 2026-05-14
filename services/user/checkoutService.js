@@ -187,17 +187,35 @@ export const placeOrderService = async (userId, orderData) => {
         await revertFailedOrderService(oldOrder.orderId, userId);
     }
 
-    const newOrder = new Order({
-        orderId,
-        user: userId,
-        items: cart.items.map(item => ({
+    let remainingDiscount = discount;
+    const mappedItems = cart.items.map((item, index) => {
+        const itemTotal = item.price * item.qty;
+        const itemRatio = subtotal > 0 ? itemTotal / subtotal : 0;
+        let itemDiscount = Math.floor(discount * itemRatio);
+
+        if (index === cart.items.length - 1) {
+            itemDiscount = remainingDiscount; // Allocate remainder to the last item
+        }
+        remainingDiscount -= itemDiscount;
+
+        const finalPaidAmount = Math.max(0, itemTotal - itemDiscount);
+
+        return {
             product: item.product._id,
             productName: item.product.name,
             productImage: item.displayImage,
             variant: item.variant,
             qty: item.qty,
-            price: item.price
-        })),
+            price: item.price,
+            couponDiscount: itemDiscount,
+            finalPaidAmount: finalPaidAmount
+        };
+    });
+
+    const newOrder = new Order({
+        orderId,
+        user: userId,
+        items: mappedItems,
         shippingAddress: {
             fullName: address.name,
             phone: address.phone,
@@ -251,8 +269,9 @@ export const placeOrderService = async (userId, orderData) => {
 
     await newOrder.save();
 
-    // If coupon used, update coupon stats
-    if (appliedCoupon) {
+    // If coupon used, update coupon stats only if not online payment
+    // Online payments update stats in verifyPaymentService
+    if (appliedCoupon && paymentMethod !== 'ONLINE PAYMENT') {
         appliedCoupon.usedBy.push(userId);
         await appliedCoupon.save();
     }
@@ -302,6 +321,15 @@ export const verifyPaymentService = async (paymentData) => {
             order.razorpayPaymentId = razorpay_payment_id;
             order.razorpaySignature = razorpay_signature;
             await order.save();
+
+            // Track coupon usage if a coupon was applied
+            if (order.couponCode) {
+                const coupon = await Coupon.findOne({ code: order.couponCode });
+                if (coupon && !coupon.usedBy.includes(order.user)) {
+                    coupon.usedBy.push(order.user);
+                    await coupon.save();
+                }
+            }
 
             // Finalize Stock (Convert reservation to sale)
             for (const item of order.items) {

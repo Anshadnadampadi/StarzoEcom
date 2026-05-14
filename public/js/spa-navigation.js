@@ -60,12 +60,11 @@ const SpaNavigation = {
             if (newContent && currentContent) {
                 currentContent.innerHTML = newContent.innerHTML;
                 
-                // Refresh Breadcrumbs if any
-                const newBread = doc.querySelector('.breadcrumbs-container');
-                const oldBread = document.querySelector('.breadcrumbs-container');
-                if (newBread && oldBread) {
-                    oldBread.className = newBread.className;
-                    oldBread.innerHTML = newBread.innerHTML;
+                // Refresh Breadcrumbs
+                const newBreadWrapper = doc.querySelector('#breadcrumbs-wrapper');
+                const oldBreadWrapper = document.querySelector('#breadcrumbs-wrapper');
+                if (newBreadWrapper && oldBreadWrapper) {
+                    oldBreadWrapper.innerHTML = newBreadWrapper.innerHTML;
                 }
 
                 // Refresh all Sidebar Navs (Desktop & Mobile)

@@ -734,13 +734,12 @@ export const removeProfileImage = async (req, res) => {
             return res.status(401).json({ success: false, message: "Not authenticated" });
         }
 
-        const defaultImage = "/images/default-avatar.png";
         await User.findByIdAndUpdate(req.session.user, {
-            profileImage: defaultImage,
-            avatar: defaultImage
+            profileImage: "",
+            avatar: ""
         });
 
-        return res.json({ success: true, imageUrl: defaultImage });
+        return res.json({ success: true, imageUrl: "" });
     } catch (error) {
         console.log(error);
         return res.status(500).json({ success: false, message: "Server error" });

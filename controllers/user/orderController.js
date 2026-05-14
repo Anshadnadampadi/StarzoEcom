@@ -243,25 +243,29 @@ export const downloadInvoice = async (req, res) => {
         doc.font('Helvetica').fontSize(9).fillColor(textColor);
 
         originalItems.forEach((item, index) => {
-            const isEven = index % 2 === 0;
-            if (!isEven) doc.rect(50, currentY, 500, 25).fill(lightGray);
-            
-            doc.fillColor(textColor);
-            
             let variantStr = '';
             if (typeof item.variant === 'string') {
                 variantStr = item.variant;
             } else if (typeof item.variant === 'object' && item.variant !== null) {
                 variantStr = [item.variant.storage, item.variant.color, item.variant.ram].filter(Boolean).join(' / ');
             }
-            const description = `${item.product ? item.product.name : 'Product'} ${variantStr ? '(' + variantStr + ')' : ''}`;
+            const description = `${item.product ? item.product.name : 'Product'} ${variantStr ? '(' + variantStr + ')' : ''}\nStatus: ${item.status.toUpperCase()}`;
+            
+            // Calculate dynamic height
+            const textHeight = doc.heightOfString(description, { width: 230 });
+            const rowHeight = Math.max(30, textHeight + 16);
+
+            const isEven = index % 2 === 0;
+            if (!isEven) doc.rect(50, currentY, 500, rowHeight).fill(lightGray);
+            
+            doc.fillColor(textColor);
             
             doc.text(description, 60, currentY + 8, { width: 230 });
-            doc.text(`₹${item.price.toLocaleString()}`, 300, currentY + 8, { width: 80, align: 'right' });
-            doc.text(item.qty.toString(), 390, currentY + 8, { width: 40, align: 'center' });
-            doc.text(`₹${(item.price * item.qty).toLocaleString()}`, 450, currentY + 8, { width: 90, align: 'right' });
+            doc.text(`₹${item.price.toLocaleString()}`, 300, currentY + 8 + (rowHeight/2 - 12), { width: 80, align: 'right' });
+            doc.text(item.qty.toString(), 390, currentY + 8 + (rowHeight/2 - 12), { width: 40, align: 'center' });
+            doc.text(`₹${(item.price * item.qty).toLocaleString()}`, 450, currentY + 8 + (rowHeight/2 - 12), { width: 90, align: 'right' });
             
-            currentY += 25;
+            currentY += rowHeight;
             doc.strokeColor(borderColor).lineWidth(0.5).moveTo(50, currentY).lineTo(550, currentY).stroke();
         });
 

@@ -40,6 +40,14 @@ const orderSchema = new mongoose.Schema({
             type: Number,
             required: true
         },
+        couponDiscount: {
+            type: Number,
+            default: 0
+        },
+        finalPaidAmount: {
+            type: Number,
+            default: 0
+        },
         status: {
             type: String,
             enum: ['Ordered', 'Shipped', 'Delivered', 'Cancelled', 'Return Requested', 'Return Approved', 'Return Picked', 'Returned', 'Return Rejected'],
