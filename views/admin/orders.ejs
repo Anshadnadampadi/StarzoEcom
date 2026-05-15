@@ -96,11 +96,15 @@
                             </td>
                             <td class="px-8 py-6">
                                 <p class="text-white text-xs font-bold uppercase">
-                                    <%= (order.user.firstName || order.user.name || order.user.email.split('@')[0]) %>
+                                    <% if (order.user) { %>
+                                        <%= (order.user.firstName || order.user.name || order.user.email.split('@')[0]) %>
                                         <%= (order.user.lastName || '' ) %>
+                                    <% } else { %>
+                                        Unknown Customer
+                                    <% } %>
                                 </p>
                                 <p class="text-white/30 text-[9px] tracking-wider truncate w-40">
-                                    <%= order.user.email %>
+                                    <%= order.user ? order.user.email : 'N/A' %>
                                 </p>
                             </td>
                             <td class="px-8 py-6 text-white font-mono text-sm font-bold">
