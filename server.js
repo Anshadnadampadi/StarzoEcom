@@ -60,7 +60,7 @@ app.use(helmet({
             "frame-src": ["'self'", "https:", "http:", "*.razorpay.com"],
             "object-src": ["'none'"],
             "worker-src": ["'self'", "blob:"],
-            // ...(process.env.NODE_ENV === 'production' ? { "upgrade-insecure-requests": [] } : {}),
+            "upgrade-insecure-requests": null,
         },
     },
     crossOriginEmbedderPolicy: false,
