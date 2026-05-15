@@ -70,7 +70,7 @@
             <button @click="open = !open" class="flex items-center gap-2 focus:outline-none group">
                 <% if (locals.user && locals.user.profileImage) { %>
                     <div class="w-8 h-8 rounded-sm overflow-hidden border border-white/10 group-hover:border-accent transition-colors">
-                        <img src="<%= locals.user.profileImage %>" class="w-full h-full object-cover">
+                        <img src="<%= locals.user.profileImage %>" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<%= encodeURIComponent((locals.user && (locals.user.firstName || locals.user.name)) ? (locals.user.firstName || locals.user.name) : 'U') %>&background=ff6a00&color=000';" class="w-full h-full object-cover">
                     </div>
                 <% } else { %>
                     <div class="text-white/60 group-hover:text-white transition-colors">
@@ -150,7 +150,7 @@
             <div class="bg-accent px-6 py-8 flex items-center gap-4">
                 <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center border border-white/30 overflow-hidden">
                     <% if (locals.user && locals.user.profileImage) { %>
-                        <img src="<%= locals.user.profileImage %>" class="w-full h-full object-cover">
+                        <img src="<%= locals.user.profileImage %>" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<%= encodeURIComponent((locals.user && (locals.user.firstName || locals.user.name)) ? (locals.user.firstName || locals.user.name) : 'U') %>&background=ff6a00&color=000';" class="w-full h-full object-cover">
                     <% } else { %>
                         <i class="fas fa-user text-white text-xl"></i>
                     <% } %>
