@@ -75,6 +75,19 @@ const SpaNavigation = {
                         if (newNavs[idx]) oldNav.innerHTML = newNavs[idx].innerHTML;
                     });
                 }
+
+                // Handle AI Chatbot visibility across SPA transitions
+                const newChat = doc.getElementById('ai-chatbot');
+                const oldChat = document.getElementById('ai-chatbot');
+                if (newChat && !oldChat) {
+                    document.body.appendChild(newChat.cloneNode(true));
+                } else if (!newChat && oldChat) {
+                    oldChat.remove();
+                } else if (newChat && oldChat) {
+                    // Optional: keep it as is, or replace its content if needed.
+                    // Leaving it alone preserves chat state during navigation!
+                }
+
                 
                 // Re-initialize scripts in new content
                 this.executeScripts(currentContent);
