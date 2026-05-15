@@ -69,10 +69,10 @@
         <div x-data="{ open: false }" @click.away="open = false" class="relative hidden sm:block">
             <button @click="open = !open" class="flex items-center gap-2 focus:outline-none group">
                 <% if (locals.user && locals.user.profileImage) { %>
-                    <div class="w-8 h-8 rounded-full overflow-hidden border border-white/10 group-hover:border-accent transition-colors relative flex items-center justify-center bg-white/5">
+                    <div class="w-8 h-8 rounded-full overflow-hidden border border-white/10 group-hover:border-accent transition-colors relative flex items-center justify-center bg-accent/10">
                         <img src="<%= locals.user.profileImage %>" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover absolute inset-0 z-10">
-                        <div style="display: none;" class="w-full h-full flex items-center justify-center z-0 text-white/60 group-hover:text-white transition-colors">
-                            <i class="fas fa-user text-sm"></i>
+                        <div style="display: none;" class="w-full h-full flex items-center justify-center z-0 text-accent uppercase font-black text-sm">
+                            <%= (locals.user && locals.user.firstName) ? locals.user.firstName[0] : (locals.user && locals.user.email ? locals.user.email[0] : 'U') %>
                         </div>
                     </div>
                 <% } else { %>
@@ -151,14 +151,16 @@
             
             <!-- Flipkart-Style Blue Header -->
             <div class="bg-accent px-6 py-8 flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center border border-white/30 overflow-hidden relative">
+                <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center border border-white/30 overflow-hidden relative">
                     <% if (locals.user && locals.user.profileImage) { %>
                         <img src="<%= locals.user.profileImage %>" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" class="w-full h-full object-cover absolute inset-0 z-10">
-                        <div style="display: none;" class="w-full h-full flex items-center justify-center z-0">
-                            <i class="fas fa-user text-white text-xl"></i>
+                        <div style="display: none;" class="w-full h-full flex items-center justify-center z-0 text-accent uppercase font-black text-xl">
+                            <%= (locals.user && locals.user.firstName) ? locals.user.firstName[0] : (locals.user && locals.user.email ? locals.user.email[0] : 'U') %>
                         </div>
                     <% } else { %>
-                        <i class="fas fa-user text-white text-xl"></i>
+                        <div class="w-full h-full flex items-center justify-center z-0 text-accent uppercase font-black text-xl">
+                            <%= (locals.user && locals.user.firstName) ? locals.user.firstName[0] : (locals.user && locals.user.email ? locals.user.email[0] : 'U') %>
+                        </div>
                     <% } %>
                 </div>
                 <div>
