@@ -351,10 +351,12 @@
 		}
 	}
 
-	document.addEventListener('DOMContentLoaded', () => {
+	const initOrdersPage = () => {
 		const ordersContainer = document.getElementById('ordersContainer');
 		const filterFormInputs = document.querySelectorAll('#filterForm input[name="status"]');
 		
+		if (!ordersContainer) return;
+
 		const updateContent = async (url, push = true) => {
 			ordersContainer.style.opacity = '0.4';
 			ordersContainer.style.pointerEvents = 'none';
@@ -397,9 +399,13 @@
 		const attachContentListeners = () => {
 			const searchForm = document.getElementById('searchForm');
 			if (searchForm) {
-				searchForm.addEventListener('submit', (e) => {
+				// Re-attach listener by cloning to avoid duplicates
+				const newSearchForm = searchForm.cloneNode(true);
+				searchForm.parentNode.replaceChild(newSearchForm, searchForm);
+				
+				newSearchForm.addEventListener('submit', (e) => {
 					e.preventDefault();
-					const searchInput = searchForm.querySelector('input[name="search"]');
+					const searchInput = newSearchForm.querySelector('input[name="search"]');
 					const url = new URL(window.location.href);
 					url.searchParams.set('search', searchInput.value);
 					url.searchParams.set('page', '1');
@@ -426,18 +432,10 @@
 		});
 
 		attachContentListeners();
+	};
 
-		window.addEventListener('popstate', (e) => {
-			if (e.state && e.state.url) {
-				updateContent(e.state.url, false);
-				
-				const params = new URLSearchParams(new URL(e.state.url).search);
-				const status = params.get('status') || '';
-				const radio = document.querySelector(`#filterForm input[name="status"][value="${status}"]`);
-				if (radio) radio.checked = true;
-			} else {
-				window.location.reload();
-			}
-		});
-	});
+	// Initialize immediately for SPA compatibility
+	initOrdersPage();
+	// Fallback for regular page loads
+	document.addEventListener('DOMContentLoaded', initOrdersPage);
 </script>
