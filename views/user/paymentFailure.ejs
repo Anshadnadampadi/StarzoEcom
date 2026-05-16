@@ -50,6 +50,19 @@
 
         <!-- Actions -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10" x-data="failureHandler()">
+            <!-- Processing Overlay -->
+            <div x-show="isVerifyingPayment" x-cloak class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6">
+                <div class="relative mb-12">
+                    <div class="w-24 h-24 border-2 border-white/5 rounded-full"></div>
+                    <div class="absolute inset-0 border-t-2 border-accent rounded-full animate-spin"></div>
+                    <div class="absolute inset-4 bg-accent/10 rounded-full animate-pulse"></div>
+                </div>
+                <h2 class="text-white text-2xl md:text-3xl font-black tracking-[0.2em] uppercase mb-4 text-center">Verifying Payment</h2>
+                <p class="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em] max-w-xs text-center leading-relaxed">
+                    Connecting to secure vault. Please do not refresh or close this window.
+                </p>
+            </div>
+
             <% if (order) { %>
                 <button @click="retryPayment('<%= order.orderId %>')" 
                     class="w-full sm:w-auto px-6 py-4 bg-status-danger text-white font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black rounded-lg transition-all shadow-[0_0_15px_rgba(255,59,48,0.3)] disabled:opacity-50"
@@ -83,6 +96,8 @@
     function failureHandler() {
         return {
             isProcessing: false,
+            isVerifyingPayment: false,
+            isPaymentSuccessful: false,
             async retryPayment(orderId) {
                 this.isProcessing = true;
                 try {
@@ -102,30 +117,42 @@
                             description: 'Order Payment Retry',
                             order_id: data.razorpayOrder.id,
                             handler: async (res) => {
-                                // Verify
-                                const vRes = await fetch('/checkout/verify-payment', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ ...res, orderId })
-                                });
-                                const vData = await vRes.json();
-                                if (vData.success) {
-                                    window.location.href = `/checkout/success/${orderId}`;
-                                } else {
-                                    window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: vData.message || 'Verification failed. Please check My Orders.', type: 'error' }}));
+                                this.isPaymentSuccessful = true;
+                                this.isVerifyingPayment = true;
+                                try {
+                                    const vRes = await fetch('/checkout/verify-payment', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ ...res, orderId })
+                                    });
+                                    const vData = await vRes.json();
+                                    if (vData.success) {
+                                        window.location.href = `/checkout/success/${orderId}`;
+                                    } else {
+                                        this.isVerifyingPayment = false;
+                                        window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: vData.message || 'Verification failed. Please check My Orders.', type: 'error' }}));
+                                    }
+                                } catch (vErr) {
+                                    this.isVerifyingPayment = false;
+                                    console.error("Verification Error:", vErr);
                                 }
                             },
-                            theme: { color: "#ff3b30" }
+                            theme: { color: "#ff6a00" }
                         };
                         const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', (response) => {
+                            if (this.isPaymentSuccessful) return;
+                            this.isProcessing = false;
+                            window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Payment failed or cancelled. Please try again.', type: 'warning' }}));
+                        });
                         rzp.open();
                     } else {
                         window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message || 'Retry failed', type: 'error' }}));
+                        this.isProcessing = false;
                     }
                 } catch (err) {
                     console.error(err);
                     window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'An error occurred during retry', type: 'error' }}));
-                } finally {
                     this.isProcessing = false;
                 }
             },

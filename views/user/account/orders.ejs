@@ -250,10 +250,36 @@
 	</div>
 </div>
 
+<!-- Processing Overlay -->
+<div id="processing-overlay" class="fixed inset-0 z-[100] bg-black/90 flex-col items-center justify-center p-6 hidden">
+    <div class="relative mb-12">
+        <div class="w-24 h-24 border-2 border-white/5 rounded-full"></div>
+        <div class="absolute inset-0 border-t-2 border-accent rounded-full animate-spin"></div>
+        <div class="absolute inset-4 bg-accent/10 rounded-full animate-pulse"></div>
+    </div>
+    <h2 class="text-white text-2xl md:text-3xl font-black tracking-[0.2em] uppercase mb-4 text-center">Verifying Payment</h2>
+    <p class="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em] max-w-xs text-center leading-relaxed">
+        Connecting to secure vault. Please do not refresh or close this window.
+    </p>
+</div>
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+	let isPaymentSuccessful = false;
+
+	function showOverlay() {
+		document.getElementById('processing-overlay').classList.remove('hidden');
+		document.getElementById('processing-overlay').classList.add('flex');
+	}
+
+	function hideOverlay() {
+		document.getElementById('processing-overlay').classList.add('hidden');
+		document.getElementById('processing-overlay').classList.remove('flex');
+	}
+
 	async function retryPayment(orderId) {
 		try {
+			isPaymentSuccessful = false;
 			const response = await fetch('/checkout/retry-payment', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -271,11 +297,27 @@
 					description: "Complete Your Order Payment",
 					order_id: data.razorpayOrder.id,
 					handler: async function (response) {
+						isPaymentSuccessful = true;
+						showOverlay();
 						await verifyPayment(response, orderId);
 					},
-					theme: { color: "#ff6a00" }
+					theme: { color: "#ff6a00" },
+					modal: {
+						ondismiss: function() {
+							hideOverlay();
+						}
+					}
 				};
 				const rzp = new Razorpay(options);
+				rzp.on('payment.failed', function (response) {
+					if (isPaymentSuccessful) return;
+					hideOverlay();
+					if (window.dispatchGlobalToast) {
+						dispatchGlobalToast('error', 'Payment Failed', 'The payment process was interrupted.');
+					} else {
+						alert('Payment Failed');
+					}
+				});
 				rzp.open();
 			} else {
 				throw new Error(data.message || "Failed to initiate payment");
@@ -283,6 +325,7 @@
 		} catch (error) {
 			console.error('Retry error:', error);
 			alert(error.message);
+			hideOverlay();
 		}
 	}
 
@@ -298,11 +341,12 @@
 			});
 			const data = await res.json();
 			if(data.success) {
-				window.location.reload();
+				window.location.href = '/checkout/success/' + orderId;
 			} else {
 				throw new Error(data.message || 'Payment verification failed.');
 			}
 		} catch(error) {
+			hideOverlay();
 			alert(error.message);
 		}
 	}
